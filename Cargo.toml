@@ -1,0 +1,12 @@
+[package]
+name = "dnstracer"
+version = "0.9.0"
+edition = "2021"
+license = "MIT"
+description = "A DNS traceroute tool"
+readme = "README.md"
+keywords = ["DNS", "traceroute"]
+homepage = "https://gitlab.com/mat813/dnstracer-rs"
+repository = "https://gitlab.com/mat813/dnstracer-rs"
+
+[dependencies]
