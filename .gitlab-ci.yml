@@ -1,0 +1,42 @@
+default:
+  interruptible: true
+
+.build:
+  stage: build
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}-${RUST_VERSION}
+    paths:
+      - target/
+  script:
+    - cargo build --verbose
+    - cargo test --verbose
+
+build:
+  extends: .build
+  image: rust:$RUST_VERSION
+  parallel:
+    matrix:
+      - RUST_VERSION: ["1.80", "1.79", "1.78"]
+
+build-nightly:
+  extends: .build
+  image: rustlang/rust:nightly
+  allow_failure: true
+
+fmt:
+  stage: test
+  needs: []
+  image: rust:latest
+  before_script:
+    - rustup component add rustfmt
+  script:
+    - cargo fmt --check
+
+clippy:
+  stage: test
+  needs: []
+  image: rust:latest
+  before_script:
+    - rustup component add clippy
+  script:
+    - cargo clippy
