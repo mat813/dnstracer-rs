@@ -407,3 +407,66 @@ impl RecursiveResolver {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::args::Args;
+    use std::net::{IpAddr, Ipv4Addr};
+
+    fn default_args() -> Args {
+        Args {
+            domain: "example.com".to_string(),
+            no_positive_cache: false,
+            negative_cache: false,
+            no_edns0: true,
+            overview: false,
+            query_type: RecordType::A,
+            retries: 3,
+            server: ".".to_string(),
+            timeout: 5,
+            source_address: None,
+            ipv6: false,
+            ipv4: true,
+        }
+    }
+
+    #[test]
+    fn test_recursive_resolver_new() {
+        let args = default_args();
+        let resolver = RecursiveResolver::new(args.clone());
+
+        assert_eq!(resolver.arguments, args);
+        assert!(resolver.positive_cache.is_some());
+        assert!(resolver.negative_cache.is_none());
+    }
+
+    #[test]
+    fn test_recursive_resolver_new_2() {
+        let args = Args {
+            no_positive_cache: true,
+            negative_cache: true,
+            ..default_args()
+        };
+        let resolver = RecursiveResolver::new(args.clone());
+
+        assert_eq!(resolver.arguments, args);
+        assert!(resolver.positive_cache.is_none());
+        assert!(resolver.negative_cache.is_some());
+    }
+
+    #[test]
+    fn test_recursive_resolver_init_with_ip() {
+        let args = Args {
+            server: "8.8.8.8".to_string(),
+            ..default_args()
+        };
+        let resolver = RecursiveResolver::new(args);
+
+        let result = resolver.init();
+        assert!(result.is_ok());
+        let opt_name = result.unwrap();
+        assert_eq!(opt_name.ip, IpAddr::V4(Ipv4Addr::new(8, 8, 8, 8)));
+        assert!(opt_name.name.is_none());
+    }
+}

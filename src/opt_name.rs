@@ -69,3 +69,189 @@ impl Ord for OptName {
         (self.name.as_ref(), &self.ip).cmp(&(other.name.as_ref(), &other.ip))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::net::{Ipv4Addr, Ipv6Addr};
+
+    #[test]
+    fn test_optname_eq() {
+        let opt1 = OptName {
+            ip: IpAddr::V4(Ipv4Addr::new(192, 168, 1, 1)),
+            name: Some("ns1.example.com".to_string()),
+            zone: Some("example.com.".to_string()),
+        };
+
+        let opt2 = OptName {
+            ip: IpAddr::V4(Ipv4Addr::new(192, 168, 1, 1)),
+            name: Some("ns1.example.com".to_string()),
+            zone: Some("example.com.".to_string()),
+        };
+
+        assert_eq!(
+            opt1, opt2,
+            "OptNames with the same IP and name should be equal"
+        );
+    }
+
+    #[test]
+    fn test_optname_neq() {
+        let opt1 = OptName {
+            ip: IpAddr::V4(Ipv4Addr::new(192, 168, 1, 1)),
+            name: Some("ns1.example.com".to_string()),
+            zone: Some("example.com.".to_string()),
+        };
+
+        let opt2 = OptName {
+            ip: IpAddr::V4(Ipv4Addr::new(192, 168, 1, 2)),
+            name: Some("ns2.example.com".to_string()),
+            zone: Some("example.com.".to_string()),
+        };
+
+        assert_ne!(
+            opt1, opt2,
+            "OptNames with different IPs or names should not be equal"
+        );
+    }
+
+    #[test]
+    fn test_optname_ordering() {
+        let opt1 = OptName {
+            ip: IpAddr::V4(Ipv4Addr::new(192, 168, 1, 1)),
+            name: Some("ns1.example.com".to_string()),
+            zone: Some("example.com.".to_string()),
+        };
+
+        let opt2 = OptName {
+            ip: IpAddr::V4(Ipv4Addr::new(192, 168, 1, 2)),
+            name: Some("ns2.example.com".to_string()),
+            zone: Some("example.com.".to_string()),
+        };
+
+        assert!(opt1 < opt2, "OptName should be ordered by name and then IP");
+    }
+
+    #[test]
+    fn test_optname_display() {
+        let opt = OptName {
+            ip: IpAddr::V4(Ipv4Addr::new(192, 168, 1, 1)),
+            name: None,
+            zone: None,
+        };
+
+        let expected = "192.168.1.1 (192.168.1.1)";
+        assert_eq!(
+            format!("{}", opt),
+            expected,
+            "Display without zone is incorrect"
+        );
+    }
+
+    #[test]
+    fn test_optname_display_with_name() {
+        let opt = OptName {
+            ip: IpAddr::V4(Ipv4Addr::new(192, 168, 1, 1)),
+            name: Some("ns1.example.com".to_string()),
+            zone: None,
+        };
+
+        let expected = "ns1.example.com (192.168.1.1)";
+        assert_eq!(
+            format!("{}", opt),
+            expected,
+            "Display without zone is incorrect"
+        );
+    }
+
+    #[test]
+    fn test_optname_full_display() {
+        let opt = OptName {
+            ip: IpAddr::V4(Ipv4Addr::new(192, 168, 1, 1)),
+            name: Some("ns1.example.com".to_string()),
+            zone: Some("example.com.".to_string()),
+        };
+
+        let expected = "ns1.example.com [example.com] (192.168.1.1)";
+        assert_eq!(
+            format!("{}", opt),
+            expected,
+            "Display implementation is incorrect"
+        );
+    }
+
+    #[test]
+    fn test_optname_full_display_root_zone() {
+        let opt = OptName {
+            ip: IpAddr::V4(Ipv4Addr::new(192, 168, 1, 1)),
+            name: Some("ns1.example.com".to_string()),
+            zone: Some(".".to_string()),
+        };
+
+        let expected = "ns1.example.com [.] (192.168.1.1)";
+        assert_eq!(
+            format!("{}", opt),
+            expected,
+            "Display implementation is incorrect"
+        );
+    }
+
+    #[test]
+    fn test_optname_into_socketaddr_v4() {
+        let opt = OptName {
+            ip: IpAddr::V4(Ipv4Addr::new(192, 168, 1, 1)),
+            name: None,
+            zone: None,
+        };
+
+        let socket_addr: SocketAddr = opt.into();
+        assert_eq!(socket_addr, "192.168.1.1:53".parse().unwrap());
+    }
+
+    #[test]
+    fn test_optname_into_socketaddr_v6() {
+        let opt = OptName {
+            ip: IpAddr::V6(Ipv6Addr::new(
+                0xfe80, 0, 0, 0, 0x0202, 0xb3ff, 0xfe1e, 0x8329,
+            )),
+            name: None,
+            zone: None,
+        };
+
+        let socket_addr: SocketAddr = opt.into();
+        assert_eq!(
+            socket_addr,
+            "[fe80::202:b3ff:fe1e:8329]:53".parse().unwrap()
+        );
+    }
+
+    #[test]
+    fn test_optname_hash() {
+        use std::collections::hash_map::DefaultHasher;
+        use std::hash::{Hash, Hasher};
+
+        let opt1 = OptName {
+            ip: IpAddr::V4(Ipv4Addr::new(192, 168, 1, 1)),
+            name: Some("ns1.example.com".to_string()),
+            zone: Some("example.com.".to_string()),
+        };
+
+        let opt2 = OptName {
+            ip: IpAddr::V4(Ipv4Addr::new(192, 168, 1, 1)),
+            name: Some("ns1.example.com".to_string()),
+            zone: Some("example.com.".to_string()),
+        };
+
+        let mut hasher1 = DefaultHasher::new();
+        let mut hasher2 = DefaultHasher::new();
+
+        opt1.hash(&mut hasher1);
+        opt2.hash(&mut hasher2);
+
+        assert_eq!(
+            hasher1.finish(),
+            hasher2.finish(),
+            "Hash should be the same for identical OptNames"
+        );
+    }
+}
