@@ -145,6 +145,7 @@ impl RecursiveResolver {
             &server,
             name,
             match depth {
+                // First request is always a NS request, in case the given server is a recursive server.
                 0 => RecordType::NS,
                 _ => self.arguments.query_type,
             },
@@ -233,12 +234,7 @@ impl RecursiveResolver {
         )
         .expect("Failed to create UDP connection");
 
-        SyncClient::new(conn).query(
-            name,
-            DNSClass::IN,
-            // First request is always a NS request, in case the given server is a recursive server.
-            query_type,
-        )
+        SyncClient::new(conn).query(name, DNSClass::IN, query_type)
     }
 
     /// Figure out the next servers in the recursion
