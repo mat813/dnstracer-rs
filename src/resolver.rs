@@ -1,13 +1,13 @@
 use crate::{args::Args, opt_name::OptName};
 use hickory_client::{
-    client::{Client, SyncClient},
+    client::{AsyncClient, ClientHandle},
     op::DnsResponse,
     rr::{Name, RecordType},
-    udp::UdpClientConnection,
 };
 use hickory_proto::{
     op::ResponseCode,
     rr::{DNSClass, RData, Record},
+    udp::UdpClientStream,
 };
 use hickory_resolver::{
     config::{LookupIpStrategy, ResolverConfig, ResolverOpts},
@@ -18,10 +18,11 @@ use itertools::Itertools;
 use std::{
     collections::{HashMap, HashSet},
     fmt,
-    net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr},
+    net::{IpAddr, Ipv4Addr, Ipv6Addr},
     sync::RwLock,
     time::Duration,
 };
+use tokio::{net::UdpSocket, runtime::Runtime};
 
 /// Provide a shortcut to get the root servers
 macro_rules! dot_to_a {
@@ -225,16 +226,28 @@ impl RecursiveResolver {
         name: &Name,
         query_type: RecordType,
     ) -> Result<DnsResponse, hickory_client::error::ClientError> {
-        let conn = UdpClientConnection::with_bind_addr_and_timeout(
-            server.clone().into(),
-            self.arguments
-                .source_address
-                .map(|ip| SocketAddr::new(ip, 0)),
-            Duration::from_secs(self.arguments.timeout),
-        )
-        .expect("Failed to create UDP connection");
+        let runtime = Runtime::new().unwrap();
 
-        SyncClient::new(conn).query(name, DNSClass::IN, query_type)
+        runtime.block_on(async {
+            let stream = UdpClientStream::<UdpSocket>::with_timeout(
+                server.clone().into(),
+                Duration::from_secs(5),
+            );
+            let (mut client, bg) = AsyncClient::connect(stream)
+                .await
+                .expect("Failed to create AsyncClient");
+
+            if self.arguments.no_edns0 {
+                client.disable_edns();
+            } else {
+                client.enable_edns();
+            }
+
+            // Spawn background task for the DNS client
+            tokio::spawn(bg);
+
+            client.query(name.clone(), DNSClass::IN, query_type).await
+        })
     }
 
     /// Figure out the next servers in the recursion

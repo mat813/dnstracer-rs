@@ -183,6 +183,7 @@ dependencies = [
  "hickory-proto",
  "hickory-resolver",
  "itertools",
+ "tokio",
 ]
 
 [[package]]
