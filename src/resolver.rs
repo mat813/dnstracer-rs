@@ -141,21 +141,9 @@ impl RecursiveResolver {
             return;
         }
 
-        let address = server.clone().into();
-        let conn = UdpClientConnection::with_bind_addr_and_timeout(
-            address,
-            self.arguments
-                .source_address
-                .map(|ip| SocketAddr::new(ip, 0)),
-            Duration::from_secs(self.arguments.timeout),
-        )
-        .expect("Failed to create UDP connection");
-        let client = SyncClient::new(conn);
-
-        let response_res = client.query(
+        let response_res = self.udp_query(
+            &server,
             name,
-            DNSClass::IN,
-            // First request is always a NS request, in case the given server is a recursive server.
             match depth {
                 0 => RecordType::NS,
                 _ => self.arguments.query_type,
@@ -227,6 +215,30 @@ impl RecursiveResolver {
                 self.print(depth, &server, format!("resolution error: {e}"), last);
             }
         }
+    }
+
+    /// Make a UDP DNS query
+    fn udp_query(
+        &self,
+        server: &OptName,
+        name: &Name,
+        query_type: RecordType,
+    ) -> Result<DnsResponse, hickory_client::error::ClientError> {
+        let conn = UdpClientConnection::with_bind_addr_and_timeout(
+            server.clone().into(),
+            self.arguments
+                .source_address
+                .map(|ip| SocketAddr::new(ip, 0)),
+            Duration::from_secs(self.arguments.timeout),
+        )
+        .expect("Failed to create UDP connection");
+
+        SyncClient::new(conn).query(
+            name,
+            DNSClass::IN,
+            // First request is always a NS request, in case the given server is a recursive server.
+            query_type,
+        )
     }
 
     /// Figure out the next servers in the recursion
