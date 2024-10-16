@@ -76,7 +76,7 @@ mod tests {
 
     #[test]
     fn test_default_values() {
-        let args = Args::try_parse_from(&["test", "example.com"]).unwrap();
+        let args = Args::try_parse_from(["test", "example.com"]).unwrap();
 
         assert_eq!(args.domain, "example.com");
         assert!(!args.no_positive_cache);
@@ -94,7 +94,7 @@ mod tests {
 
     #[test]
     fn test_all_flags() {
-        let args = Args::try_parse_from(&[
+        let args = Args::try_parse_from([
             "test",
             "-c", // no_positive_cache
             "-C", // negative_cache
@@ -133,7 +133,7 @@ mod tests {
 
     #[test]
     fn test_ipv4_flag() {
-        let args = Args::try_parse_from(&["test", "example.com", "-4"]).unwrap();
+        let args = Args::try_parse_from(["test", "example.com", "-4"]).unwrap();
 
         assert!(args.ipv4);
         assert!(!args.ipv6);
@@ -141,21 +141,21 @@ mod tests {
 
     #[test]
     fn test_with_server_override() {
-        let args = Args::try_parse_from(&["test", "-s", "1.1.1.1", "example.com"]).unwrap();
+        let args = Args::try_parse_from(["test", "-s", "1.1.1.1", "example.com"]).unwrap();
 
         assert_eq!(args.server, "1.1.1.1");
     }
 
     #[test]
     fn test_with_query_type() {
-        let args = Args::try_parse_from(&["test", "example.com", "-q", "AAAA"]).unwrap();
+        let args = Args::try_parse_from(["test", "example.com", "-q", "AAAA"]).unwrap();
 
         assert_eq!(args.query_type, RecordType::AAAA);
     }
 
     #[test]
     fn test_invalid_query_type() {
-        let result = Args::try_parse_from(&["test", "example.com", "-q", "INVALID"]);
+        let result = Args::try_parse_from(["test", "example.com", "-q", "INVALID"]);
         assert!(result.is_err()); // Should fail since "INVALID" is not a valid RecordType
     }
 }
