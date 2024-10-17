@@ -12,17 +12,19 @@ use hickory_proto::{
 use hickory_resolver::{
     config::{LookupIpStrategy, ResolverConfig, ResolverOpts},
     error::ResolveError,
-    Resolver,
+    TokioAsyncResolver,
 };
 use itertools::Itertools;
 use std::{
     collections::{HashMap, HashSet},
     fmt,
+    future::Future,
     net::{IpAddr, Ipv4Addr, Ipv6Addr},
+    pin::Pin,
     sync::RwLock,
     time::Duration,
 };
-use tokio::{net::UdpSocket, runtime::Runtime};
+use tokio::net::UdpSocket;
 
 /// Provide a shortcut to get the root servers
 macro_rules! dot_to_a {
@@ -59,7 +61,7 @@ struct FullResult {
 /// Recursive resolver
 pub struct RecursiveResolver {
     results: RwLock<HashMap<OptName, FullResult>>,
-    resolver: Resolver,
+    resolver: TokioAsyncResolver,
     arguments: Args,
     positive_cache: Option<RwLock<Cache>>,
     negative_cache: Option<RwLock<Cache>>,
@@ -87,8 +89,7 @@ impl RecursiveResolver {
 
         Self {
             results: RwLock::new(HashMap::new()),
-            resolver: Resolver::new(ResolverConfig::default(), resolver_opts)
-                .expect("Unable to create internal resolver"),
+            resolver: TokioAsyncResolver::tokio(ResolverConfig::default(), resolver_opts),
             positive_cache: match args.no_positive_cache {
                 true => None,
                 false => Some(RwLock::new(HashSet::new())),
@@ -102,7 +103,7 @@ impl RecursiveResolver {
     }
 
     /// Figure out the server we got as an argument
-    pub fn init(&self) -> Result<OptName, ResolveError> {
+    pub async fn init(&self) -> Result<OptName, ResolveError> {
         // If it is an IP, use it directly
         if let Ok(ip) = self.arguments.server.parse::<IpAddr>() {
             Ok(OptName {
@@ -112,7 +113,11 @@ impl RecursiveResolver {
             })
         } else {
             // Otherwise, we got a name server, try and resolve its ip address
-            match self.resolver.lookup_ip(dot_to_a!(self.arguments.server)) {
+            match self
+                .resolver
+                .lookup_ip(dot_to_a!(self.arguments.server))
+                .await
+            {
                 Ok(lookup) => match lookup.iter().find(|ip| is_ip_allowed!(self, ip)) {
                     Some(ip) => Ok(OptName {
                         ip,
@@ -136,122 +141,134 @@ impl RecursiveResolver {
     }
 
     /// Recurse through the internet looking for answers
-    pub fn do_recurse(&self, name: &Name, server: OptName, depth: usize, last: Vec<bool>) {
-        if self.cache_get(&server, name) {
-            self.print(depth, &server, "(cached)", last.clone());
-            return;
-        }
+    pub async fn do_recurse<'a>(
+        &'a self,
+        name: &'a Name,
+        server: OptName,
+        depth: usize,
+        last: Vec<bool>,
+    ) -> Pin<Box<dyn Future<Output = ()> + '_>> {
+        Box::pin(async move {
+            if self.cache_get(&server, name) {
+                self.print(depth, &server, "(cached)", last.clone());
+                return;
+            }
 
-        let response_res = self.udp_query(
-            &server,
-            name,
-            match depth {
-                // First request is always a NS request, in case the given server is a recursive server.
-                0 => RecordType::NS,
-                _ => self.arguments.query_type,
-            },
-        );
+            let response_res = self
+                .udp_query(
+                    &server,
+                    name,
+                    match depth {
+                        // First request is always a NS request, in case the given server is a recursive server.
+                        0 => RecordType::NS,
+                        _ => self.arguments.query_type,
+                    },
+                )
+                .await;
 
-        match response_res {
-            Ok(response) => {
-                let mut next_servers: Option<Vec<OptName>> = None;
+            match response_res {
+                Ok(response) => {
+                    let mut next_servers: Option<Vec<OptName>> = None;
 
-                if response.authoritative() {
-                    // If the response is authoritative, we are probaby at the end of the journey.
-                    let result = response.answers();
-                    self.print(depth, &server, "found authoritative answer", last.clone());
-                    self.cache_set(true, &server, name);
-                    self.add_result(server.clone(), response.response_code(), result);
+                    if response.authoritative() {
+                        // If the response is authoritative, we are probaby at the end of the journey.
+                        let result = response.answers();
+                        self.print(depth, &server, "found authoritative answer", last.clone());
+                        self.cache_set(true, &server, name);
+                        self.add_result(server.clone(), response.response_code(), result);
 
-                    // But if we get only CNAMEs and we asked for something
-                    // else, we need to try and continue the recursion.
-                    if self.arguments.query_type != RecordType::CNAME
-                        && result.iter().all(|r| r.record_type() == RecordType::CNAME)
-                        && response.name_server_count() > 0
-                    {
-                        for cname in response
-                            .answers()
-                            .iter()
-                            // We already checked every entry was a CNAME
-                            .map(|r| r.data().unwrap().as_cname().unwrap())
+                        // But if we get only CNAMEs and we asked for something
+                        // else, we need to try and continue the recursion.
+                        if self.arguments.query_type != RecordType::CNAME
+                            && result.iter().all(|r| r.record_type() == RecordType::CNAME)
+                            && response.name_server_count() > 0
                         {
-                            next_servers = Some(self.get_next_servers(
-                                response.name_servers(),
-                                &response,
-                                &server,
-                                cname,
-                                depth,
-                                &last,
-                            ));
+                            for cname in response
+                                .answers()
+                                .iter()
+                                // We already checked every entry was a CNAME
+                                .map(|r| r.data().unwrap().as_cname().unwrap())
+                            {
+                                next_servers = Some(
+                                    self.get_next_servers(
+                                        response.name_servers(),
+                                        &response,
+                                        &server,
+                                        cname,
+                                        depth,
+                                        &last,
+                                    )
+                                    .await,
+                                );
+                            }
+                        }
+                    } else {
+                        self.print(depth, &server, "", last.clone());
+
+                        let records = if depth == 0 && response.answer_count() > 0 {
+                            // If we're at the start and we get answers, it means it was a recursive name server, so use those answers.
+                            response.answers()
+                        } else {
+                            // Otherwise, we get an authority section.
+                            response.name_servers()
+                        };
+
+                        next_servers = Some(
+                            self.get_next_servers(records, &response, &server, name, depth, &last)
+                                .await,
+                        );
+                    }
+
+                    if let Some(next) = next_servers {
+                        let len = next.len();
+                        for (index, ns) in next.iter().sorted().enumerate() {
+                            self.do_recurse(name, ns.clone(), depth + 1, {
+                                let mut new_last = last.to_owned();
+                                new_last.push(index == (len - 1));
+                                new_last
+                            })
+                            .await
+                            .await;
                         }
                     }
-                } else {
-                    self.print(depth, &server, "", last.clone());
-
-                    let records = if depth == 0 && response.answer_count() > 0 {
-                        // If we're at the start and we get answers, it means it was a recursive name server, so use those answers.
-                        response.answers()
-                    } else {
-                        // Otherwise, we get an authority section.
-                        response.name_servers()
-                    };
-
-                    next_servers = Some(
-                        self.get_next_servers(records, &response, &server, name, depth, &last),
-                    );
                 }
-
-                if let Some(next) = next_servers {
-                    let len = next.len();
-                    for (index, ns) in next.iter().sorted().enumerate() {
-                        self.do_recurse(name, ns.clone(), depth + 1, {
-                            let mut new_last = last.to_owned();
-                            new_last.push(index == (len - 1));
-                            new_last
-                        });
-                    }
+                Err(e) => {
+                    self.cache_set(false, &server, name);
+                    self.print(depth, &server, format!("resolution error: {e}"), last);
                 }
             }
-            Err(e) => {
-                self.cache_set(false, &server, name);
-                self.print(depth, &server, format!("resolution error: {e}"), last);
-            }
-        }
+        })
     }
 
     /// Make a UDP DNS query
-    fn udp_query(
+    async fn udp_query(
         &self,
         server: &OptName,
         name: &Name,
         query_type: RecordType,
     ) -> Result<DnsResponse, hickory_client::error::ClientError> {
-        let runtime = Runtime::new().unwrap();
+        let stream = UdpClientStream::<UdpSocket>::with_timeout(
+            server.clone().into(),
+            Duration::from_secs(5),
+        );
+        let (mut client, bg) = AsyncClient::connect(stream)
+            .await
+            .expect("Failed to create AsyncClient");
 
-        runtime.block_on(async {
-            let stream = UdpClientStream::<UdpSocket>::with_timeout(
-                server.clone().into(),
-                Duration::from_secs(5),
-            );
-            let (mut client, bg) = AsyncClient::connect(stream)
-                .await
-                .expect("Failed to create AsyncClient");
+        if self.arguments.no_edns0 {
+            client.disable_edns();
+        } else {
+            client.enable_edns();
+        }
 
-            if self.arguments.no_edns0 {
-                client.disable_edns();
-            } else {
-                client.enable_edns();
-            }
+        // Spawn background task for the DNS client
+        tokio::spawn(bg);
 
-            // Spawn background task for the DNS client
-            tokio::spawn(bg);
-
-            client.query(name.clone(), DNSClass::IN, query_type).await
-        })
+        client.query(name.clone(), DNSClass::IN, query_type).await
     }
 
     /// Figure out the next servers in the recursion
-    fn get_next_servers(
+    async fn get_next_servers(
         &self,
         records: &[Record],
         response: &DnsResponse,
@@ -297,7 +314,7 @@ impl RecursiveResolver {
             // ourselves.
             if !found {
                 let ns_s = ns.to_string();
-                if let Ok(response) = self.resolver.lookup_ip(dot_to_a!(ns_s)) {
+                if let Ok(response) = self.resolver.lookup_ip(dot_to_a!(ns_s)).await {
                     next_servers.append(
                         &mut response
                             .iter()
@@ -476,15 +493,15 @@ mod tests {
         assert!(resolver.negative_cache.is_some());
     }
 
-    #[test]
-    fn test_recursive_resolver_init_with_ip() {
+    #[tokio::test]
+    async fn test_recursive_resolver_init_with_ip() {
         let args = Args {
             server: "8.8.8.8".to_string(),
             ..default_args()
         };
         let resolver = RecursiveResolver::new(args);
 
-        let result = resolver.init();
+        let result = resolver.init().await;
         assert!(result.is_ok());
         let opt_name = result.unwrap();
         assert_eq!(opt_name.ip, IpAddr::V4(Ipv4Addr::new(8, 8, 8, 8)));

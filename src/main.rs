@@ -114,13 +114,14 @@ mod args;
 mod opt_name;
 mod resolver;
 
-fn main() {
+#[tokio::main]
+async fn main() {
     // Parse command-line arguments into the Args struct
     let arguments = Args::parse();
 
     let recursor = RecursiveResolver::new(arguments.clone());
 
-    let first_server = match recursor.init() {
+    let first_server = match recursor.init().await {
         Ok(s) => s,
         Err(e) => {
             eprintln!("Error: {e}");
@@ -141,7 +142,10 @@ fn main() {
         arguments.retries
     );
 
-    recursor.do_recurse(&name, first_server, 0, Vec::new());
+    recursor
+        .do_recurse(&name, first_server, 0, Vec::new())
+        .await
+        .await;
 
     if arguments.overview {
         recursor.show_overview();
