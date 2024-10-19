@@ -66,6 +66,10 @@ pub struct Args {
     /// Force using IPv4 for DNS queries (no IPv6)
     #[arg(short = '4', long)]
     pub ipv4: bool,
+
+    /// Force using TCP for DNS queries
+    #[arg(short = 'T', long)]
+    pub tcp: bool,
 }
 
 #[cfg(test)]
@@ -90,6 +94,7 @@ mod tests {
         assert!(args.source_address.is_none());
         assert!(!args.ipv6);
         assert!(!args.ipv4);
+        assert!(!args.tcp);
     }
 
     #[test]
@@ -111,6 +116,7 @@ mod tests {
             "-S",
             "192.168.0.1", // source_address: 192.168.0.1
             "-6",          // force IPv6
+            "-T",          // use TCP
             "example.com",
         ])
         .unwrap();
@@ -129,6 +135,7 @@ mod tests {
         );
         assert!(args.ipv6);
         assert!(!args.ipv4);
+        assert!(args.tcp);
     }
 
     #[test]

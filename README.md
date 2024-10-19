@@ -72,6 +72,8 @@ dnstracer [OPTIONS] <domain>
   - Force using IPv6 for DNS queries (no IPv4)
 - `-4`, `--ipv4`
   - Force using IPv4 for DNS queries (no IPv6)
+- `-T`, `--tcp`
+  - Force using TCP for DNS queries
 - `-h`, `--help`
   - Print help
 - `-V`, `--version`

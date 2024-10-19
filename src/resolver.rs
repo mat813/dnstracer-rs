@@ -2,11 +2,13 @@ use crate::{args::Args, opt_name::OptName};
 use hickory_client::{
     client::{AsyncClient, ClientHandle},
     op::DnsResponse,
+    proto::iocompat::AsyncIoTokioAsStd,
     rr::{Name, RecordType},
 };
 use hickory_proto::{
     op::ResponseCode,
     rr::{DNSClass, RData, Record},
+    tcp::TcpClientStream,
     udp::UdpClientStream,
 };
 use hickory_resolver::{
@@ -24,7 +26,7 @@ use std::{
     sync::RwLock,
     time::Duration,
 };
-use tokio::net::UdpSocket;
+use tokio::net::{TcpStream, UdpSocket};
 
 /// Provide a shortcut to get the root servers
 macro_rules! dot_to_a {
@@ -154,17 +156,32 @@ impl RecursiveResolver {
                 return;
             }
 
-            let response_res = self
-                .udp_query(
-                    &server,
-                    name,
-                    match depth {
-                        // First request is always a NS request, in case the given server is a recursive server.
-                        0 => RecordType::NS,
-                        _ => self.arguments.query_type,
-                    },
-                )
-                .await;
+            let response_res = match self.arguments.tcp {
+                true => {
+                    self.tcp_query(
+                        &server,
+                        name,
+                        match depth {
+                            // First request is always a NS request, in case the given server is a recursive server.
+                            0 => RecordType::NS,
+                            _ => self.arguments.query_type,
+                        },
+                    )
+                    .await
+                }
+                false => {
+                    self.udp_query(
+                        &server,
+                        name,
+                        match depth {
+                            // First request is always a NS request, in case the given server is a recursive server.
+                            0 => RecordType::NS,
+                            _ => self.arguments.query_type,
+                        },
+                    )
+                    .await
+                }
+            };
 
             match response_res {
                 Ok(response) => {
@@ -255,6 +272,36 @@ impl RecursiveResolver {
             Duration::from_secs(5),
         );
         let (mut client, bg) = AsyncClient::connect(stream).await?;
+
+        if self.arguments.no_edns0 {
+            client.disable_edns();
+        } else {
+            client.enable_edns();
+        }
+
+        // Spawn background task for the DNS client
+        tokio::spawn(bg);
+
+        client.query(name.clone(), DNSClass::IN, query_type).await
+    }
+
+    /// Make a TCP DNS query
+    async fn tcp_query(
+        &self,
+        server: &OptName,
+        name: &Name,
+        query_type: RecordType,
+    ) -> Result<DnsResponse, hickory_client::error::ClientError> {
+        let (stream, sender) =
+            TcpClientStream::<AsyncIoTokioAsStd<TcpStream>>::with_bind_addr_and_timeout(
+                server.clone().into(),
+                self.arguments
+                    .source_address
+                    .map(|ip| SocketAddr::new(ip, 0)),
+                Duration::from_secs(5),
+            );
+
+        let (mut client, bg) = AsyncClient::new(stream, sender, None).await?;
 
         if self.arguments.no_edns0 {
             client.disable_edns();
@@ -468,6 +515,7 @@ mod tests {
             source_address: None,
             ipv6: false,
             ipv4: true,
+            tcp: false,
         }
     }
 
