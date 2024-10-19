@@ -46,9 +46,11 @@ pub struct Args {
     #[arg(short = 'r', long, default_value = "3")]
     pub retries: usize,
 
-    /// Start the query at the given DNS server (IP or hostname)
-    /// If "." is specified, A.ROOT-SERVERS.NET will be used
-    #[arg(short, long, default_value = ".")]
+    /// Start the query at the given DNS server
+    /// If an ip is given, it will be used
+    /// If a hostname is given, all its ip will be used
+    /// If "." is specified, all root servers will be used
+    #[arg(short, long, default_value = "a.root-servers.net")]
     pub server: String,
 
     /// Limit time to wait per try
@@ -120,7 +122,7 @@ mod tests {
         assert!(!args.overview);
         assert_eq!(args.query_type, RecordType::A);
         assert_eq!(args.retries, 3);
-        assert_eq!(args.server, ".");
+        assert_eq!(args.server, "a.root-servers.net");
         assert_eq!(args.timeout, 5);
         assert!(args.source_address.is_none());
         assert!(!args.ipv6);

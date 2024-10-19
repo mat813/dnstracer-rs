@@ -28,17 +28,6 @@ use std::{
 };
 use tokio::net::{TcpStream, UdpSocket};
 
-/// Provide a shortcut to get the root servers
-macro_rules! dot_to_a {
-    ($server:expr) => {
-        if $server == "." {
-            String::from("A.ROOT-SERVERS.NET.")
-        } else {
-            $server.clone()
-        }
-    };
-}
-
 /// Is the ip allowed with regard to what the op asked.
 macro_rules! is_ip_allowed {
         ($self:expr, $ip:expr ) => {
@@ -105,36 +94,68 @@ impl RecursiveResolver {
     }
 
     /// Figure out the server we got as an argument
-    pub async fn init(&self) -> Result<OptName, ResolveError> {
+    pub async fn init(&self) -> Result<Vec<OptName>, ResolveError> {
+        let mut results: Vec<OptName> = vec![];
+
         // If it is an IP, use it directly
         if let Ok(ip) = self.arguments.server.parse::<IpAddr>() {
-            Ok(OptName {
+            results.push(OptName {
                 ip,
                 name: None,
                 zone: None,
-            })
-        } else {
-            // Otherwise, we got a name server, try and resolve its ip address
-            match self
+            });
+        } else if self.arguments.server == "." {
+            // It's a dot, we want to start at the root zone and iterate over all its name servers ips
+            let root_ns: Vec<Name> = self
                 .resolver
-                .lookup_ip(dot_to_a!(self.arguments.server))
+                .ns_lookup(".")
                 .await?
                 .iter()
-                .find(|ip| is_ip_allowed!(self, ip))
-            {
-                Some(ip) => Ok(OptName {
-                    ip,
-                    name: Some(dot_to_a!(self.arguments.server)),
-                    zone: match self.arguments.server.as_str() {
-                        "." => Some(".".to_string()),
-                        _ => None,
-                    },
-                }),
-                None => Err(ResolveError::from(format!(
-                    "no IP address found for hostname: {}",
-                    self.arguments.server
-                ))),
+                .cloned()
+                .map(|ns| ns.0)
+                .collect();
+
+            for ns in root_ns {
+                results.append(
+                    &mut self
+                        .resolver
+                        .lookup_ip(ns.clone())
+                        .await?
+                        .iter()
+                        .filter(|ip| is_ip_allowed!(self, ip))
+                        .map(|ip| OptName {
+                            ip,
+                            name: Some(ns.to_string()),
+                            zone: Some(".".to_string()),
+                        })
+                        .collect(),
+                );
             }
+        } else {
+            // It's not a dot, let's try and resolve it
+            results.append(
+                &mut self
+                    .resolver
+                    .lookup_ip(self.arguments.server.clone())
+                    .await?
+                    .iter()
+                    .filter(|ip| is_ip_allowed!(self, ip))
+                    .map(|ip| OptName {
+                        ip,
+                        name: Some(self.arguments.server.clone()),
+                        zone: None,
+                    })
+                    .collect(),
+            );
+        }
+
+        if results.is_empty() {
+            Err(ResolveError::from(format!(
+                "no IP address found for hostname: {}",
+                self.arguments.server
+            )))
+        } else {
+            Ok(results)
         }
     }
 
@@ -358,7 +379,7 @@ impl RecursiveResolver {
             // ourselves.
             if !found {
                 let ns_s = ns.to_string();
-                if let Ok(response) = self.resolver.lookup_ip(dot_to_a!(ns_s)).await {
+                if let Ok(response) = self.resolver.lookup_ip(ns_s).await {
                     next_servers.append(
                         &mut response
                             .iter()
@@ -547,8 +568,9 @@ mod tests {
 
         let result = resolver.init().await;
         assert!(result.is_ok());
-        let opt_name = result.unwrap();
-        assert_eq!(opt_name.ip, IpAddr::V4(Ipv4Addr::new(8, 8, 8, 8)));
-        assert!(opt_name.name.is_none());
+        let servers = result.unwrap();
+        assert_eq!(servers.len(), 1);
+        assert_eq!(servers[0].ip, IpAddr::V4(Ipv4Addr::new(8, 8, 8, 8)));
+        assert!(servers[0].name.is_none());
     }
 }

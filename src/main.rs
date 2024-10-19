@@ -128,7 +128,7 @@ async fn main() {
 
     let recursor = RecursiveResolver::new(arguments.clone());
 
-    let first_server = match recursor.init().await {
+    let first_servers = match recursor.init().await {
         Ok(s) => s,
         Err(e) => {
             eprintln!("Error: {e}");
@@ -138,21 +138,25 @@ async fn main() {
 
     let name = Name::from_str(&arguments.domain).expect("Unable to parse domain name");
 
-    println!(
-        "Tracing to {}[{}] via {}, maximum of {} retries",
-        name,
-        arguments.query_type,
-        OptName {
-            zone: None,
-            ..first_server.clone()
-        },
-        arguments.retries
-    );
+    for (index, first_server) in first_servers.iter().enumerate() {
+        if index == 0 {
+            println!(
+                "Tracing to {}[{}] via {}, maximum of {} retries",
+                name,
+                arguments.query_type,
+                OptName {
+                    zone: None,
+                    ..first_server.clone()
+                },
+                arguments.retries
+            );
+        }
 
-    recursor
-        .do_recurse(&name, first_server, 0, Vec::new())
-        .await
-        .await;
+        recursor
+            .do_recurse(&name, first_server.clone(), 0, Vec::new())
+            .await
+            .await;
+    }
 
     if arguments.overview {
         recursor.show_overview();
