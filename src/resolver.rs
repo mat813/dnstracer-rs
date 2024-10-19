@@ -19,7 +19,7 @@ use std::{
     collections::{HashMap, HashSet},
     fmt,
     future::Future,
-    net::{IpAddr, Ipv4Addr, Ipv6Addr},
+    net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr},
     pin::Pin,
     sync::RwLock,
     time::Duration,
@@ -247,8 +247,11 @@ impl RecursiveResolver {
         name: &Name,
         query_type: RecordType,
     ) -> Result<DnsResponse, hickory_client::error::ClientError> {
-        let stream = UdpClientStream::<UdpSocket>::with_timeout(
+        let stream = UdpClientStream::<UdpSocket>::with_bind_addr_and_timeout(
             server.clone().into(),
+            self.arguments
+                .source_address
+                .map(|ip| SocketAddr::new(ip, 0)),
             Duration::from_secs(5),
         );
         let (mut client, bg) = AsyncClient::connect(stream)
