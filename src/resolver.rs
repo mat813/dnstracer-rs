@@ -265,7 +265,7 @@ impl RecursiveResolver {
             self.arguments
                 .source_address
                 .map(|ip| SocketAddr::new(ip, 0)),
-            Duration::from_secs(5),
+            Duration::from_secs(self.arguments.timeout),
         );
         let (mut client, bg) = AsyncClient::connect(stream).await?;
 
@@ -294,7 +294,7 @@ impl RecursiveResolver {
                 self.arguments
                     .source_address
                     .map(|ip| SocketAddr::new(ip, 0)),
-                Duration::from_secs(5),
+                Duration::from_secs(self.arguments.timeout),
             );
 
         let (mut client, bg) = AsyncClient::new(stream, sender, None).await?;
