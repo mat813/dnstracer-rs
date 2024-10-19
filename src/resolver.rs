@@ -438,7 +438,8 @@ impl RecursiveResolver {
             output.push_str(r"\___ ");
         }
 
-        if format!("{}", rest) != "" {
+        let rest = format!("{}", rest);
+        if !rest.is_empty() {
             println!("{output}{server} {rest}");
         } else {
             println!("{output}{server}");
