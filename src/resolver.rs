@@ -254,9 +254,7 @@ impl RecursiveResolver {
                 .map(|ip| SocketAddr::new(ip, 0)),
             Duration::from_secs(5),
         );
-        let (mut client, bg) = AsyncClient::connect(stream)
-            .await
-            .expect("Failed to create AsyncClient");
+        let (mut client, bg) = AsyncClient::connect(stream).await?;
 
         if self.arguments.no_edns0 {
             client.disable_edns();
