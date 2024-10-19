@@ -148,7 +148,7 @@ impl RecursiveResolver {
     ) -> Pin<Box<dyn Future<Output = ()> + '_>> {
         Box::pin(async move {
             if self.cache_get(&server, name) {
-                self.print(depth, &server, "(cached)", last.clone());
+                self.print(depth, &server, "(cached)", &last);
                 return;
             }
 
@@ -186,7 +186,7 @@ impl RecursiveResolver {
                     if response.authoritative() {
                         // If the response is authoritative, we are probaby at the end of the journey.
                         let result = response.answers();
-                        self.print(depth, &server, "found authoritative answer", last.clone());
+                        self.print(depth, &server, "found authoritative answer", &last);
                         self.cache_set(true, &server, name);
                         self.add_result(server.clone(), response.response_code(), result);
 
@@ -216,7 +216,7 @@ impl RecursiveResolver {
                             }
                         }
                     } else {
-                        self.print(depth, &server, "", last.clone());
+                        self.print(depth, &server, "", &last);
 
                         let records = if depth == 0 && response.answer_count() > 0 {
                             // If we're at the start and we get answers, it means it was a recursive name server, so use those answers.
@@ -247,7 +247,7 @@ impl RecursiveResolver {
                 }
                 Err(e) => {
                     self.cache_set(false, &server, name);
-                    self.print(depth, &server, format!("resolution error: {e}"), last);
+                    self.print(depth, &server, format!("resolution error: {e}"), &last);
                 }
             }
         })
@@ -389,7 +389,7 @@ impl RecursiveResolver {
                         zone: Some(record.name().to_string()),
                     },
                     "no ip found",
-                    last.to_owned(),
+                    last,
                 );
             }
         }
@@ -462,7 +462,7 @@ impl RecursiveResolver {
     }
 
     /// Try to give a nice out, as the original did
-    fn print<S: fmt::Display>(&self, depth: usize, server: &OptName, rest: S, last: Vec<bool>) {
+    fn print<S: fmt::Display>(&self, depth: usize, server: &OptName, rest: S, last: &[bool]) {
         let mut output = String::new();
 
         for i in 0..depth {
