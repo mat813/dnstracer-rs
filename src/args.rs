@@ -72,6 +72,37 @@ pub struct Args {
     pub tcp: bool,
 }
 
+impl Args {
+    /// Perform some validation on arguments
+    pub fn validate(&mut self) -> Result<(), String> {
+        match self.source_address {
+            Some(IpAddr::V4(ip)) => {
+                if self.ipv6 {
+                    return Err(format!(
+                        "Cannot use IPv6 only queries with an ipv4 source address ({})",
+                        ip
+                    ));
+                }
+                // Also, force IPv4 queries everywhere, otherwise we'd get protocol errors
+                self.ipv4 = true;
+            }
+            Some(IpAddr::V6(ip)) => {
+                if self.ipv4 {
+                    return Err(format!(
+                        "Cannot use IPv4 only queries with an ipv6 source address ({})",
+                        ip
+                    ));
+                }
+                // Also, force IPv6 queries everywhere, otherwise we'd get protocol errors
+                self.ipv6 = true;
+            }
+            None => (),
+        }
+
+        Ok(())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -164,5 +195,45 @@ mod tests {
     fn test_invalid_query_type() {
         let result = Args::try_parse_from(["test", "example.com", "-q", "INVALID"]);
         assert!(result.is_err()); // Should fail since "INVALID" is not a valid RecordType
+    }
+
+    #[test]
+    fn test_with_source_address_v4() {
+        let mut args = Args::try_parse_from(["test", "example.com", "-S", "1.1.1.1"]).unwrap();
+        let validated = args.validate();
+
+        assert!(validated.is_ok());
+        assert_eq!(args.source_address, Some("1.1.1.1".parse().unwrap()));
+        assert!(args.ipv4);
+        assert!(!args.ipv6);
+    }
+
+    #[test]
+    fn test_with_source_address_v6() {
+        let mut args = Args::try_parse_from(["test", "example.com", "-S", "2001:db8::1"]).unwrap();
+        let validated = args.validate();
+
+        assert!(validated.is_ok());
+        assert_eq!(args.source_address, Some("2001:db8::1".parse().unwrap()));
+        assert!(!args.ipv4);
+        assert!(args.ipv6);
+    }
+
+    #[test]
+    fn test_with_source_address_v4_and_ipv6() {
+        let mut args = Args::try_parse_from(["test", "example.com", "-6", "-S", "1.1.1.1"]).unwrap();
+        let validated = args.validate();
+
+        assert!(validated.is_err());
+        assert_eq!(validated.unwrap_err(), "Cannot use IPv6 only queries with an ipv4 source address (1.1.1.1)");
+    }
+
+    #[test]
+    fn test_with_source_address_v6_and_ipv4() {
+        let mut args = Args::try_parse_from(["test", "example.com", "-4", "-S", "2001:db8::1"]).unwrap();
+        let validated = args.validate();
+
+        assert!(validated.is_err());
+        assert_eq!(validated.unwrap_err(), "Cannot use IPv4 only queries with an ipv6 source address (2001:db8::1)");
     }
 }

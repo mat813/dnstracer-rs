@@ -119,7 +119,12 @@ mod resolver;
 #[tokio::main]
 async fn main() {
     // Parse command-line arguments into the Args struct
-    let arguments = Args::parse();
+    let mut arguments = Args::parse();
+
+    if let Err(err) = arguments.validate() {
+        eprintln!("Error: {err}");
+        process::exit(1);
+    }
 
     let recursor = RecursiveResolver::new(arguments.clone());
 
