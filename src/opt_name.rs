@@ -24,13 +24,7 @@ impl hash::Hash for OptName {
 
 impl From<OptName> for SocketAddr {
     fn from(opt_name: OptName) -> Self {
-        if opt_name.ip.is_ipv4() {
-            format!("{}:53", opt_name.ip)
-        } else {
-            format!("[{}]:53", opt_name.ip)
-        }
-        .parse()
-        .unwrap() // We can simply unwrap because the IpAddr is always valid
+        SocketAddr::new(opt_name.ip, 53)
     }
 }
 
