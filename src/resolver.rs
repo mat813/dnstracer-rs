@@ -118,24 +118,20 @@ impl RecursiveResolver {
             match self
                 .resolver
                 .lookup_ip(dot_to_a!(self.arguments.server))
-                .await
+                .await?
+                .iter()
+                .find(|ip| is_ip_allowed!(self, ip))
             {
-                Ok(lookup) => match lookup.iter().find(|ip| is_ip_allowed!(self, ip)) {
-                    Some(ip) => Ok(OptName {
-                        ip,
-                        name: Some(dot_to_a!(self.arguments.server)),
-                        zone: match self.arguments.server.as_str() {
-                            "." => Some(".".to_string()),
-                            _ => None,
-                        },
-                    }),
-                    None => Err(ResolveError::from(format!(
-                        "no IP address found for hostname: {}",
-                        self.arguments.server
-                    ))),
-                },
-                Err(e) => Err(ResolveError::from(format!(
-                    "no IP address found for hostname: {} ({e})",
+                Some(ip) => Ok(OptName {
+                    ip,
+                    name: Some(dot_to_a!(self.arguments.server)),
+                    zone: match self.arguments.server.as_str() {
+                        "." => Some(".".to_string()),
+                        _ => None,
+                    },
+                }),
+                None => Err(ResolveError::from(format!(
+                    "no IP address found for hostname: {}",
                     self.arguments.server
                 ))),
             }
@@ -432,12 +428,10 @@ impl RecursiveResolver {
 
     /// Did we already ask for this, wether it turned out ok or not ?
     fn cache_get(&self, server: &OptName, name: &Name) -> bool {
-        (match &self.positive_cache {
-            Some(ref o) => o.read().unwrap().get(&(server.ip, name.clone())).is_some(),
-            None => false,
-        }) || (match &self.negative_cache {
-            Some(ref o) => o.read().unwrap().get(&(server.ip, name.clone())).is_some(),
-            None => false,
+        self.positive_cache.as_ref().map_or(false, |o| {
+            o.read().unwrap().get(&(server.ip, name.clone())).is_some()
+        }) || self.negative_cache.as_ref().map_or(false, |o| {
+            o.read().unwrap().get(&(server.ip, name.clone())).is_some()
         })
     }
 
