@@ -1,6 +1,6 @@
 use clap::Parser;
 use hickory_client::rr::RecordType;
-use std::{net::IpAddr, str::FromStr};
+use std::{net::IpAddr, str::FromStr, time::Duration};
 
 // Original arguments
 // -c: disable local caching, default enabled
@@ -54,8 +54,8 @@ pub struct Args {
     pub server: String,
 
     /// Limit time to wait per try
-    #[arg(short = 't', long, default_value = "5")]
-    pub timeout: u64,
+    #[arg(short = 't', long, default_value = "5", value_parser = parse_duration)]
+    pub timeout: Duration,
 
     /// use this source address.
     #[arg(short = 'S', long)]
@@ -105,6 +105,12 @@ impl Args {
     }
 }
 
+fn parse_duration(src: &str) -> Result<Duration, String> {
+    src.parse::<u64>()
+        .map(Duration::from_secs)
+        .map_err(|_| format!("Invalid duration: {}", src))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -123,7 +129,7 @@ mod tests {
         assert_eq!(args.query_type, RecordType::A);
         assert_eq!(args.retries, 3);
         assert_eq!(args.server, "a.root-servers.net");
-        assert_eq!(args.timeout, 5);
+        assert_eq!(args.timeout, Duration::from_secs(5));
         assert!(args.source_address.is_none());
         assert!(!args.ipv6);
         assert!(!args.ipv4);
@@ -161,7 +167,7 @@ mod tests {
         assert_eq!(args.query_type, RecordType::NS);
         assert_eq!(args.retries, 5);
         assert_eq!(args.server, "8.8.8.8");
-        assert_eq!(args.timeout, 10);
+        assert_eq!(args.timeout, Duration::from_secs(10));
         assert_eq!(
             args.source_address,
             Some(IpAddr::from_str("192.168.0.1").unwrap())

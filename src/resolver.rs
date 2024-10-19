@@ -24,7 +24,6 @@ use std::{
     net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr},
     pin::Pin,
     sync::RwLock,
-    time::Duration,
 };
 use tokio::net::{TcpStream, UdpSocket};
 
@@ -75,7 +74,7 @@ impl RecursiveResolver {
         let mut resolver_opts = ResolverOpts::default();
         resolver_opts.ip_strategy = LookupIpStrategy::Ipv4AndIpv6;
         resolver_opts.attempts = args.retries;
-        resolver_opts.timeout = Duration::from_secs(args.timeout);
+        resolver_opts.timeout = args.timeout;
         resolver_opts.edns0 = !args.no_edns0;
 
         Self {
@@ -286,7 +285,7 @@ impl RecursiveResolver {
             self.arguments
                 .source_address
                 .map(|ip| SocketAddr::new(ip, 0)),
-            Duration::from_secs(self.arguments.timeout),
+            self.arguments.timeout,
         );
         let (mut client, bg) = AsyncClient::connect(stream).await?;
 
@@ -315,7 +314,7 @@ impl RecursiveResolver {
                 self.arguments
                     .source_address
                     .map(|ip| SocketAddr::new(ip, 0)),
-                Duration::from_secs(self.arguments.timeout),
+                self.arguments.timeout,
             );
 
         let (mut client, bg) = AsyncClient::new(stream, sender, None).await?;
@@ -514,7 +513,10 @@ impl RecursiveResolver {
 mod tests {
     use super::*;
     use crate::args::Args;
-    use std::net::{IpAddr, Ipv4Addr};
+    use std::{
+        net::{IpAddr, Ipv4Addr},
+        time::Duration,
+    };
 
     fn default_args() -> Args {
         Args {
@@ -526,7 +528,7 @@ mod tests {
             query_type: RecordType::A,
             retries: 3,
             server: ".".to_string(),
-            timeout: 5,
+            timeout: Duration::from_secs(5),
             source_address: None,
             ipv6: false,
             ipv4: true,
