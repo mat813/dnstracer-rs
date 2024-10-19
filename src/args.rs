@@ -221,19 +221,27 @@ mod tests {
 
     #[test]
     fn test_with_source_address_v4_and_ipv6() {
-        let mut args = Args::try_parse_from(["test", "example.com", "-6", "-S", "1.1.1.1"]).unwrap();
+        let mut args =
+            Args::try_parse_from(["test", "example.com", "-6", "-S", "1.1.1.1"]).unwrap();
         let validated = args.validate();
 
         assert!(validated.is_err());
-        assert_eq!(validated.unwrap_err(), "Cannot use IPv6 only queries with an ipv4 source address (1.1.1.1)");
+        assert_eq!(
+            validated.unwrap_err(),
+            "Cannot use IPv6 only queries with an ipv4 source address (1.1.1.1)"
+        );
     }
 
     #[test]
     fn test_with_source_address_v6_and_ipv4() {
-        let mut args = Args::try_parse_from(["test", "example.com", "-4", "-S", "2001:db8::1"]).unwrap();
+        let mut args =
+            Args::try_parse_from(["test", "example.com", "-4", "-S", "2001:db8::1"]).unwrap();
         let validated = args.validate();
 
         assert!(validated.is_err());
-        assert_eq!(validated.unwrap_err(), "Cannot use IPv4 only queries with an ipv6 source address (2001:db8::1)");
+        assert_eq!(
+            validated.unwrap_err(),
+            "Cannot use IPv4 only queries with an ipv6 source address (2001:db8::1)"
+        );
     }
 }
