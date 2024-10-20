@@ -16,7 +16,7 @@ use std::{net::IpAddr, str::FromStr, time::Duration};
 // TODO: -v: verbose
 // -S <ip address>: use this source address.
 // -4: don't query IPv6 servers
-#[derive(Parser, Debug, Clone, PartialEq)]
+#[derive(Parser, Debug, Clone, PartialEq, Eq)]
 #[command(version, about)]
 pub struct Args {
     /// The domain to query
@@ -81,8 +81,7 @@ impl Args {
             Some(IpAddr::V4(ip)) => {
                 if self.ipv6 {
                     return Err(format!(
-                        "Cannot use IPv6 only queries with an ipv4 source address ({})",
-                        ip
+                        "Cannot use IPv6 only queries with an ipv4 source address ({ip})"
                     ));
                 }
                 // Also, force IPv4 queries everywhere, otherwise we'd get protocol errors
@@ -91,8 +90,7 @@ impl Args {
             Some(IpAddr::V6(ip)) => {
                 if self.ipv4 {
                     return Err(format!(
-                        "Cannot use IPv4 only queries with an ipv6 source address ({})",
-                        ip
+                        "Cannot use IPv4 only queries with an ipv6 source address ({ip})"
                     ));
                 }
                 // Also, force IPv6 queries everywhere, otherwise we'd get protocol errors
@@ -108,7 +106,7 @@ impl Args {
 fn parse_duration(src: &str) -> Result<Duration, String> {
     src.parse::<u64>()
         .map(Duration::from_secs)
-        .map_err(|_| format!("Invalid duration: {}", src))
+        .map_err(|_| format!("Invalid duration: {src}"))
 }
 
 #[cfg(test)]

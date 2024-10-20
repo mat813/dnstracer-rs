@@ -154,7 +154,6 @@ async fn main() {
 
         recursor
             .do_recurse(&name, first_server.clone(), 0, Vec::new())
-            .await
             .await;
     }
 

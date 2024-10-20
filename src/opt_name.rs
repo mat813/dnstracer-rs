@@ -4,7 +4,7 @@ use std::{
     net::{IpAddr, SocketAddr},
 };
 
-/// OptName is a struct that represents an nameserver and the zone it is supposed to be authoritative for.
+/// `OptName` is a struct that represents an nameserver and the zone it is supposed to be authoritative for.
 #[derive(Debug, Clone, Eq)]
 pub struct OptName {
     /// The name server IP address
@@ -24,7 +24,7 @@ impl hash::Hash for OptName {
 
 impl From<OptName> for SocketAddr {
     fn from(opt_name: OptName) -> Self {
-        SocketAddr::new(opt_name.ip, 53)
+        Self::new(opt_name.ip, 53)
     }
 }
 
@@ -39,7 +39,7 @@ impl fmt::Display for OptName {
                 "{name} [{z}] ({ip})",
                 z = match zone.len() {
                     0 | 1 => zone,
-                    _ => zone.trim_end_matches("."),
+                    _ => zone.trim_end_matches('.'),
                 },
             ),
         }
@@ -136,7 +136,7 @@ mod tests {
 
         let expected = "192.168.1.1 (192.168.1.1)";
         assert_eq!(
-            format!("{}", opt),
+            format!("{opt}"),
             expected,
             "Display without zone is incorrect"
         );
@@ -152,7 +152,7 @@ mod tests {
 
         let expected = "ns1.example.com (192.168.1.1)";
         assert_eq!(
-            format!("{}", opt),
+            format!("{opt}"),
             expected,
             "Display without zone is incorrect"
         );
@@ -168,7 +168,7 @@ mod tests {
 
         let expected = "ns1.example.com [example.com] (192.168.1.1)";
         assert_eq!(
-            format!("{}", opt),
+            format!("{opt}"),
             expected,
             "Display implementation is incorrect"
         );
@@ -184,7 +184,7 @@ mod tests {
 
         let expected = "ns1.example.com [.] (192.168.1.1)";
         assert_eq!(
-            format!("{}", opt),
+            format!("{opt}"),
             expected,
             "Display implementation is incorrect"
         );

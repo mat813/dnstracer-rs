@@ -64,7 +64,7 @@ impl fmt::Debug for RecursiveResolver {
             .field("args", &self.arguments)
             .field("positive_cache", &self.positive_cache)
             .field("negative_cache", &self.negative_cache)
-            .finish()
+            .finish_non_exhaustive()
     }
 }
 
@@ -80,14 +80,8 @@ impl RecursiveResolver {
         Self {
             results: RwLock::new(HashMap::new()),
             resolver: TokioAsyncResolver::tokio(ResolverConfig::default(), resolver_opts),
-            positive_cache: match args.no_positive_cache {
-                true => None,
-                false => Some(RwLock::new(HashSet::new())),
-            },
-            negative_cache: match args.negative_cache {
-                true => Some(RwLock::new(HashSet::new())),
-                false => None,
-            },
+            positive_cache: (!args.no_positive_cache).then(|| RwLock::new(HashSet::new())),
+            negative_cache: args.negative_cache.then(|| RwLock::new(HashSet::new())),
             arguments: args,
         }
     }
@@ -159,7 +153,7 @@ impl RecursiveResolver {
     }
 
     /// Recurse through the internet looking for answers
-    pub async fn do_recurse<'a>(
+    pub fn do_recurse<'a>(
         &'a self,
         name: &'a Name,
         server: OptName,
@@ -172,31 +166,28 @@ impl RecursiveResolver {
                 return;
             }
 
-            let response_res = match self.arguments.tcp {
-                true => {
-                    self.tcp_query(
-                        &server,
-                        name,
-                        match depth {
-                            // First request is always a NS request, in case the given server is a recursive server.
-                            0 => RecordType::NS,
-                            _ => self.arguments.query_type,
-                        },
-                    )
-                    .await
-                }
-                false => {
-                    self.udp_query(
-                        &server,
-                        name,
-                        match depth {
-                            // First request is always a NS request, in case the given server is a recursive server.
-                            0 => RecordType::NS,
-                            _ => self.arguments.query_type,
-                        },
-                    )
-                    .await
-                }
+            let response_res = if self.arguments.tcp {
+                self.tcp_query(
+                    &server,
+                    name,
+                    match depth {
+                        // First request is always a NS request, in case the given server is a recursive server.
+                        0 => RecordType::NS,
+                        _ => self.arguments.query_type,
+                    },
+                )
+                .await
+            } else {
+                self.udp_query(
+                    &server,
+                    name,
+                    match depth {
+                        // First request is always a NS request, in case the given server is a recursive server.
+                        0 => RecordType::NS,
+                        _ => self.arguments.query_type,
+                    },
+                )
+                .await
             };
 
             match response_res {
@@ -256,11 +247,10 @@ impl RecursiveResolver {
                         let len = next.len();
                         for (index, ns) in next.iter().sorted().enumerate() {
                             self.do_recurse(name, ns.clone(), depth + 1, {
-                                let mut new_last = last.to_owned();
+                                let mut new_last = last.clone();
                                 new_last.push(index == (len - 1));
                                 new_last
                             })
-                            .await
                             .await;
                         }
                     }
@@ -343,7 +333,7 @@ impl RecursiveResolver {
     ) -> Vec<OptName> {
         let mut next_servers: Vec<OptName> = vec![];
 
-        for record in records.iter() {
+        for record in records {
             let mut found = false;
             // Here, we know it's a NS, so unwrap all that.
             let ns = record.data().unwrap().as_ns().unwrap();
@@ -457,9 +447,10 @@ impl RecursiveResolver {
 
     /// Set one of the caches
     fn cache_set(&self, positive: bool, server: &OptName, name: &Name) {
-        if let Some(ref o) = match positive {
-            true => &self.positive_cache,
-            false => &self.negative_cache,
+        if let Some(ref o) = if positive {
+            &self.positive_cache
+        } else {
+            &self.negative_cache
         } {
             let mut a = o.write().unwrap();
             a.insert((server.ip, name.clone()));
@@ -487,9 +478,9 @@ impl RecursiveResolver {
 
         for i in 0..depth {
             if *last.get(i).unwrap_or(&false) {
-                output.push_str("  ")
+                output.push_str("  ");
             } else {
-                output.push_str(" |")
+                output.push_str(" |");
             }
             if i < depth - 1 {
                 output.push_str("     ");
@@ -500,11 +491,11 @@ impl RecursiveResolver {
             output.push_str(r"\___ ");
         }
 
-        let rest = format!("{}", rest);
-        if !rest.is_empty() {
-            println!("{output}{server} {rest}");
-        } else {
+        let rest = format!("{rest}");
+        if rest.is_empty() {
             println!("{output}{server}");
+        } else {
+            println!("{output}{server} {rest}");
         }
     }
 }
