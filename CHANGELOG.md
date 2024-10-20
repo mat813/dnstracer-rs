@@ -5,7 +5,58 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v1.1.0 (2024-10-20)
+
+### Chore
+
+ - <csr-id-0000020ffd4184a2e3f769b2869d3bc340b60438/> add old changelog
+
+### New Features
+
+ - <csr-id-000002439f930b2237003e14864784265da57ccf/> change the meaning of . as a server
+   The default server changed from . to a.root-servers.net.
+   If . is used, all root servers will be used.
+
+### Bug Fixes
+
+ - <csr-id-0000025a10a65db7bb515f15b2285d79480e731b/> parse the timeout when the arguments are parsed
+ - <csr-id-000002396551c391ae8328059a683779c5af5c27/> use the timeout from the arguments
+ - <csr-id-0000022af7f9012d4a22b6b9305eafeea06b57ca/> avoid cloning the last vec for printing
+ - <csr-id-0000021d4fdf551a0c1449aba0e788343935d6ce/> simplify code
+
+### Style
+
+ - <csr-id-00000192671e0aeccb2cd9e9b222a38eb495846d/> fmt
+
+### Commit Statistics
+
+<csr-read-only-do-not-edit/>
+
+ - 7 commits contributed to the release.
+ - 1 day passed between releases.
+ - 7 commits were understood as [conventional](https://www.conventionalcommits.org).
+ - 0 issues like '(#ID)' were seen in commit messages
+
+### Commit Details
+
+<csr-read-only-do-not-edit/>
+
+<details><summary>view details</summary>
+
+ * **Uncategorized**
+    - Parse the timeout when the arguments are parsed (0000025)
+    - Change the meaning of . as a server (0000024)
+    - Use the timeout from the arguments (0000023)
+    - Avoid cloning the last vec for printing (0000022)
+    - Simplify code (0000021)
+    - Add old changelog (0000020)
+    - Fmt (0000019)
+</details>
+
 ## v1.0.0 (2024-10-19)
+
+<csr-id-000001859882e30eefd707dcb762ccaa67c630cf/>
+<csr-id-0000011944a7ba166dff4bdede376f0d1b144af3/>
 
 ### Chore
 
@@ -52,6 +103,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## v0.9.2 (2024-10-17)
 
+<csr-id-0000007442382fb59fc62314a5caae5f024b2f75/>
+<csr-id-00000088e4167ccd4c47b2924e7abd4cc470df34/>
+
 ### Chore
 
  - <csr-id-0000007442382fb59fc62314a5caae5f024b2f75/> move a comment at the right place
@@ -89,6 +143,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## v0.9.1 (2024-10-16)
 
+<csr-id-0000005992bae326ff306b9d76952988dd6708ff/>
+
 ### Chore
 
  - <csr-id-0000005992bae326ff306b9d76952988dd6708ff/> add LICENSE file
@@ -118,6 +174,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 </details>
 
 ## v0.9.0 (2024-10-13)
+
+<csr-id-0000004e9ef9e2582e57373f8a76beeda2339b36/>
+<csr-id-0000003319978b8d3f5ef777cfb41f64b90a21f5/>
 
 ### New Features
 
