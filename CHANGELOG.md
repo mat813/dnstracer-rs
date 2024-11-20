@@ -5,7 +5,44 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v1.1.1 (2024-11-20)
+
+### Chore
+
+ - <csr-id-00000303484ccb4f2fb2180b5f9facdc287fb9e0/> update lock file
+ - <csr-id-000002746ba7b4a6356ccc7f5f148913310d3cfb/> clippy
+
+### Bug Fixes
+
+ - <csr-id-0000029a09921484cfb6dca43d40ad0362e23582/> update tokio to 1.41.1
+ - <csr-id-000002886d43f0c22549e2d08598c1bc375213db/> update clap to 4.5.21
+
+### Commit Statistics
+
+<csr-read-only-do-not-edit/>
+
+ - 4 commits contributed to the release.
+ - 31 days passed between releases.
+ - 4 commits were understood as [conventional](https://www.conventionalcommits.org).
+ - 0 issues like '(#ID)' were seen in commit messages
+
+### Commit Details
+
+<csr-read-only-do-not-edit/>
+
+<details><summary>view details</summary>
+
+ * **Uncategorized**
+    - Update lock file (0000030)
+    - Update tokio to 1.41.1 (0000029)
+    - Update clap to 4.5.21 (0000028)
+    - Clippy (0000027)
+</details>
+
 ## v1.1.0 (2024-10-20)
+
+<csr-id-0000020ffd4184a2e3f769b2869d3bc340b60438/>
+<csr-id-00000192671e0aeccb2cd9e9b222a38eb495846d/>
 
 ### Chore
 
@@ -32,7 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <csr-read-only-do-not-edit/>
 
- - 7 commits contributed to the release.
+ - 8 commits contributed to the release.
  - 1 day passed between releases.
  - 7 commits were understood as [conventional](https://www.conventionalcommits.org).
  - 0 issues like '(#ID)' were seen in commit messages
@@ -44,6 +81,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <details><summary>view details</summary>
 
  * **Uncategorized**
+    - Release dnstracer v1.1.0 (76197bf)
     - Parse the timeout when the arguments are parsed (0000025)
     - Change the meaning of . as a server (0000024)
     - Use the timeout from the arguments (0000023)
