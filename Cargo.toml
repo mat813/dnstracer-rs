@@ -10,7 +10,7 @@ homepage = "https://gitlab.com/mat813/dnstracer-rs"
 repository = "https://gitlab.com/mat813/dnstracer-rs"
 
 [dependencies]
-clap = { version = "4.5.21", features = ["derive"] }
+clap = { version = "4.5.22", features = ["derive"] }
 hickory-client = "0.24.1"
 hickory-proto = "0.24.1"
 hickory-resolver = "0.24.1"
