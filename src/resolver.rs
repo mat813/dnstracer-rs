@@ -49,11 +49,20 @@ struct FullResult {
 }
 
 /// Recursive resolver
+#[expect(
+    clippy::module_name_repetitions,
+    reason = "It feels better with that name"
+)]
 pub struct RecursiveResolver {
+    /// Store the results, in case we need to display them
     results: RwLock<HashMap<OptName, FullResult>>,
+    /// Single resolver for everything
     resolver: TokioAsyncResolver,
+    /// Copy of all the arguments for easier processing
     arguments: Args,
+    /// Positive answer cache
     positive_cache: Option<RwLock<Cache>>,
+    /// Negative answer cache
     negative_cache: Option<RwLock<Cache>>,
 }
 
@@ -162,7 +171,7 @@ impl RecursiveResolver {
     ) -> Pin<Box<dyn Future<Output = ()> + 'a>> {
         Box::pin(async move {
             if self.cache_get(&server, name) {
-                self.print(depth, &server, "(cached)", &last);
+                Self::print(depth, &server, "(cached)", &last);
                 return;
             }
 
@@ -197,7 +206,7 @@ impl RecursiveResolver {
                     if response.authoritative() {
                         // If the response is authoritative, we are probaby at the end of the journey.
                         let result = response.answers();
-                        self.print(depth, &server, "found authoritative answer", &last);
+                        Self::print(depth, &server, "found authoritative answer", &last);
                         self.cache_set(true, &server, name);
                         self.add_result(server.clone(), response.response_code(), result);
 
@@ -227,7 +236,7 @@ impl RecursiveResolver {
                             }
                         }
                     } else {
-                        self.print(depth, &server, "", &last);
+                        Self::print(depth, &server, "", &last);
 
                         let records = if depth == 0 && response.answer_count() > 0 {
                             // If we're at the start and we get answers, it means it was a recursive name server, so use those answers.
@@ -257,7 +266,7 @@ impl RecursiveResolver {
                 }
                 Err(e) => {
                     self.cache_set(false, &server, name);
-                    self.print(depth, &server, format!("resolution error: {e}"), &last);
+                    Self::print(depth, &server, format!("resolution error: {e}"), &last);
                 }
             }
         })
@@ -391,7 +400,7 @@ impl RecursiveResolver {
                 self.cache_set(true, server, name);
             } else {
                 // If we cannot find an IP address, we create a fake server to give an error
-                self.print(
+                Self::print(
                     depth,
                     &OptName {
                         ip: [0, 0, 0, 0].into(),
@@ -458,6 +467,10 @@ impl RecursiveResolver {
     }
 
     /// Add a result to the pile
+    #[expect(
+        clippy::significant_drop_tightening,
+        reason = "Scope is short enough and there should not be contentions"
+    )]
     fn add_result(&self, server: OptName, response_code: ResponseCode, results: &[Record]) {
         let mut res = self.results.write().unwrap();
 
@@ -473,7 +486,7 @@ impl RecursiveResolver {
     }
 
     /// Try to give a nice out, as the original did
-    fn print<S: fmt::Display>(&self, depth: usize, server: &OptName, rest: S, last: &[bool]) {
+    fn print<S: fmt::Display>(depth: usize, server: &OptName, rest: S, last: &[bool]) {
         let mut output = String::new();
 
         for i in 0..depth {

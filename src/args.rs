@@ -16,6 +16,9 @@ use std::{net::IpAddr, str::FromStr, time::Duration};
 // TODO: -v: verbose
 // -S <ip address>: use this source address.
 // -4: don't query IPv6 servers
+
+/// Our command line arguments
+#[expect(clippy::struct_excessive_bools, reason = "Those are flags, not states")]
 #[derive(Parser, Debug, Clone, PartialEq, Eq)]
 #[command(version, about)]
 pub struct Args {
@@ -103,6 +106,7 @@ impl Args {
     }
 }
 
+/// Duration parser for args
 fn parse_duration(src: &str) -> Result<Duration, String> {
     src.parse::<u64>()
         .map(Duration::from_secs)

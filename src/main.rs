@@ -1,12 +1,33 @@
 #![doc = include_str!("../README.md")]
+#![warn(
+    clippy::allow_attributes,
+    clippy::as_ptr_cast_mut,
+    clippy::as_underscore,
+    clippy::assigning_clones,
+    clippy::borrow_as_ptr,
+    clippy::branches_sharing_code,
+    clippy::case_sensitive_file_extension_comparisons,
+    clippy::cast_lossless,
+    clippy::cast_possible_truncation,
+    clippy::if_then_some_else_none,
+    clippy::match_like_matches_macro,
+    clippy::match_same_arms,
+    clippy::missing_docs_in_private_items,
+    clippy::nursery,
+    clippy::option_as_ref_deref,
+    clippy::pedantic
+)]
 
 use crate::{args::Args, opt_name::OptName, resolver::RecursiveResolver};
 use clap::Parser;
 use hickory_client::rr::Name;
 use std::{process, str::FromStr};
 
+/// The arguments
 mod args;
+/// A nameserver and the zone it is supposed to be authoritative for.
 mod opt_name;
+/// All the codes in there
 mod resolver;
 
 #[tokio::main]
