@@ -15,4 +15,4 @@ hickory-client = "0.24.1"
 hickory-proto = "0.24.1"
 hickory-resolver = "0.24.1"
 itertools = "0.13.0"
-tokio = { version = "1.41.1", features = ["full"] }
+tokio = { version = "1.42.0", features = ["full"] }
