@@ -5,7 +5,49 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v1.1.2 (2024-12-04)
+
+### Bug Fixes
+
+ - <csr-id-000003473065e9ed637e3f83604a5e530706bd41/> update clap to 4.5.22
+ - <csr-id-000003336ec43c3fa57fb74b1547dbbd0c4bc74d/> update tokio to 1.42.0
+ - <csr-id-000003275a4427161a70ec1edf463c694c4ec118/> this lifetime has a name
+
+### Other
+
+ - <csr-id-00000354eea0e832fae6285c44605e7222f50652/> include the README.md instead of copying it
+
+### Style
+
+ - <csr-id-00000369560f5a95262d5e2cacc2e38339a7b308/> clippy
+
+### Commit Statistics
+
+<csr-read-only-do-not-edit/>
+
+ - 5 commits contributed to the release.
+ - 13 days passed between releases.
+ - 5 commits were understood as [conventional](https://www.conventionalcommits.org).
+ - 0 issues like '(#ID)' were seen in commit messages
+
+### Commit Details
+
+<csr-read-only-do-not-edit/>
+
+<details><summary>view details</summary>
+
+ * **Uncategorized**
+    - Clippy (0000036)
+    - Include the README.md instead of copying it (0000035)
+    - Update clap to 4.5.22 (0000034)
+    - Update tokio to 1.42.0 (0000033)
+    - This lifetime has a name (0000032)
+</details>
+
 ## v1.1.1 (2024-11-20)
+
+<csr-id-00000303484ccb4f2fb2180b5f9facdc287fb9e0/>
+<csr-id-000002746ba7b4a6356ccc7f5f148913310d3cfb/>
 
 ### Chore
 
@@ -21,7 +63,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <csr-read-only-do-not-edit/>
 
- - 4 commits contributed to the release.
+ - 5 commits contributed to the release.
  - 31 days passed between releases.
  - 4 commits were understood as [conventional](https://www.conventionalcommits.org).
  - 0 issues like '(#ID)' were seen in commit messages
@@ -33,6 +75,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <details><summary>view details</summary>
 
  * **Uncategorized**
+    - Release dnstracer v1.1.1 (4f77ad0)
     - Update lock file (0000030)
     - Update tokio to 1.41.1 (0000029)
     - Update clap to 4.5.21 (0000028)
