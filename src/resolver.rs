@@ -159,7 +159,7 @@ impl RecursiveResolver {
         server: OptName,
         depth: usize,
         last: Vec<bool>,
-    ) -> Pin<Box<dyn Future<Output = ()> + '_>> {
+    ) -> Pin<Box<dyn Future<Output = ()> + 'a>> {
         Box::pin(async move {
             if self.cache_get(&server, name) {
                 self.print(depth, &server, "(cached)", &last);
