@@ -13,10 +13,7 @@ default:
 
 build:
   extends: .build
-  image: rust:$RUST_VERSION
-  parallel:
-    matrix:
-      - RUST_VERSION: ["1.80", "1.79", "1.78"]
+  image: rust:latest
 
 build-nightly:
   extends: .build
