@@ -18,7 +18,7 @@ use hickory_resolver::{
 };
 use itertools::Itertools;
 use std::{
-    collections::{HashMap, HashSet},
+    collections::{BTreeSet, HashMap, HashSet},
     fmt,
     future::Future,
     net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr},
@@ -46,7 +46,7 @@ type Cache = HashSet<CacheKey>;
 #[derive(Clone, Debug, Default)]
 struct FullResult {
     /// List of records from a nameserver
-    records: Vec<Record>,
+    records: BTreeSet<Record>,
     /// Response code from the answer
     response_code: ResponseCode,
 }
@@ -419,13 +419,7 @@ impl RecursiveResolver<'_> {
 
     /// Print the overview
     pub fn show_overview(&self) {
-        for (key, values) in self
-            .results
-            .read()
-            .unwrap()
-            .iter()
-            .sorted_by_key(|(o, _)| *o)
-        {
+        for (key, values) in self.results.read().unwrap().iter() {
             if values.response_code != ResponseCode::NoError {
                 println!(
                     "{} ({})\t{}",
@@ -481,9 +475,7 @@ impl RecursiveResolver<'_> {
         full.response_code = response_code;
 
         for result in results {
-            if !full.records.contains(result) {
-                full.records.push(result.clone());
-            }
+            full.records.insert(result.clone());
         }
     }
 
