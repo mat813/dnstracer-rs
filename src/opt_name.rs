@@ -28,6 +28,12 @@ impl From<OptName> for SocketAddr {
     }
 }
 
+impl From<&OptName> for SocketAddr {
+    fn from(opt_name: &OptName) -> Self {
+        Self::new(opt_name.ip, 53)
+    }
+}
+
 impl fmt::Display for OptName {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let ip = self.ip;

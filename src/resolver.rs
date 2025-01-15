@@ -49,24 +49,20 @@ struct FullResult {
 }
 
 /// Recursive resolver
-#[expect(
-    clippy::module_name_repetitions,
-    reason = "It feels better with that name"
-)]
-pub struct RecursiveResolver {
+pub struct RecursiveResolver<'a> {
     /// Store the results, in case we need to display them
     results: RwLock<HashMap<OptName, FullResult>>,
     /// Single resolver for everything
     resolver: TokioAsyncResolver,
     /// Copy of all the arguments for easier processing
-    arguments: Args,
+    arguments: &'a Args,
     /// Positive answer cache
     positive_cache: Option<RwLock<Cache>>,
     /// Negative answer cache
     negative_cache: Option<RwLock<Cache>>,
 }
 
-impl fmt::Debug for RecursiveResolver {
+impl fmt::Debug for RecursiveResolver<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("RecursiveResolver")
             .field("results", &self.results)
@@ -77,9 +73,9 @@ impl fmt::Debug for RecursiveResolver {
     }
 }
 
-impl RecursiveResolver {
+impl<'a> RecursiveResolver<'a> {
     /// Create a new recursive resolver
-    pub fn new(args: Args) -> Self {
+    pub fn new(args: &'a Args) -> Self {
         let mut resolver_opts = ResolverOpts::default();
         resolver_opts.ip_strategy = LookupIpStrategy::Ipv4AndIpv6;
         resolver_opts.attempts = args.retries;
@@ -94,7 +90,9 @@ impl RecursiveResolver {
             arguments: args,
         }
     }
+}
 
+impl RecursiveResolver<'_> {
     /// Figure out the server we got as an argument
     pub async fn init(&self) -> Result<Vec<OptName>, ResolveError> {
         let mut results: Vec<OptName> = vec![];
@@ -138,7 +136,7 @@ impl RecursiveResolver {
             results.append(
                 &mut self
                     .resolver
-                    .lookup_ip(self.arguments.server.clone())
+                    .lookup_ip(&self.arguments.server)
                     .await?
                     .iter()
                     .filter(|ip| is_ip_allowed!(self, ip))
@@ -165,19 +163,19 @@ impl RecursiveResolver {
     pub fn do_recurse<'a>(
         &'a self,
         name: &'a Name,
-        server: OptName,
+        server: &'a OptName,
         depth: usize,
         last: Vec<bool>,
     ) -> Pin<Box<dyn Future<Output = ()> + 'a>> {
         Box::pin(async move {
-            if self.cache_get(&server, name) {
-                Self::print(depth, &server, "(cached)", &last);
+            if self.cache_get(server, name) {
+                Self::print(depth, server, "(cached)", &last);
                 return;
             }
 
             let response_res = if self.arguments.tcp {
                 self.tcp_query(
-                    &server,
+                    server,
                     name,
                     match depth {
                         // First request is always a NS request, in case the given server is a recursive server.
@@ -188,7 +186,7 @@ impl RecursiveResolver {
                 .await
             } else {
                 self.udp_query(
-                    &server,
+                    server,
                     name,
                     match depth {
                         // First request is always a NS request, in case the given server is a recursive server.
@@ -206,8 +204,8 @@ impl RecursiveResolver {
                     if response.authoritative() {
                         // If the response is authoritative, we are probaby at the end of the journey.
                         let result = response.answers();
-                        Self::print(depth, &server, "found authoritative answer", &last);
-                        self.cache_set(true, &server, name);
+                        Self::print(depth, server, "found authoritative answer", &last);
+                        self.cache_set(true, server, name);
                         self.add_result(server.clone(), response.response_code(), result);
 
                         // But if we get only CNAMEs and we asked for something
@@ -226,7 +224,7 @@ impl RecursiveResolver {
                                     self.get_next_servers(
                                         response.name_servers(),
                                         &response,
-                                        &server,
+                                        server,
                                         cname,
                                         depth,
                                         &last,
@@ -236,7 +234,7 @@ impl RecursiveResolver {
                             }
                         }
                     } else {
-                        Self::print(depth, &server, "", &last);
+                        Self::print(depth, server, "", &last);
 
                         let records = if depth == 0 && response.answer_count() > 0 {
                             // If we're at the start and we get answers, it means it was a recursive name server, so use those answers.
@@ -247,7 +245,7 @@ impl RecursiveResolver {
                         };
 
                         next_servers = Some(
-                            self.get_next_servers(records, &response, &server, name, depth, &last)
+                            self.get_next_servers(records, &response, server, name, depth, &last)
                                 .await,
                         );
                     }
@@ -255,7 +253,7 @@ impl RecursiveResolver {
                     if let Some(next) = next_servers {
                         let len = next.len();
                         for (index, ns) in next.iter().sorted().enumerate() {
-                            self.do_recurse(name, ns.clone(), depth + 1, {
+                            self.do_recurse(name, ns, depth + 1, {
                                 let mut new_last = last.clone();
                                 new_last.push(index == (len - 1));
                                 new_last
@@ -265,8 +263,8 @@ impl RecursiveResolver {
                     }
                 }
                 Err(e) => {
-                    self.cache_set(false, &server, name);
-                    Self::print(depth, &server, format!("resolution error: {e}"), &last);
+                    self.cache_set(false, server, name);
+                    Self::print(depth, server, format!("resolution error: {e}"), &last);
                 }
             }
         })
@@ -280,7 +278,7 @@ impl RecursiveResolver {
         query_type: RecordType,
     ) -> Result<DnsResponse, hickory_client::error::ClientError> {
         let stream = UdpClientStream::<UdpSocket>::with_bind_addr_and_timeout(
-            server.clone().into(),
+            server.into(),
             self.arguments
                 .source_address
                 .map(|ip| SocketAddr::new(ip, 0)),
@@ -309,7 +307,7 @@ impl RecursiveResolver {
     ) -> Result<DnsResponse, hickory_client::error::ClientError> {
         let (stream, sender) =
             TcpClientStream::<AsyncIoTokioAsStd<TcpStream>>::with_bind_addr_and_timeout(
-                server.clone().into(),
+                server.into(),
                 self.arguments
                     .source_address
                     .map(|ip| SocketAddr::new(ip, 0)),
@@ -545,9 +543,9 @@ mod tests {
     #[test]
     fn test_recursive_resolver_new() {
         let args = default_args();
-        let resolver = RecursiveResolver::new(args.clone());
+        let resolver = RecursiveResolver::new(&args);
 
-        assert_eq!(resolver.arguments, args);
+        assert_eq!(*resolver.arguments, args);
         assert!(resolver.positive_cache.is_some());
         assert!(resolver.negative_cache.is_none());
     }
@@ -559,9 +557,9 @@ mod tests {
             negative_cache: true,
             ..default_args()
         };
-        let resolver = RecursiveResolver::new(args.clone());
+        let resolver = RecursiveResolver::new(&args);
 
-        assert_eq!(resolver.arguments, args);
+        assert_eq!(*resolver.arguments, args);
         assert!(resolver.positive_cache.is_none());
         assert!(resolver.negative_cache.is_some());
     }
@@ -572,7 +570,7 @@ mod tests {
             server: "8.8.8.8".to_string(),
             ..default_args()
         };
-        let resolver = RecursiveResolver::new(args);
+        let resolver = RecursiveResolver::new(&args);
 
         let result = resolver.init().await;
         assert!(result.is_ok());

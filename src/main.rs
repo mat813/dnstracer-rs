@@ -40,7 +40,7 @@ async fn main() {
         process::exit(1);
     }
 
-    let recursor = RecursiveResolver::new(arguments.clone());
+    let recursor = RecursiveResolver::new(&arguments);
 
     let first_servers = match recursor.init().await {
         Ok(s) => s,
@@ -67,7 +67,7 @@ async fn main() {
         }
 
         recursor
-            .do_recurse(&name, first_server.clone(), 0, Vec::new())
+            .do_recurse(&name, first_server, 0, Vec::new())
             .await;
     }
 
