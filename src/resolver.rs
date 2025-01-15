@@ -447,11 +447,13 @@ impl RecursiveResolver {
 
     /// Did we already ask for this, wether it turned out ok or not ?
     fn cache_get(&self, server: &OptName, name: &Name) -> bool {
-        self.positive_cache.as_ref().map_or(false, |o| {
-            o.read().unwrap().get(&(server.ip, name.clone())).is_some()
-        }) || self.negative_cache.as_ref().map_or(false, |o| {
-            o.read().unwrap().get(&(server.ip, name.clone())).is_some()
-        })
+        self.positive_cache
+            .as_ref()
+            .is_some_and(|o| o.read().unwrap().get(&(server.ip, name.clone())).is_some())
+            || self
+                .negative_cache
+                .as_ref()
+                .is_some_and(|o| o.read().unwrap().get(&(server.ip, name.clone())).is_some())
     }
 
     /// Set one of the caches
