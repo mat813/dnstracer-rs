@@ -11,8 +11,8 @@ repository = "https://gitlab.com/mat813/dnstracer-rs"
 
 [dependencies]
 clap = { version = "4.5.26", features = ["derive"] }
-hickory-client = "0.24.1"
-hickory-proto = "0.24.1"
-hickory-resolver = "0.24.1"
+hickory-client = "0.24.2"
+hickory-proto = "0.24.2"
+hickory-resolver = "0.24.2"
 itertools = "0.13.0"
 tokio = { version = "1.42.0", features = ["full"] }
