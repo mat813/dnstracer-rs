@@ -36,18 +36,18 @@ impl From<&OptName> for SocketAddr {
 
 impl fmt::Display for OptName {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let ip = self.ip;
-        match (&self.name, &self.zone) {
-            (None, _) => write!(f, "{ip} ({ip})"),
-            (Some(name), None) => write!(f, "{name} ({ip})"),
-            (Some(name), Some(zone)) => write!(
-                f,
-                "{name} [{z}] ({ip})",
-                z = match zone.len() {
-                    0 | 1 => zone,
-                    _ => zone.trim_end_matches('.'),
-                },
-            ),
+        match self {
+            Self { ip, name: None, .. } => write!(f, "{ip} ({ip})"),
+            Self {
+                ip,
+                name: Some(name),
+                zone: None,
+            } => write!(f, "{name} ({ip})"),
+            Self {
+                ip,
+                name: Some(name),
+                zone: Some(zone),
+            } => write!(f, "{name} [{zone}] ({ip})",),
         }
     }
 }
