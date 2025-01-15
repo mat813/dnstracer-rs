@@ -5,7 +5,51 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v1.1.3 (2025-01-15)
+
+### Chore
+
+ - <csr-id-000004383b5d7dc2afbb9387ec2e0b32a88145ce/> update lock file
+
+### Bug Fixes
+
+ - <csr-id-0000042136ac438af0dc58a13fe247869bb5cd3a/> update tokio to 1.43.0
+ - <csr-id-0000041e456da39e6df21d3a1acc2c4bfa7e5b74/> update itertools to 0.14.0
+ - <csr-id-0000040aab4cf270066eb190933f94f877e1ce69/> update hickory-* to 0.24.2
+ - <csr-id-0000039d2d445743e950fed09433faa85f537423/> update clap to 4.5.26
+
+### Other
+
+ - <csr-id-0000038bad2d66cd2d526abac3b19289c2f6dfdc/> build with latest
+
+### Commit Statistics
+
+<csr-read-only-do-not-edit/>
+
+ - 6 commits contributed to the release.
+ - 41 days passed between releases.
+ - 6 commits were understood as [conventional](https://www.conventionalcommits.org).
+ - 0 issues like '(#ID)' were seen in commit messages
+
+### Commit Details
+
+<csr-read-only-do-not-edit/>
+
+<details><summary>view details</summary>
+
+ * **Uncategorized**
+    - Update lock file (0000043)
+    - Update tokio to 1.43.0 (0000042)
+    - Update itertools to 0.14.0 (0000041)
+    - Update hickory-* to 0.24.2 (0000040)
+    - Update clap to 4.5.26 (0000039)
+    - Build with latest (0000038)
+</details>
+
 ## v1.1.2 (2024-12-04)
+
+<csr-id-00000354eea0e832fae6285c44605e7222f50652/>
+<csr-id-00000369560f5a95262d5e2cacc2e38339a7b308/>
 
 ### Bug Fixes
 
@@ -25,7 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <csr-read-only-do-not-edit/>
 
- - 5 commits contributed to the release.
+ - 6 commits contributed to the release.
  - 13 days passed between releases.
  - 5 commits were understood as [conventional](https://www.conventionalcommits.org).
  - 0 issues like '(#ID)' were seen in commit messages
@@ -37,6 +81,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <details><summary>view details</summary>
 
  * **Uncategorized**
+    - Release dnstracer v1.1.2 (39b945c)
     - Clippy (0000036)
     - Include the README.md instead of copying it (0000035)
     - Update clap to 4.5.22 (0000034)
