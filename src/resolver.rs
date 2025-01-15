@@ -36,8 +36,11 @@ macro_rules! is_ip_allowed {
         }
     }
 
+/// Cache key
+type CacheKey = (IpAddr, Name);
+
 /// Lookup cache
-type Cache = HashSet<(IpAddr, Name)>;
+type Cache = HashSet<CacheKey>;
 
 /// Results from one nameserver
 #[derive(Clone, Debug, Default)]
@@ -168,7 +171,7 @@ impl RecursiveResolver<'_> {
         last: Vec<bool>,
     ) -> Pin<Box<dyn Future<Output = ()> + 'a>> {
         Box::pin(async move {
-            if self.cache_get(server, name) {
+            if self.cache_get(&(server.ip, name.clone())) {
                 Self::print(depth, server, "(cached)", &last);
                 return;
             }
@@ -205,7 +208,7 @@ impl RecursiveResolver<'_> {
                         // If the response is authoritative, we are probaby at the end of the journey.
                         let result = response.answers();
                         Self::print(depth, server, "found authoritative answer", &last);
-                        self.cache_set(true, server, name);
+                        self.cache_set(true, (server.ip, name.clone()));
                         self.add_result(server.clone(), response.response_code(), result);
 
                         // But if we get only CNAMEs and we asked for something
@@ -263,7 +266,7 @@ impl RecursiveResolver<'_> {
                     }
                 }
                 Err(e) => {
-                    self.cache_set(false, server, name);
+                    self.cache_set(false, (server.ip, name.clone()));
                     Self::print(depth, server, format!("resolution error: {e}"), &last);
                 }
             }
@@ -395,7 +398,7 @@ impl RecursiveResolver<'_> {
             }
 
             if found {
-                self.cache_set(true, server, name);
+                self.cache_set(true, (server.ip, name.clone()));
             } else {
                 // If we cannot find an IP address, we create a fake server to give an error
                 Self::print(
@@ -444,25 +447,24 @@ impl RecursiveResolver<'_> {
     }
 
     /// Did we already ask for this, wether it turned out ok or not ?
-    fn cache_get(&self, server: &OptName, name: &Name) -> bool {
+    fn cache_get(&self, key: &CacheKey) -> bool {
         self.positive_cache
             .as_ref()
-            .is_some_and(|o| o.read().unwrap().get(&(server.ip, name.clone())).is_some())
+            .is_some_and(|o| o.read().unwrap().get(key).is_some())
             || self
                 .negative_cache
                 .as_ref()
-                .is_some_and(|o| o.read().unwrap().get(&(server.ip, name.clone())).is_some())
+                .is_some_and(|o| o.read().unwrap().get(key).is_some())
     }
 
     /// Set one of the caches
-    fn cache_set(&self, positive: bool, server: &OptName, name: &Name) {
+    fn cache_set(&self, positive: bool, key: CacheKey) {
         if let Some(ref o) = if positive {
             &self.positive_cache
         } else {
             &self.negative_cache
         } {
-            let mut a = o.write().unwrap();
-            a.insert((server.ip, name.clone()));
+            o.write().unwrap().insert(key);
         }
     }
 
