@@ -176,28 +176,19 @@ impl RecursiveResolver<'_> {
                 return;
             }
 
-            let response_res = if self.arguments.tcp {
-                self.tcp_query(
-                    server,
-                    name,
-                    match depth {
-                        // First request is always a NS request, in case the given server is a recursive server.
-                        0 => RecordType::NS,
-                        _ => self.arguments.query_type,
-                    },
-                )
-                .await
-            } else {
-                self.udp_query(
-                    server,
-                    name,
-                    match depth {
-                        // First request is always a NS request, in case the given server is a recursive server.
-                        0 => RecordType::NS,
-                        _ => self.arguments.query_type,
-                    },
-                )
-                .await
+            let response_res = {
+                let query_type = if depth == 0 {
+                    // First request is always a NS request, in case the given server is a recursive server.
+                    RecordType::NS
+                } else {
+                    self.arguments.query_type
+                };
+
+                if self.arguments.tcp {
+                    self.tcp_query(server, name, query_type).await
+                } else {
+                    self.udp_query(server, name, query_type).await
+                }
             };
 
             match response_res {
