@@ -5,7 +5,56 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v1.1.4 (2025-03-05)
+
+### Chore
+
+ - <csr-id-000005488c8144805e6637de13f294030ae8ff63/> update lock file
+ - <csr-id-0000051722ea125a8fb5aaba29ac623a386a5375/> slim release builds a bit
+
+### Bug Fixes
+
+ - <csr-id-0000053efd45344f286374a3e3cd6a7bb698c657/> update hickory-* to 0.24.4
+ - <csr-id-0000052380b4c5c5e3cb56cf55f70b1aa6758c15/> update clap to 4.5.31
+ - <csr-id-00000504c6211372a784a144d0cff13a0a69d56b/> refactor the query selection a bit
+ - <csr-id-0000049ab80ab44e79da425db9e9328b5539d076/> refactor Display for OptName
+ - <csr-id-000004865e295887fcdfae68d26074f59dda7dfe/> use a BTreeSet for results
+ - <csr-id-00000471ea9663841e24816a956635d1e38ba17c/> refactor cache with a unified CacheKey
+ - <csr-id-0000046592a08e8eb22eff18249901bfccbfc927/> remove some cloning
+ - <csr-id-0000045881ef8a7342e01b7acf935c57d0fa58e7/> use is_some_and instead of map_or
+
+### Commit Statistics
+
+<csr-read-only-do-not-edit/>
+
+ - 10 commits contributed to the release.
+ - 48 days passed between releases.
+ - 10 commits were understood as [conventional](https://www.conventionalcommits.org).
+ - 0 issues like '(#ID)' were seen in commit messages
+
+### Commit Details
+
+<csr-read-only-do-not-edit/>
+
+<details><summary>view details</summary>
+
+ * **Uncategorized**
+    - Update lock file (0000054)
+    - Update hickory-* to 0.24.4 (0000053)
+    - Update clap to 4.5.31 (0000052)
+    - Slim release builds a bit (0000051)
+    - Refactor the query selection a bit (0000050)
+    - Refactor Display for OptName (0000049)
+    - Use a BTreeSet for results (0000048)
+    - Refactor cache with a unified CacheKey (0000047)
+    - Remove some cloning (0000046)
+    - Use is_some_and instead of map_or (0000045)
+</details>
+
 ## v1.1.3 (2025-01-15)
+
+<csr-id-000004383b5d7dc2afbb9387ec2e0b32a88145ce/>
+<csr-id-0000038bad2d66cd2d526abac3b19289c2f6dfdc/>
 
 ### Chore
 
@@ -26,7 +75,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <csr-read-only-do-not-edit/>
 
- - 6 commits contributed to the release.
+ - 7 commits contributed to the release.
  - 41 days passed between releases.
  - 6 commits were understood as [conventional](https://www.conventionalcommits.org).
  - 0 issues like '(#ID)' were seen in commit messages
@@ -38,6 +87,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <details><summary>view details</summary>
 
  * **Uncategorized**
+    - Release dnstracer v1.1.3 (8f57f83)
     - Update lock file (0000043)
     - Update tokio to 1.43.0 (0000042)
     - Update itertools to 0.14.0 (0000041)
