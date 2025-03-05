@@ -172,7 +172,7 @@ mod tests {
             zone: Some("example.com.".to_string()),
         };
 
-        let expected = "ns1.example.com [example.com] (192.168.1.1)";
+        let expected = "ns1.example.com [example.com.] (192.168.1.1)";
         assert_eq!(
             format!("{opt}"),
             expected,
