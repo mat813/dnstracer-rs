@@ -72,6 +72,8 @@ impl Ord for OptName {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::expect_used, clippy::unwrap_used)]
+
     use super::*;
     use std::net::{Ipv4Addr, Ipv6Addr};
 

@@ -115,6 +115,8 @@ fn parse_duration(src: &str) -> Result<Duration, String> {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::expect_used, clippy::unwrap_used)]
+
     use super::*;
     use clap::Parser;
     use std::net::IpAddr;

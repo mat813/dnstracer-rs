@@ -36,6 +36,9 @@ macro_rules! is_ip_allowed {
         }
     }
 
+/// Standard result type
+pub type MyResult = Result<(), Box<dyn std::error::Error>>;
+
 /// Cache key
 type CacheKey = (IpAddr, Name);
 
@@ -169,11 +172,11 @@ impl RecursiveResolver<'_> {
         server: &'a OptName,
         depth: usize,
         last: Vec<bool>,
-    ) -> Pin<Box<dyn Future<Output = ()> + 'a>> {
+    ) -> Pin<Box<dyn Future<Output = MyResult> + 'a>> {
         Box::pin(async move {
             if self.cache_get(&(server.ip, name.clone())) {
                 Self::print(depth, server, "(cached)", &last);
-                return;
+                return Ok(());
             }
 
             let response_res = {
@@ -200,7 +203,7 @@ impl RecursiveResolver<'_> {
                         let result = response.answers();
                         Self::print(depth, server, "found authoritative answer", &last);
                         self.cache_set(true, (server.ip, name.clone()));
-                        self.add_result(server.clone(), response.response_code(), result);
+                        self.add_result(server.clone(), response.response_code(), result)?;
 
                         // But if we get only CNAMEs and we asked for something
                         // else, we need to try and continue the recursion.
@@ -212,7 +215,7 @@ impl RecursiveResolver<'_> {
                                 .answers()
                                 .iter()
                                 // We already checked every entry was a CNAME
-                                .map(|r| r.data().unwrap().as_cname().unwrap())
+                                .filter_map(|r| r.data().and_then(|v| v.as_cname()))
                             {
                                 next_servers = Some(
                                     self.get_next_servers(
@@ -252,7 +255,7 @@ impl RecursiveResolver<'_> {
                                 new_last.push(index == (len - 1));
                                 new_last
                             })
-                            .await;
+                            .await?;
                         }
                     }
                 }
@@ -261,6 +264,7 @@ impl RecursiveResolver<'_> {
                     Self::print(depth, server, format!("resolution error: {e}"), &last);
                 }
             }
+            Ok(())
         })
     }
 
@@ -337,7 +341,9 @@ impl RecursiveResolver<'_> {
         for record in records {
             let mut found = false;
             // Here, we know it's a NS, so unwrap all that.
-            let ns = record.data().unwrap().as_ns().unwrap();
+            let Some(ns) = record.data().and_then(|d| d.as_ns()) else {
+                continue;
+            };
             // Some name servers will respond with an additional section, use it
             next_servers.append(
                 &mut response
@@ -409,12 +415,12 @@ impl RecursiveResolver<'_> {
     }
 
     /// Print the overview
-    pub fn show_overview(&self) {
-        for (key, values) in self.results.read().unwrap().iter() {
+    pub fn show_overview(&self) -> MyResult {
+        for (key, values) in self.results.read().map_err(|e| format!("{e}"))?.iter() {
             if values.response_code != ResponseCode::NoError {
                 println!(
                     "{} ({})\t{}",
-                    key.name.as_deref().unwrap(),
+                    key.name.as_deref().unwrap_or_default(),
                     key.ip,
                     values.response_code
                 );
@@ -426,30 +432,42 @@ impl RecursiveResolver<'_> {
                 // Don't use Record's Ord impl, it sorts things in a strange way
                 .sorted_by_cached_key(|r| format!("{r}"))
             {
-                println!("{} ({}) \t{record}", key.name.as_deref().unwrap(), key.ip);
+                println!(
+                    "{} ({}) \t{record}",
+                    key.name.as_deref().unwrap_or_default(),
+                    key.ip
+                );
             }
         }
+        Ok(())
     }
 
     /// Did we already ask for this, wether it turned out ok or not ?
     fn cache_get(&self, key: &CacheKey) -> bool {
         self.positive_cache
             .as_ref()
-            .is_some_and(|o| o.read().unwrap().get(key).is_some())
+            .is_some_and(|o| o.read().ok().as_ref().and_then(|r| r.get(key)).is_some())
             || self
                 .negative_cache
                 .as_ref()
-                .is_some_and(|o| o.read().unwrap().get(key).is_some())
+                .is_some_and(|o| o.read().ok().as_ref().and_then(|r| r.get(key)).is_some())
     }
 
     /// Set one of the caches
     fn cache_set(&self, positive: bool, key: CacheKey) {
-        if let Some(ref o) = if positive {
+        if let Some(ref locked_cache) = if positive {
             &self.positive_cache
         } else {
             &self.negative_cache
         } {
-            o.write().unwrap().insert(key);
+            match locked_cache.write() {
+                Ok(mut cache) => {
+                    cache.insert(key);
+                }
+                Err(error) => {
+                    eprintln!("cache set error {error}");
+                }
+            }
         }
     }
 
@@ -458,9 +476,13 @@ impl RecursiveResolver<'_> {
         clippy::significant_drop_tightening,
         reason = "Scope is short enough and there should not be contentions"
     )]
-    fn add_result(&self, server: OptName, response_code: ResponseCode, results: &[Record]) {
-        let mut res = self.results.write().unwrap();
-
+    fn add_result(
+        &self,
+        server: OptName,
+        response_code: ResponseCode,
+        results: &[Record],
+    ) -> MyResult {
+        let mut res = self.results.write().map_err(|e| format!("{e}"))?;
         let full = res.entry(server).or_default();
 
         full.response_code = response_code;
@@ -468,6 +490,8 @@ impl RecursiveResolver<'_> {
         for result in results {
             full.records.insert(result.clone());
         }
+
+        Ok(())
     }
 
     /// Try to give a nice out, as the original did
@@ -500,6 +524,8 @@ impl RecursiveResolver<'_> {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::expect_used, clippy::unwrap_used)]
+
     use super::*;
     use crate::args::Args;
     use std::{

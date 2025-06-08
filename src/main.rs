@@ -15,10 +15,14 @@
     clippy::missing_docs_in_private_items,
     clippy::nursery,
     clippy::option_as_ref_deref,
+    clippy::needless_raw_strings,
+    clippy::unneeded_field_pattern,
+    clippy::expect_used,
+    clippy::unwrap_used,
     clippy::pedantic
 )]
 
-use crate::{args::Args, opt_name::OptName, resolver::RecursiveResolver};
+use crate::{args::Args, opt_name::OptName, resolver::{MyResult, RecursiveResolver}};
 use clap::Parser;
 use hickory_client::rr::Name;
 use std::{process, str::FromStr};
@@ -31,7 +35,7 @@ mod opt_name;
 mod resolver;
 
 #[tokio::main]
-async fn main() {
+async fn main() -> MyResult {
     // Parse command-line arguments into the Args struct
     let mut arguments = Args::parse();
 
@@ -50,7 +54,7 @@ async fn main() {
         }
     };
 
-    let name = Name::from_str(&arguments.domain).expect("Unable to parse domain name");
+    let name = Name::from_str(&arguments.domain)?;
 
     for (index, first_server) in first_servers.iter().enumerate() {
         if index == 0 {
@@ -66,12 +70,19 @@ async fn main() {
             );
         }
 
-        recursor
+        if let Err(error) = recursor
             .do_recurse(&name, first_server, 0, Vec::new())
-            .await;
+            .await
+        {
+            eprintln!("{error}");
+        }
     }
 
     if arguments.overview {
-        recursor.show_overview();
+        if let Err(e) = recursor.show_overview() {
+            eprintln!("error getting overview: {e}");
+        }
     }
+
+    Ok(())
 }
