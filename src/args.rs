@@ -1,6 +1,6 @@
 use clap::Parser;
 use hickory_client::rr::RecordType;
-use std::{net::IpAddr, str::FromStr, time::Duration};
+use std::{net::IpAddr, str::FromStr as _, time::Duration};
 
 // Original arguments
 // -c: disable local caching, default enabled
@@ -115,14 +115,13 @@ fn parse_duration(src: &str) -> Result<Duration, String> {
 
 #[cfg(test)]
 mod tests {
-    #![allow(clippy::expect_used, clippy::unwrap_used)]
+    #![allow(clippy::expect_used, clippy::unwrap_used, reason = "test")]
 
     use super::*;
-    use clap::Parser;
     use std::net::IpAddr;
 
     #[test]
-    fn test_default_values() {
+    fn default_values() {
         let args = Args::try_parse_from(["test", "example.com"]).unwrap();
 
         assert_eq!(args.domain, "example.com");
@@ -141,7 +140,7 @@ mod tests {
     }
 
     #[test]
-    fn test_all_flags() {
+    fn all_flags() {
         let args = Args::try_parse_from([
             "test",
             "-c", // no_positive_cache
@@ -182,7 +181,7 @@ mod tests {
     }
 
     #[test]
-    fn test_ipv4_flag() {
+    fn ipv4_flag() {
         let args = Args::try_parse_from(["test", "example.com", "-4"]).unwrap();
 
         assert!(args.ipv4);
@@ -190,27 +189,27 @@ mod tests {
     }
 
     #[test]
-    fn test_with_server_override() {
+    fn with_server_override() {
         let args = Args::try_parse_from(["test", "-s", "1.1.1.1", "example.com"]).unwrap();
 
         assert_eq!(args.server, "1.1.1.1");
     }
 
     #[test]
-    fn test_with_query_type() {
+    fn with_query_type() {
         let args = Args::try_parse_from(["test", "example.com", "-q", "AAAA"]).unwrap();
 
         assert_eq!(args.query_type, RecordType::AAAA);
     }
 
     #[test]
-    fn test_invalid_query_type() {
+    fn invalid_query_type() {
         let result = Args::try_parse_from(["test", "example.com", "-q", "INVALID"]);
         assert!(result.is_err()); // Should fail since "INVALID" is not a valid RecordType
     }
 
     #[test]
-    fn test_with_source_address_v4() {
+    fn with_source_address_v4() {
         let mut args = Args::try_parse_from(["test", "example.com", "-S", "1.1.1.1"]).unwrap();
         let validated = args.validate();
 
@@ -221,7 +220,7 @@ mod tests {
     }
 
     #[test]
-    fn test_with_source_address_v6() {
+    fn with_source_address_v6() {
         let mut args = Args::try_parse_from(["test", "example.com", "-S", "2001:db8::1"]).unwrap();
         let validated = args.validate();
 
@@ -232,7 +231,7 @@ mod tests {
     }
 
     #[test]
-    fn test_with_source_address_v4_and_ipv6() {
+    fn with_source_address_v4_and_ipv6() {
         let mut args =
             Args::try_parse_from(["test", "example.com", "-6", "-S", "1.1.1.1"]).unwrap();
         let validated = args.validate();
@@ -245,7 +244,7 @@ mod tests {
     }
 
     #[test]
-    fn test_with_source_address_v6_and_ipv4() {
+    fn with_source_address_v6_and_ipv4() {
         let mut args =
             Args::try_parse_from(["test", "example.com", "-4", "-S", "2001:db8::1"]).unwrap();
         let validated = args.validate();

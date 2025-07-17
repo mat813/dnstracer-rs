@@ -36,17 +36,19 @@ impl From<&OptName> for SocketAddr {
 
 impl fmt::Display for OptName {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self { ip, name: None, .. } => write!(f, "{ip} ({ip})"),
+        match *self {
             Self {
-                ip,
-                name: Some(name),
+                ref ip, name: None, ..
+            } => write!(f, "{ip} ({ip})"),
+            Self {
+                ref ip,
+                name: Some(ref name),
                 zone: None,
             } => write!(f, "{name} ({ip})"),
             Self {
-                ip,
-                name: Some(name),
-                zone: Some(zone),
+                ref ip,
+                name: Some(ref name),
+                zone: Some(ref zone),
             } => write!(f, "{name} [{zone}] ({ip})",),
         }
     }
@@ -72,23 +74,23 @@ impl Ord for OptName {
 
 #[cfg(test)]
 mod tests {
-    #![allow(clippy::expect_used, clippy::unwrap_used)]
+    #![allow(clippy::expect_used, clippy::unwrap_used, reason = "test")]
 
     use super::*;
     use std::net::{Ipv4Addr, Ipv6Addr};
 
     #[test]
-    fn test_optname_eq() {
+    fn optname_eq() {
         let opt1 = OptName {
             ip: IpAddr::V4(Ipv4Addr::new(192, 168, 1, 1)),
-            name: Some("ns1.example.com".to_string()),
-            zone: Some("example.com.".to_string()),
+            name: Some("ns1.example.com".to_owned()),
+            zone: Some("example.com.".to_owned()),
         };
 
         let opt2 = OptName {
             ip: IpAddr::V4(Ipv4Addr::new(192, 168, 1, 1)),
-            name: Some("ns1.example.com".to_string()),
-            zone: Some("example.com.".to_string()),
+            name: Some("ns1.example.com".to_owned()),
+            zone: Some("example.com.".to_owned()),
         };
 
         assert_eq!(
@@ -98,17 +100,17 @@ mod tests {
     }
 
     #[test]
-    fn test_optname_neq() {
+    fn optname_neq() {
         let opt1 = OptName {
             ip: IpAddr::V4(Ipv4Addr::new(192, 168, 1, 1)),
-            name: Some("ns1.example.com".to_string()),
-            zone: Some("example.com.".to_string()),
+            name: Some("ns1.example.com".to_owned()),
+            zone: Some("example.com.".to_owned()),
         };
 
         let opt2 = OptName {
             ip: IpAddr::V4(Ipv4Addr::new(192, 168, 1, 2)),
-            name: Some("ns2.example.com".to_string()),
-            zone: Some("example.com.".to_string()),
+            name: Some("ns2.example.com".to_owned()),
+            zone: Some("example.com.".to_owned()),
         };
 
         assert_ne!(
@@ -118,24 +120,24 @@ mod tests {
     }
 
     #[test]
-    fn test_optname_ordering() {
+    fn optname_ordering() {
         let opt1 = OptName {
             ip: IpAddr::V4(Ipv4Addr::new(192, 168, 1, 1)),
-            name: Some("ns1.example.com".to_string()),
-            zone: Some("example.com.".to_string()),
+            name: Some("ns1.example.com".to_owned()),
+            zone: Some("example.com.".to_owned()),
         };
 
         let opt2 = OptName {
             ip: IpAddr::V4(Ipv4Addr::new(192, 168, 1, 2)),
-            name: Some("ns2.example.com".to_string()),
-            zone: Some("example.com.".to_string()),
+            name: Some("ns2.example.com".to_owned()),
+            zone: Some("example.com.".to_owned()),
         };
 
         assert!(opt1 < opt2, "OptName should be ordered by name and then IP");
     }
 
     #[test]
-    fn test_optname_display() {
+    fn optname_display() {
         let opt = OptName {
             ip: IpAddr::V4(Ipv4Addr::new(192, 168, 1, 1)),
             name: None,
@@ -151,10 +153,10 @@ mod tests {
     }
 
     #[test]
-    fn test_optname_display_with_name() {
+    fn optname_display_with_name() {
         let opt = OptName {
             ip: IpAddr::V4(Ipv4Addr::new(192, 168, 1, 1)),
-            name: Some("ns1.example.com".to_string()),
+            name: Some("ns1.example.com".to_owned()),
             zone: None,
         };
 
@@ -167,11 +169,11 @@ mod tests {
     }
 
     #[test]
-    fn test_optname_full_display() {
+    fn optname_full_display() {
         let opt = OptName {
             ip: IpAddr::V4(Ipv4Addr::new(192, 168, 1, 1)),
-            name: Some("ns1.example.com".to_string()),
-            zone: Some("example.com.".to_string()),
+            name: Some("ns1.example.com".to_owned()),
+            zone: Some("example.com.".to_owned()),
         };
 
         let expected = "ns1.example.com [example.com.] (192.168.1.1)";
@@ -183,11 +185,11 @@ mod tests {
     }
 
     #[test]
-    fn test_optname_full_display_root_zone() {
+    fn optname_full_display_root_zone() {
         let opt = OptName {
             ip: IpAddr::V4(Ipv4Addr::new(192, 168, 1, 1)),
-            name: Some("ns1.example.com".to_string()),
-            zone: Some(".".to_string()),
+            name: Some("ns1.example.com".to_owned()),
+            zone: Some(".".to_owned()),
         };
 
         let expected = "ns1.example.com [.] (192.168.1.1)";
@@ -199,7 +201,7 @@ mod tests {
     }
 
     #[test]
-    fn test_optname_into_socketaddr_v4() {
+    fn optname_into_socketaddr_v4() {
         let opt = OptName {
             ip: IpAddr::V4(Ipv4Addr::new(192, 168, 1, 1)),
             name: None,
@@ -211,7 +213,7 @@ mod tests {
     }
 
     #[test]
-    fn test_optname_into_socketaddr_v6() {
+    fn optname_into_socketaddr_v6() {
         let opt = OptName {
             ip: IpAddr::V6(Ipv6Addr::new(
                 0xfe80, 0, 0, 0, 0x0202, 0xb3ff, 0xfe1e, 0x8329,
@@ -228,20 +230,20 @@ mod tests {
     }
 
     #[test]
-    fn test_optname_hash() {
+    fn optname_hash() {
         use std::collections::hash_map::DefaultHasher;
-        use std::hash::{Hash, Hasher};
+        use std::hash::{Hash as _, Hasher as _};
 
         let opt1 = OptName {
             ip: IpAddr::V4(Ipv4Addr::new(192, 168, 1, 1)),
-            name: Some("ns1.example.com".to_string()),
-            zone: Some("example.com.".to_string()),
+            name: Some("ns1.example.com".to_owned()),
+            zone: Some("example.com.".to_owned()),
         };
 
         let opt2 = OptName {
             ip: IpAddr::V4(Ipv4Addr::new(192, 168, 1, 1)),
-            name: Some("ns1.example.com".to_string()),
-            zone: Some("example.com.".to_string()),
+            name: Some("ns1.example.com".to_owned()),
+            zone: Some("example.com.".to_owned()),
         };
 
         let mut hasher1 = DefaultHasher::new();

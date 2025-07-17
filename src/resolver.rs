@@ -1,6 +1,6 @@
 use crate::{args::Args, opt_name::OptName};
 use hickory_client::{
-    client::{AsyncClient, ClientHandle},
+    client::{AsyncClient, ClientHandle as _},
     op::DnsResponse,
     proto::iocompat::AsyncIoTokioAsStd,
     rr::{Name, RecordType},
@@ -16,12 +16,12 @@ use hickory_resolver::{
     error::ResolveError,
     TokioAsyncResolver,
 };
-use itertools::Itertools;
+use itertools::Itertools as _;
 use std::{
     collections::{BTreeSet, HashMap, HashSet},
     fmt,
     future::Future,
-    net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr},
+    net::{IpAddr, SocketAddr},
     pin::Pin,
     sync::RwLock,
 };
@@ -132,7 +132,7 @@ impl RecursiveResolver<'_> {
                         .map(|ip| OptName {
                             ip,
                             name: Some(ns.to_string()),
-                            zone: Some(".".to_string()),
+                            zone: Some(".".to_owned()),
                         })
                         .collect(),
                 );
@@ -351,13 +351,11 @@ impl RecursiveResolver<'_> {
                     .iter()
                     .filter(|r| *r.name() == ns.0)
                     .filter_map(|additional| match additional.data() {
-                        Some(RData::A(a)) => Some((additional, IpAddr::from(Ipv4Addr::from(*a)))),
-                        Some(RData::AAAA(a)) => {
-                            Some((additional, IpAddr::from(Ipv6Addr::from(*a))))
-                        }
+                        Some(&RData::A(a)) => Some((additional, IpAddr::from(*a))),
+                        Some(&RData::AAAA(a)) => Some((additional, IpAddr::from(*a))),
                         _ => None,
                     })
-                    .filter(|(_, ip)| is_ip_allowed!(self, ip))
+                    .filter(|&(_, ip)| is_ip_allowed!(self, ip))
                     .map(|(additional, ip)| {
                         found = true;
 
@@ -415,6 +413,7 @@ impl RecursiveResolver<'_> {
     }
 
     /// Print the overview
+    #[expect(clippy::print_stdout, reason = "print")]
     pub fn show_overview(&self) -> MyResult {
         for (key, values) in self.results.read().map_err(|e| format!("{e}"))?.iter() {
             if values.response_code != ResponseCode::NoError {
@@ -454,8 +453,10 @@ impl RecursiveResolver<'_> {
     }
 
     /// Set one of the caches
+    #[expect(clippy::print_stderr, reason = "non fatal error")]
     fn cache_set(&self, positive: bool, key: CacheKey) {
-        if let Some(ref locked_cache) = if positive {
+        #[expect(clippy::needless_borrowed_reference, reason = "ok")]
+        if let &Some(ref locked_cache) = if positive {
             &self.positive_cache
         } else {
             &self.negative_cache
@@ -495,6 +496,7 @@ impl RecursiveResolver<'_> {
     }
 
     /// Try to give a nice out, as the original did
+    #[expect(clippy::print_stdout, reason = "called print")]
     fn print<S: fmt::Display>(depth: usize, server: &OptName, rest: S, last: &[bool]) {
         let mut output = String::new();
 
@@ -524,7 +526,12 @@ impl RecursiveResolver<'_> {
 
 #[cfg(test)]
 mod tests {
-    #![allow(clippy::expect_used, clippy::unwrap_used)]
+    #![allow(
+        clippy::expect_used,
+        clippy::unwrap_used,
+        clippy::indexing_slicing,
+        reason = "test"
+    )]
 
     use super::*;
     use crate::args::Args;
@@ -535,14 +542,14 @@ mod tests {
 
     fn default_args() -> Args {
         Args {
-            domain: "example.com".to_string(),
+            domain: "example.com".to_owned(),
             no_positive_cache: false,
             negative_cache: false,
             no_edns0: true,
             overview: false,
             query_type: RecordType::A,
             retries: 3,
-            server: ".".to_string(),
+            server: ".".to_owned(),
             timeout: Duration::from_secs(5),
             source_address: None,
             ipv6: false,
@@ -552,7 +559,7 @@ mod tests {
     }
 
     #[test]
-    fn test_recursive_resolver_new() {
+    fn recursive_resolver_new() {
         let args = default_args();
         let resolver = RecursiveResolver::new(&args);
 
@@ -562,7 +569,7 @@ mod tests {
     }
 
     #[test]
-    fn test_recursive_resolver_new_2() {
+    fn recursive_resolver_new_2() {
         let args = Args {
             no_positive_cache: true,
             negative_cache: true,
@@ -576,9 +583,9 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_recursive_resolver_init_with_ip() {
+    async fn recursive_resolver_init_with_ip() {
         let args = Args {
-            server: "8.8.8.8".to_string(),
+            server: "8.8.8.8".to_owned(),
             ..default_args()
         };
         let resolver = RecursiveResolver::new(&args);
