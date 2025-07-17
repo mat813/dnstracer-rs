@@ -1,31 +1,27 @@
 use crate::{args::Args, opt_name::OptName};
-use hickory_client::{
-    client::{AsyncClient, ClientHandle as _},
-    op::DnsResponse,
-    proto::iocompat::AsyncIoTokioAsStd,
-    rr::{Name, RecordType},
-};
+use hickory_client::client::{Client, ClientHandle as _};
 use hickory_proto::{
     op::ResponseCode,
-    rr::{DNSClass, RData, Record},
+    rr::{DNSClass, Name, RData, Record, RecordType},
+    runtime::TokioRuntimeProvider,
     tcp::TcpClientStream,
     udp::UdpClientStream,
+    xfer::DnsResponse,
 };
 use hickory_resolver::{
-    config::{LookupIpStrategy, ResolverConfig, ResolverOpts},
-    error::ResolveError,
-    TokioAsyncResolver,
+    config::{LookupIpStrategy, ResolverOpts},
+    name_server::GenericConnector,
+    ResolveError, TokioResolver,
 };
 use itertools::Itertools as _;
 use std::{
     collections::{BTreeSet, HashMap, HashSet},
     fmt,
     future::Future,
-    net::{IpAddr, SocketAddr},
+    net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr},
     pin::Pin,
     sync::RwLock,
 };
-use tokio::net::{TcpStream, UdpSocket};
 
 /// Is the ip allowed with regard to what the op asked.
 macro_rules! is_ip_allowed {
@@ -59,7 +55,7 @@ pub struct RecursiveResolver<'a> {
     /// Store the results, in case we need to display them
     results: RwLock<HashMap<OptName, FullResult>>,
     /// Single resolver for everything
-    resolver: TokioAsyncResolver,
+    resolver: TokioResolver,
     /// Copy of all the arguments for easier processing
     arguments: &'a Args,
     /// Positive answer cache
@@ -81,20 +77,24 @@ impl fmt::Debug for RecursiveResolver<'_> {
 
 impl<'a> RecursiveResolver<'a> {
     /// Create a new recursive resolver
-    pub fn new(args: &'a Args) -> Self {
+    pub fn new(args: &'a Args) -> Result<Self, ResolveError> {
         let mut resolver_opts = ResolverOpts::default();
         resolver_opts.ip_strategy = LookupIpStrategy::Ipv4AndIpv6;
         resolver_opts.attempts = args.retries;
         resolver_opts.timeout = args.timeout;
         resolver_opts.edns0 = !args.no_edns0;
 
-        Self {
+        let resolver = TokioResolver::builder(GenericConnector::new(TokioRuntimeProvider::new()))?
+            .with_options(resolver_opts)
+            .build();
+
+        Ok(Self {
             results: RwLock::new(HashMap::new()),
-            resolver: TokioAsyncResolver::tokio(ResolverConfig::default(), resolver_opts),
+            resolver,
             positive_cache: (!args.no_positive_cache).then(|| RwLock::new(HashSet::new())),
             negative_cache: args.negative_cache.then(|| RwLock::new(HashSet::new())),
             arguments: args,
-        }
+        })
     }
 }
 
@@ -215,7 +215,7 @@ impl RecursiveResolver<'_> {
                                 .answers()
                                 .iter()
                                 // We already checked every entry was a CNAME
-                                .filter_map(|r| r.data().and_then(|v| v.as_cname()))
+                                .filter_map(|r| r.data().as_cname())
                             {
                                 next_servers = Some(
                                     self.get_next_servers(
@@ -274,15 +274,16 @@ impl RecursiveResolver<'_> {
         server: &OptName,
         name: &Name,
         query_type: RecordType,
-    ) -> Result<DnsResponse, hickory_client::error::ClientError> {
-        let stream = UdpClientStream::<UdpSocket>::with_bind_addr_and_timeout(
-            server.into(),
-            self.arguments
-                .source_address
-                .map(|ip| SocketAddr::new(ip, 0)),
-            self.arguments.timeout,
-        );
-        let (mut client, bg) = AsyncClient::connect(stream).await?;
+    ) -> Result<DnsResponse, hickory_client::ClientError> {
+        let stream = UdpClientStream::builder(server.into(), TokioRuntimeProvider::new())
+            .with_timeout(Some(self.arguments.timeout))
+            .with_bind_addr(
+                self.arguments
+                    .source_address
+                    .map(|ip| SocketAddr::new(ip, 0)),
+            )
+            .build();
+        let (mut client, bg) = Client::connect(stream).await?;
 
         if self.arguments.no_edns0 {
             client.disable_edns();
@@ -302,17 +303,17 @@ impl RecursiveResolver<'_> {
         server: &OptName,
         name: &Name,
         query_type: RecordType,
-    ) -> Result<DnsResponse, hickory_client::error::ClientError> {
-        let (stream, sender) =
-            TcpClientStream::<AsyncIoTokioAsStd<TcpStream>>::with_bind_addr_and_timeout(
-                server.into(),
-                self.arguments
-                    .source_address
-                    .map(|ip| SocketAddr::new(ip, 0)),
-                self.arguments.timeout,
-            );
+    ) -> Result<DnsResponse, hickory_client::ClientError> {
+        let (stream, sender) = TcpClientStream::new(
+            server.into(),
+            self.arguments
+                .source_address
+                .map(|ip| SocketAddr::new(ip, 0)),
+            Some(self.arguments.timeout),
+            TokioRuntimeProvider::new(),
+        );
 
-        let (mut client, bg) = AsyncClient::new(stream, sender, None).await?;
+        let (mut client, bg) = Client::new(stream, sender, None).await?;
 
         if self.arguments.no_edns0 {
             client.disable_edns();
@@ -341,7 +342,7 @@ impl RecursiveResolver<'_> {
         for record in records {
             let mut found = false;
             // Here, we know it's a NS, so unwrap all that.
-            let Some(ns) = record.data().and_then(|d| d.as_ns()) else {
+            let Some(ns) = record.data().as_ns() else {
                 continue;
             };
             // Some name servers will respond with an additional section, use it
@@ -350,9 +351,13 @@ impl RecursiveResolver<'_> {
                     .additionals()
                     .iter()
                     .filter(|r| *r.name() == ns.0)
-                    .filter_map(|additional| match additional.data() {
-                        Some(&RData::A(a)) => Some((additional, IpAddr::from(*a))),
-                        Some(&RData::AAAA(a)) => Some((additional, IpAddr::from(*a))),
+                    .filter_map(|additional| match *additional.data() {
+                        RData::A(ref a) => {
+                            Some((additional, IpAddr::from(Into::<Ipv4Addr>::into(*a))))
+                        }
+                        RData::AAAA(ref a) => {
+                            Some((additional, IpAddr::from(Into::<Ipv6Addr>::into(*a))))
+                        }
                         _ => None,
                     })
                     .filter(|&(_, ip)| is_ip_allowed!(self, ip))
@@ -561,7 +566,7 @@ mod tests {
     #[test]
     fn recursive_resolver_new() {
         let args = default_args();
-        let resolver = RecursiveResolver::new(&args);
+        let resolver = RecursiveResolver::new(&args).unwrap();
 
         assert_eq!(*resolver.arguments, args);
         assert!(resolver.positive_cache.is_some());
@@ -575,7 +580,7 @@ mod tests {
             negative_cache: true,
             ..default_args()
         };
-        let resolver = RecursiveResolver::new(&args);
+        let resolver = RecursiveResolver::new(&args).unwrap();
 
         assert_eq!(*resolver.arguments, args);
         assert!(resolver.positive_cache.is_none());
@@ -588,7 +593,7 @@ mod tests {
             server: "8.8.8.8".to_owned(),
             ..default_args()
         };
-        let resolver = RecursiveResolver::new(&args);
+        let resolver = RecursiveResolver::new(&args).unwrap();
 
         let result = resolver.init().await;
         assert!(result.is_ok());

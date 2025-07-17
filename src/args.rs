@@ -1,5 +1,5 @@
 use clap::Parser;
-use hickory_client::rr::RecordType;
+use hickory_proto::rr::RecordType;
 use std::{net::IpAddr, str::FromStr as _, time::Duration};
 
 // Original arguments

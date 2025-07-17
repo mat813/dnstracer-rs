@@ -6,7 +6,7 @@ use crate::{
     resolver::{MyResult, RecursiveResolver},
 };
 use clap::Parser as _;
-use hickory_client::rr::Name;
+use hickory_proto::rr::Name;
 use std::{process, str::FromStr as _};
 
 /// The arguments
@@ -28,7 +28,7 @@ async fn main() -> MyResult {
         process::exit(1);
     }
 
-    let recursor = RecursiveResolver::new(&arguments);
+    let recursor = RecursiveResolver::new(&arguments)?;
 
     let first_servers = match recursor.init().await {
         Ok(s) => s,
