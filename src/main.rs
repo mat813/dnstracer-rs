@@ -1,11 +1,8 @@
 #![doc = include_str!("../README.md")]
 
-use crate::{
-    args::Args,
-    opt_name::OptName,
-    resolver::{MyResult, RecursiveResolver},
-};
+use crate::{args::Args, opt_name::OptName, resolver::RecursiveResolver};
 use clap::Parser as _;
+use eyre::Result;
 use hickory_proto::rr::Name;
 use std::{process, str::FromStr as _};
 
@@ -19,7 +16,7 @@ mod resolver;
 #[tokio::main]
 #[allow(clippy::exit, reason = "error")]
 #[expect(clippy::print_stderr, clippy::print_stdout, reason = "main")]
-async fn main() -> MyResult {
+async fn main() -> Result<()> {
     // Parse command-line arguments into the Args struct
     let mut arguments = Args::parse();
 
