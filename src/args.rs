@@ -115,25 +115,29 @@ mod tests {
     #![allow(clippy::expect_used, clippy::unwrap_used, reason = "test")]
 
     use super::*;
-    use std::net::IpAddr;
+    use insta::assert_debug_snapshot;
 
     #[test]
     fn default_values() {
         let args = Args::try_parse_from(["test", "example.com"]).unwrap();
 
-        assert_eq!(args.domain, "example.com");
-        assert!(!args.no_positive_cache);
-        assert!(!args.negative_cache);
-        assert!(!args.no_edns0);
-        assert!(!args.overview);
-        assert_eq!(args.query_type, RecordType::A);
-        assert_eq!(args.retries, 3);
-        assert_eq!(args.server, "a.root-servers.net");
-        assert_eq!(args.timeout, Duration::from_secs(5));
-        assert!(args.source_address.is_none());
-        assert!(!args.ipv6);
-        assert!(!args.ipv4);
-        assert!(!args.tcp);
+        assert_debug_snapshot!(args, @r#"
+        Args {
+            domain: "example.com",
+            no_positive_cache: false,
+            negative_cache: false,
+            no_edns0: false,
+            overview: false,
+            query_type: A,
+            retries: 3,
+            server: "a.root-servers.net",
+            timeout: 5s,
+            source_address: None,
+            ipv6: false,
+            ipv4: false,
+            tcp: false,
+        }
+        "#);
     }
 
     #[test]
@@ -160,49 +164,197 @@ mod tests {
         ])
         .unwrap();
 
-        assert!(args.no_positive_cache);
-        assert!(args.negative_cache);
-        assert!(args.no_edns0);
-        assert!(args.overview);
-        assert_eq!(args.query_type, RecordType::NS);
-        assert_eq!(args.retries, 5);
-        assert_eq!(args.server, "8.8.8.8");
-        assert_eq!(args.timeout, Duration::from_secs(10));
-        assert_eq!(
-            args.source_address,
-            Some(IpAddr::from_str("192.168.0.1").unwrap())
-        );
-        assert!(args.ipv6);
-        assert!(!args.ipv4);
-        assert!(args.tcp);
+        assert_debug_snapshot!(args, @r#"
+        Args {
+            domain: "example.com",
+            no_positive_cache: true,
+            negative_cache: true,
+            no_edns0: true,
+            overview: true,
+            query_type: NS,
+            retries: 5,
+            server: "8.8.8.8",
+            timeout: 10s,
+            source_address: Some(
+                192.168.0.1,
+            ),
+            ipv6: true,
+            ipv4: false,
+            tcp: true,
+        }
+        "#);
     }
 
     #[test]
     fn ipv4_flag() {
         let args = Args::try_parse_from(["test", "example.com", "-4"]).unwrap();
 
-        assert!(args.ipv4);
-        assert!(!args.ipv6);
+        assert_debug_snapshot!(args, @r#"
+        Args {
+            domain: "example.com",
+            no_positive_cache: false,
+            negative_cache: false,
+            no_edns0: false,
+            overview: false,
+            query_type: A,
+            retries: 3,
+            server: "a.root-servers.net",
+            timeout: 5s,
+            source_address: None,
+            ipv6: false,
+            ipv4: true,
+            tcp: false,
+        }
+        "#);
     }
 
     #[test]
     fn with_server_override() {
         let args = Args::try_parse_from(["test", "-s", "1.1.1.1", "example.com"]).unwrap();
 
-        assert_eq!(args.server, "1.1.1.1");
+        assert_debug_snapshot!(args, @r#"
+        Args {
+            domain: "example.com",
+            no_positive_cache: false,
+            negative_cache: false,
+            no_edns0: false,
+            overview: false,
+            query_type: A,
+            retries: 3,
+            server: "1.1.1.1",
+            timeout: 5s,
+            source_address: None,
+            ipv6: false,
+            ipv4: false,
+            tcp: false,
+        }
+        "#);
     }
 
     #[test]
     fn with_query_type() {
         let args = Args::try_parse_from(["test", "example.com", "-q", "AAAA"]).unwrap();
 
-        assert_eq!(args.query_type, RecordType::AAAA);
+        assert_debug_snapshot!(args, @r#"
+        Args {
+            domain: "example.com",
+            no_positive_cache: false,
+            negative_cache: false,
+            no_edns0: false,
+            overview: false,
+            query_type: AAAA,
+            retries: 3,
+            server: "a.root-servers.net",
+            timeout: 5s,
+            source_address: None,
+            ipv6: false,
+            ipv4: false,
+            tcp: false,
+        }
+        "#);
     }
 
     #[test]
     fn invalid_query_type() {
         let result = Args::try_parse_from(["test", "example.com", "-q", "INVALID"]);
-        assert!(result.is_err()); // Should fail since "INVALID" is not a valid RecordType
+        assert_debug_snapshot!(result, @r#"
+        Err(
+            ErrorInner {
+                kind: ValueValidation,
+                context: FlatMap {
+                    keys: [
+                        InvalidArg,
+                        InvalidValue,
+                    ],
+                    values: [
+                        String(
+                            "--query-type <QUERY_TYPE>",
+                        ),
+                        String(
+                            "INVALID",
+                        ),
+                    ],
+                },
+                message: None,
+                source: Some(
+                    ProtoError {
+                        kind: UnknownRecordTypeStr(
+                            "INVALID",
+                        ),
+                    },
+                ),
+                help_flag: Some(
+                    "--help",
+                ),
+                styles: Styles {
+                    header: Style {
+                        fg: None,
+                        bg: None,
+                        underline: None,
+                        effects: Effects(BOLD | UNDERLINE),
+                    },
+                    error: Style {
+                        fg: Some(
+                            Ansi(
+                                Red,
+                            ),
+                        ),
+                        bg: None,
+                        underline: None,
+                        effects: Effects(BOLD),
+                    },
+                    usage: Style {
+                        fg: None,
+                        bg: None,
+                        underline: None,
+                        effects: Effects(BOLD | UNDERLINE),
+                    },
+                    literal: Style {
+                        fg: None,
+                        bg: None,
+                        underline: None,
+                        effects: Effects(BOLD),
+                    },
+                    placeholder: Style {
+                        fg: None,
+                        bg: None,
+                        underline: None,
+                        effects: Effects(),
+                    },
+                    valid: Style {
+                        fg: Some(
+                            Ansi(
+                                Green,
+                            ),
+                        ),
+                        bg: None,
+                        underline: None,
+                        effects: Effects(),
+                    },
+                    invalid: Style {
+                        fg: Some(
+                            Ansi(
+                                Yellow,
+                            ),
+                        ),
+                        bg: None,
+                        underline: None,
+                        effects: Effects(),
+                    },
+                    context: Style {
+                        fg: None,
+                        bg: None,
+                        underline: None,
+                        effects: Effects(),
+                    },
+                    context_value: None,
+                },
+                color_when: Auto,
+                color_help_when: Auto,
+                backtrace: None,
+            },
+        )
+        "#);
     }
 
     #[test]
@@ -211,9 +363,25 @@ mod tests {
         let validated = args.validate();
 
         assert!(validated.is_ok());
-        assert_eq!(args.source_address, Some("1.1.1.1".parse().unwrap()));
-        assert!(args.ipv4);
-        assert!(!args.ipv6);
+        assert_debug_snapshot!(args, @r#"
+        Args {
+            domain: "example.com",
+            no_positive_cache: false,
+            negative_cache: false,
+            no_edns0: false,
+            overview: false,
+            query_type: A,
+            retries: 3,
+            server: "a.root-servers.net",
+            timeout: 5s,
+            source_address: Some(
+                1.1.1.1,
+            ),
+            ipv6: false,
+            ipv4: true,
+            tcp: false,
+        }
+        "#);
     }
 
     #[test]
@@ -222,9 +390,25 @@ mod tests {
         let validated = args.validate();
 
         assert!(validated.is_ok());
-        assert_eq!(args.source_address, Some("2001:db8::1".parse().unwrap()));
-        assert!(!args.ipv4);
-        assert!(args.ipv6);
+        assert_debug_snapshot!(args, @r#"
+        Args {
+            domain: "example.com",
+            no_positive_cache: false,
+            negative_cache: false,
+            no_edns0: false,
+            overview: false,
+            query_type: A,
+            retries: 3,
+            server: "a.root-servers.net",
+            timeout: 5s,
+            source_address: Some(
+                2001:db8::1,
+            ),
+            ipv6: true,
+            ipv4: false,
+            tcp: false,
+        }
+        "#);
     }
 
     #[test]
@@ -233,11 +417,11 @@ mod tests {
             Args::try_parse_from(["test", "example.com", "-6", "-S", "1.1.1.1"]).unwrap();
         let validated = args.validate();
 
-        assert!(validated.is_err());
-        assert_eq!(
-            validated.unwrap_err(),
-            "Cannot use IPv6 only queries with an ipv4 source address (1.1.1.1)"
-        );
+        assert_debug_snapshot!(validated, @r#"
+        Err(
+            "Cannot use IPv6 only queries with an ipv4 source address (1.1.1.1)",
+        )
+        "#);
     }
 
     #[test]
@@ -246,10 +430,10 @@ mod tests {
             Args::try_parse_from(["test", "example.com", "-4", "-S", "2001:db8::1"]).unwrap();
         let validated = args.validate();
 
-        assert!(validated.is_err());
-        assert_eq!(
-            validated.unwrap_err(),
-            "Cannot use IPv4 only queries with an ipv6 source address (2001:db8::1)"
-        );
+        assert_debug_snapshot!(validated, @r#"
+        Err(
+            "Cannot use IPv4 only queries with an ipv6 source address (2001:db8::1)",
+        )
+        "#);
     }
 }

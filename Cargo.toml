@@ -81,3 +81,6 @@ unused_result_ok = "warn"
 unused_trait_names = "deny"
 unwrap_in_result = "warn"
 unwrap_used = "warn"
+
+[dev-dependencies]
+insta = "1.43.1"
