@@ -5,7 +5,57 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v1.1.6 (2025-08-15)
+
+### Chore
+
+ - <csr-id-00000650455606f53b01ed8e09dea9ff0ab54959/> update lock file
+ - <csr-id-00000620f334d9fe7408ea5eab8a175e51352f6d/> update lock file
+
+### Bug Fixes
+
+ - <csr-id-00000670f33fe43499013da8d49cb6f119401cdc/> start using eyre
+ - <csr-id-0000066062f322594b011471f65da1d2962f0038/> bump edition to 2024
+ - <csr-id-0000064044541e0e1ff95456ca53c4e202a1157a/> update tokio to 1.47.1
+ - <csr-id-00000630751e269dfd727fae1e52a690067f141a/> update clap to 4.5.45
+ - <csr-id-000006108323bec6cfc8cfa97ca47fb750b6c957/> update hickory* to 0.25.2
+ - <csr-id-0000060037d3667a1aae81aca84fa0ab8504dc42/> clippy
+
+### Test
+
+ - <csr-id-00000680928af94ee73f8139aee2971bddeef129/> use insta for tests
+
+### Commit Statistics
+
+<csr-read-only-do-not-edit/>
+
+ - 9 commits contributed to the release over the course of 28 calendar days.
+ - 67 days passed between releases.
+ - 9 commits were understood as [conventional](https://www.conventionalcommits.org).
+ - 0 issues like '(#ID)' were seen in commit messages
+
+### Commit Details
+
+<csr-read-only-do-not-edit/>
+
+<details><summary>view details</summary>
+
+ * **Uncategorized**
+    - Use insta for tests (0000068)
+    - Start using eyre (0000067)
+    - Bump edition to 2024 (0000066)
+    - Update lock file (0000065)
+    - Update tokio to 1.47.1 (0000064)
+    - Update clap to 4.5.45 (0000063)
+    - Update lock file (0000062)
+    - Update hickory* to 0.25.2 (0000061)
+    - Clippy (0000060)
+</details>
+
 ## v1.1.5 (2025-06-08)
+
+<csr-id-000005884cd1d917abd6ebd0ce6319c9d1f4baf9/>
+<csr-id-00000563c5592b829463596927684b92e05e91a5/>
 
 ### Chore
 
@@ -23,7 +73,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <csr-read-only-do-not-edit/>
 
- - 3 commits contributed to the release.
+ - 4 commits contributed to the release.
  - 3 commits were understood as [conventional](https://www.conventionalcommits.org).
  - 0 issues like '(#ID)' were seen in commit messages
 
@@ -34,6 +84,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <details><summary>view details</summary>
 
  * **Uncategorized**
+    - Release dnstracer v1.1.5 (ec51c27)
     - Update lock file (0000058)
     - Add a few lints and fix code (0000057)
     - Fix tests (0000056)
