@@ -9,9 +9,9 @@ use hickory_proto::{
     xfer::DnsResponse,
 };
 use hickory_resolver::{
+    ResolveError, TokioResolver,
     config::{LookupIpStrategy, ResolverOpts},
     name_server::GenericConnector,
-    ResolveError, TokioResolver,
 };
 use itertools::Itertools as _;
 use std::{

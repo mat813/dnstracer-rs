@@ -62,10 +62,10 @@ async fn main() -> MyResult {
         }
     }
 
-    if arguments.overview {
-        if let Err(e) = recursor.show_overview() {
-            eprintln!("error getting overview: {e}");
-        }
+    if arguments.overview
+        && let Err(e) = recursor.show_overview()
+    {
+        eprintln!("error getting overview: {e}");
     }
 
     Ok(())
