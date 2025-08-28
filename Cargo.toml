@@ -16,7 +16,7 @@ opt-level = "z"
 panic = "abort"
 
 [dependencies]
-clap = { version = "=4.5.45", features = ["derive"] }
+clap = { version = "=4.5.46", features = ["derive"] }
 eyre = "=0.6.12"
 hickory-client = "=0.25.2"
 hickory-proto = "=0.25.2"
