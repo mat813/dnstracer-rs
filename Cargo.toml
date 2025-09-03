@@ -9,12 +9,6 @@ keywords = ["DNS", "traceroute"]
 homepage = "https://gitlab.com/mat813/dnstracer-rs"
 repository = "https://gitlab.com/mat813/dnstracer-rs"
 
-[profile.release]
-codegen-units = 1
-lto = true
-opt-level = "z"
-panic = "abort"
-
 [dependencies]
 clap = { version = "=4.5.47", features = ["derive"] }
 eyre = "=0.6.12"
