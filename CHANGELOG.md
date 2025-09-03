@@ -5,7 +5,66 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v1.1.7 (2025-09-03)
+
+### Chore
+
+ - <csr-id-0000077006dc7eee26de87362582c07b0f678a2d/> remove release profile
+ - <csr-id-c2438fc618d0e3e087bca5fc1d381ddf554bdb0e/> lock file maintenance
+
+### Bug Fixes
+
+ - <csr-id-8f5b1fbfa75c34772a0b7840950bfa8d32249380/> update rust crate clap to v4.5.47
+   | datasource | package | from   | to     |
+   | ---------- | ------- | ------ | ------ |
+   | crate      | clap    | 4.5.46 | 4.5.47 |
+ - <csr-id-14e5d9898f0bbf09578daf4cb66bfca13b288fa1/> update rust crate clap to v4.5.46
+   | datasource | package | from   | to     |
+   | ---------- | ------- | ------ | ------ |
+   | crate      | clap    | 4.5.45 | 4.5.46 |
+ - <csr-id-7072fcf388ab5b40a442c20ba20c1a639257e6e6/> pin dependencies
+   | datasource | package          | from   | to     |
+   | ---------- | ---------------- | ------ | ------ |
+   | crate      | clap             | 4.5.45 | 4.5.45 |
+   | crate      | eyre             | 0.6.12 | 0.6.12 |
+   | crate      | hickory-client   | 0.25.2 | 0.25.2 |
+   | crate      | hickory-proto    | 0.25.2 | 0.25.2 |
+   | crate      | hickory-resolver | 0.25.2 | 0.25.2 |
+   | crate      | insta            | 1.43.1 | 1.43.1 |
+   | crate      | itertools        | 0.14.0 | 0.14.0 |
+   | crate      | tokio            | 1.47.1 | 1.47.1 |
+
+### Commit Statistics
+
+<csr-read-only-do-not-edit/>
+
+ - 8 commits contributed to the release.
+ - 18 days passed between releases.
+ - 5 commits were understood as [conventional](https://www.conventionalcommits.org).
+ - 0 issues like '(#ID)' were seen in commit messages
+
+### Commit Details
+
+<csr-read-only-do-not-edit/>
+
+<details><summary>view details</summary>
+
+ * **Uncategorized**
+    - Remove release profile (0000077)
+    - Update rust crate clap to v4.5.47 (8f5b1fb)
+    - Lock file maintenance (c2438fc)
+    - Update rust crate clap to v4.5.46 (14e5d98)
+    - Merge branch 'renovate/pin-dependencies' into 'main' (b80105d)
+    - Pin dependencies (7072fcf)
+    - Merge branch 'renovate/configure' into 'main' (31df71c)
+    - Add renovate.json (51bb575)
+</details>
+
 ## v1.1.6 (2025-08-15)
+
+<csr-id-00000650455606f53b01ed8e09dea9ff0ab54959/>
+<csr-id-00000620f334d9fe7408ea5eab8a175e51352f6d/>
+<csr-id-00000680928af94ee73f8139aee2971bddeef129/>
 
 ### Chore
 
@@ -29,7 +88,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <csr-read-only-do-not-edit/>
 
- - 9 commits contributed to the release over the course of 28 calendar days.
+ - 10 commits contributed to the release over the course of 28 calendar days.
  - 67 days passed between releases.
  - 9 commits were understood as [conventional](https://www.conventionalcommits.org).
  - 0 issues like '(#ID)' were seen in commit messages
@@ -41,6 +100,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <details><summary>view details</summary>
 
  * **Uncategorized**
+    - Release dnstracer v1.1.6 (0265dee)
     - Use insta for tests (0000068)
     - Start using eyre (0000067)
     - Bump edition to 2024 (0000066)
