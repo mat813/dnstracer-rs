@@ -77,4 +77,4 @@ unwrap_in_result = "warn"
 unwrap_used = "warn"
 
 [dev-dependencies]
-insta = "=1.43.1"
+insta = "=1.43.2"
