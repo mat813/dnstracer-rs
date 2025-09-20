@@ -5,7 +5,57 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v1.1.8 (2025-09-20)
+
+### Chore
+
+ - <csr-id-76e66c24a7ba99684b0df875d2d227b14e1e437c/> lock file maintenance
+ - <csr-id-c308d13e1284ad30d625b378492cd04f897cab27/> lock file maintenance
+ - <csr-id-6e7d52e53b1d83d0cb0e896314fc5676b34b2e11/> update rust crate insta to v1.43.2
+   | datasource | package | from   | to     |
+   | ---------- | ------- | ------ | ------ |
+   | crate      | insta   | 1.43.1 | 1.43.2 |
+
+### Bug Fixes
+
+ - <csr-id-000008301413329b8017f896c09fab0fe1fe3ce8/> allow passing non uppercase record types
+ - <csr-id-edc9246d3578918b98b64b65e004ab0699bc242b/> update rust crate clap to v4.5.48
+   | datasource | package | from   | to     |
+   | ---------- | ------- | ------ | ------ |
+   | crate      | clap    | 4.5.47 | 4.5.48 |
+
+### Test
+
+ - <csr-id-0000084025a902cc26b19c78eab8fd321ff47b9e/> add a few tests, and use rstest+case
+
+### Commit Statistics
+
+<csr-read-only-do-not-edit/>
+
+ - 6 commits contributed to the release.
+ - 16 days passed between releases.
+ - 6 commits were understood as [conventional](https://www.conventionalcommits.org).
+ - 0 issues like '(#ID)' were seen in commit messages
+
+### Commit Details
+
+<csr-read-only-do-not-edit/>
+
+<details><summary>view details</summary>
+
+ * **Uncategorized**
+    - Add a few tests, and use rstest+case (0000084)
+    - Allow passing non uppercase record types (0000083)
+    - Update rust crate clap to v4.5.48 (edc9246)
+    - Lock file maintenance (76e66c2)
+    - Lock file maintenance (c308d13)
+    - Update rust crate insta to v1.43.2 (6e7d52e)
+</details>
+
 ## v1.1.7 (2025-09-03)
+
+<csr-id-0000077006dc7eee26de87362582c07b0f678a2d/>
+<csr-id-c2438fc618d0e3e087bca5fc1d381ddf554bdb0e/>
 
 ### Chore
 
@@ -38,7 +88,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <csr-read-only-do-not-edit/>
 
- - 8 commits contributed to the release.
+ - 9 commits contributed to the release.
  - 18 days passed between releases.
  - 5 commits were understood as [conventional](https://www.conventionalcommits.org).
  - 0 issues like '(#ID)' were seen in commit messages
@@ -50,6 +100,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <details><summary>view details</summary>
 
  * **Uncategorized**
+    - Release dnstracer v1.1.7 (3c577cd)
     - Remove release profile (0000077)
     - Update rust crate clap to v4.5.47 (8f5b1fb)
     - Lock file maintenance (c2438fc)
