@@ -78,3 +78,4 @@ unwrap_used = "warn"
 
 [dev-dependencies]
 insta = "=1.43.2"
+rstest = "0.26.1"

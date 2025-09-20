@@ -1,0 +1,19 @@
+---
+source: src/args.rs
+expression: args
+---
+Args {
+    domain: "example.com",
+    no_positive_cache: false,
+    negative_cache: false,
+    no_edns0: false,
+    overview: false,
+    query_type: AAAA,
+    retries: 3,
+    server: "a.root-servers.net",
+    timeout: 5s,
+    source_address: None,
+    ipv6: false,
+    ipv4: false,
+    tcp: false,
+}

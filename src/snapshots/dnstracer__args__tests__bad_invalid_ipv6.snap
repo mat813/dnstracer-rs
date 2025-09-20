@@ -1,0 +1,96 @@
+---
+source: src/args.rs
+expression: args
+---
+ErrorInner {
+    kind: ValueValidation,
+    context: FlatMap {
+        keys: [
+            InvalidArg,
+            InvalidValue,
+        ],
+        values: [
+            String(
+                "--source-address <SOURCE_ADDRESS>",
+            ),
+            String(
+                "2a0x::1",
+            ),
+        ],
+    },
+    message: None,
+    source: Some(
+        AddrParseError(
+            Ip,
+        ),
+    ),
+    help_flag: Some(
+        "--help",
+    ),
+    styles: Styles {
+        header: Style {
+            fg: None,
+            bg: None,
+            underline: None,
+            effects: Effects(BOLD | UNDERLINE),
+        },
+        error: Style {
+            fg: Some(
+                Ansi(
+                    Red,
+                ),
+            ),
+            bg: None,
+            underline: None,
+            effects: Effects(BOLD),
+        },
+        usage: Style {
+            fg: None,
+            bg: None,
+            underline: None,
+            effects: Effects(BOLD | UNDERLINE),
+        },
+        literal: Style {
+            fg: None,
+            bg: None,
+            underline: None,
+            effects: Effects(BOLD),
+        },
+        placeholder: Style {
+            fg: None,
+            bg: None,
+            underline: None,
+            effects: Effects(),
+        },
+        valid: Style {
+            fg: Some(
+                Ansi(
+                    Green,
+                ),
+            ),
+            bg: None,
+            underline: None,
+            effects: Effects(),
+        },
+        invalid: Style {
+            fg: Some(
+                Ansi(
+                    Yellow,
+                ),
+            ),
+            bg: None,
+            underline: None,
+            effects: Effects(),
+        },
+        context: Style {
+            fg: None,
+            bg: None,
+            underline: None,
+            effects: Effects(),
+        },
+        context_value: None,
+    },
+    color_when: Auto,
+    color_help_when: Auto,
+    backtrace: None,
+}

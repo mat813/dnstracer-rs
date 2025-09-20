@@ -120,33 +120,11 @@ mod tests {
 
     use super::*;
     use insta::assert_debug_snapshot;
+    use rstest::rstest;
 
-    #[test]
-    fn default_values() {
-        let args = Args::try_parse_from(["test", "example.com"]).unwrap();
-
-        assert_debug_snapshot!(args, @r#"
-        Args {
-            domain: "example.com",
-            no_positive_cache: false,
-            negative_cache: false,
-            no_edns0: false,
-            overview: false,
-            query_type: A,
-            retries: 3,
-            server: "a.root-servers.net",
-            timeout: 5s,
-            source_address: None,
-            ipv6: false,
-            ipv4: false,
-            tcp: false,
-        }
-        "#);
-    }
-
-    #[test]
-    fn all_flags() {
-        let args = Args::try_parse_from([
+    #[rstest]
+    #[case("default_values", vec!["test", "example.com"])]
+    #[case("all_flags", vec![
             "test",
             "-c", // no_positive_cache
             "-C", // negative_cache
@@ -165,279 +143,54 @@ mod tests {
             "-6",          // force IPv6
             "-T",          // use TCP
             "example.com",
-        ])
-        .unwrap();
+        ])]
+    #[case("ipv4_flag", vec!["test", "example.com", "-4"])]
+    #[case("server_override", vec!["test", "-s", "1.1.1.1", "example.com"])]
+    #[case("query_type", vec!["test", "example.com", "-q", "AAAA"])]
+    #[case("source_v4", vec!["test", "example.com", "-S", "1.1.1.1"])]
+    #[case("source_v6", vec!["test", "example.com", "-S", "2001:db8::1"])]
+    #[trace]
+    fn args(#[case] name: &str, #[case] input: Vec<&str>) {
+        let args = Args::parse_from(input);
 
-        assert_debug_snapshot!(args, @r#"
-        Args {
-            domain: "example.com",
-            no_positive_cache: true,
-            negative_cache: true,
-            no_edns0: true,
-            overview: true,
-            query_type: NS,
-            retries: 5,
-            server: "8.8.8.8",
-            timeout: 10s,
-            source_address: Some(
-                192.168.0.1,
-            ),
-            ipv6: true,
-            ipv4: false,
-            tcp: true,
-        }
-        "#);
+        assert_debug_snapshot!(format!("args_{name}"), args);
     }
 
-    #[test]
-    fn ipv4_flag() {
-        let args = Args::try_parse_from(["test", "example.com", "-4"]).unwrap();
+    #[rstest]
+    #[case("soa")]
+    #[case("SoA")]
+    #[case("a")]
+    #[case("A")]
+    #[case("aAaA")]
+    #[case("Mx")]
+    #[case("dS")]
+    #[trace]
+    fn record_type(#[case] record: &str) {
+        let args = Args::parse_from(["test", "-q", record, "example.com"]);
 
-        assert_debug_snapshot!(args, @r#"
-        Args {
-            domain: "example.com",
-            no_positive_cache: false,
-            negative_cache: false,
-            no_edns0: false,
-            overview: false,
-            query_type: A,
-            retries: 3,
-            server: "a.root-servers.net",
-            timeout: 5s,
-            source_address: None,
-            ipv6: false,
-            ipv4: true,
-            tcp: false,
-        }
-        "#);
+        assert_debug_snapshot!(format!("record_{record}"), args);
     }
 
-    #[test]
-    fn with_server_override() {
-        let args = Args::try_parse_from(["test", "-s", "1.1.1.1", "example.com"]).unwrap();
+    #[rstest]
+    #[case("invalid_query_type", vec!["test", "example.com", "-q", "INVALID"])]
+    #[case("invalid_retries", vec!["test", "example.com", "-r", "INVALID"])]
+    #[case("invalid_ipv4", vec!["test", "example.com", "-S", "5432.5432.234.12"])]
+    #[case("invalid_ipv6", vec!["test", "example.com", "-S", "2a0x::1"])]
+    #[trace]
+    fn bad_args(#[case] name: &str, #[case] input: Vec<&str>) {
+        let args = Args::try_parse_from(input).unwrap_err();
 
-        assert_debug_snapshot!(args, @r#"
-        Args {
-            domain: "example.com",
-            no_positive_cache: false,
-            negative_cache: false,
-            no_edns0: false,
-            overview: false,
-            query_type: A,
-            retries: 3,
-            server: "1.1.1.1",
-            timeout: 5s,
-            source_address: None,
-            ipv6: false,
-            ipv4: false,
-            tcp: false,
-        }
-        "#);
+        assert_debug_snapshot!(format!("bad_{name}"), args);
     }
 
-    #[test]
-    fn with_query_type() {
-        let args = Args::try_parse_from(["test", "example.com", "-q", "AAAA"]).unwrap();
+    #[rstest]
+    #[case("source_v4_plus_ipv6_flag", vec!["test", "example.com", "-6", "-S", "1.1.1.1"])]
+    #[case("source_v6_plus_ipv4_flag", vec!["test", "example.com", "-4", "-S", "2001:db8::1"])]
+    #[trace]
+    fn not_valid(#[case] name: &str, #[case] input: Vec<&str>) {
+        let mut args = Args::parse_from(input);
+        let validated = args.validate().unwrap_err();
 
-        assert_debug_snapshot!(args, @r#"
-        Args {
-            domain: "example.com",
-            no_positive_cache: false,
-            negative_cache: false,
-            no_edns0: false,
-            overview: false,
-            query_type: AAAA,
-            retries: 3,
-            server: "a.root-servers.net",
-            timeout: 5s,
-            source_address: None,
-            ipv6: false,
-            ipv4: false,
-            tcp: false,
-        }
-        "#);
-    }
-
-    #[test]
-    fn invalid_query_type() {
-        let result = Args::try_parse_from(["test", "example.com", "-q", "INVALID"]);
-        assert_debug_snapshot!(result, @r#"
-        Err(
-            ErrorInner {
-                kind: ValueValidation,
-                context: FlatMap {
-                    keys: [
-                        InvalidArg,
-                        InvalidValue,
-                    ],
-                    values: [
-                        String(
-                            "--query-type <QUERY_TYPE>",
-                        ),
-                        String(
-                            "INVALID",
-                        ),
-                    ],
-                },
-                message: None,
-                source: Some(
-                    ProtoError {
-                        kind: UnknownRecordTypeStr(
-                            "INVALID",
-                        ),
-                    },
-                ),
-                help_flag: Some(
-                    "--help",
-                ),
-                styles: Styles {
-                    header: Style {
-                        fg: None,
-                        bg: None,
-                        underline: None,
-                        effects: Effects(BOLD | UNDERLINE),
-                    },
-                    error: Style {
-                        fg: Some(
-                            Ansi(
-                                Red,
-                            ),
-                        ),
-                        bg: None,
-                        underline: None,
-                        effects: Effects(BOLD),
-                    },
-                    usage: Style {
-                        fg: None,
-                        bg: None,
-                        underline: None,
-                        effects: Effects(BOLD | UNDERLINE),
-                    },
-                    literal: Style {
-                        fg: None,
-                        bg: None,
-                        underline: None,
-                        effects: Effects(BOLD),
-                    },
-                    placeholder: Style {
-                        fg: None,
-                        bg: None,
-                        underline: None,
-                        effects: Effects(),
-                    },
-                    valid: Style {
-                        fg: Some(
-                            Ansi(
-                                Green,
-                            ),
-                        ),
-                        bg: None,
-                        underline: None,
-                        effects: Effects(),
-                    },
-                    invalid: Style {
-                        fg: Some(
-                            Ansi(
-                                Yellow,
-                            ),
-                        ),
-                        bg: None,
-                        underline: None,
-                        effects: Effects(),
-                    },
-                    context: Style {
-                        fg: None,
-                        bg: None,
-                        underline: None,
-                        effects: Effects(),
-                    },
-                    context_value: None,
-                },
-                color_when: Auto,
-                color_help_when: Auto,
-                backtrace: None,
-            },
-        )
-        "#);
-    }
-
-    #[test]
-    fn with_source_address_v4() {
-        let mut args = Args::try_parse_from(["test", "example.com", "-S", "1.1.1.1"]).unwrap();
-        let validated = args.validate();
-
-        assert!(validated.is_ok());
-        assert_debug_snapshot!(args, @r#"
-        Args {
-            domain: "example.com",
-            no_positive_cache: false,
-            negative_cache: false,
-            no_edns0: false,
-            overview: false,
-            query_type: A,
-            retries: 3,
-            server: "a.root-servers.net",
-            timeout: 5s,
-            source_address: Some(
-                1.1.1.1,
-            ),
-            ipv6: false,
-            ipv4: true,
-            tcp: false,
-        }
-        "#);
-    }
-
-    #[test]
-    fn with_source_address_v6() {
-        let mut args = Args::try_parse_from(["test", "example.com", "-S", "2001:db8::1"]).unwrap();
-        let validated = args.validate();
-
-        assert!(validated.is_ok());
-        assert_debug_snapshot!(args, @r#"
-        Args {
-            domain: "example.com",
-            no_positive_cache: false,
-            negative_cache: false,
-            no_edns0: false,
-            overview: false,
-            query_type: A,
-            retries: 3,
-            server: "a.root-servers.net",
-            timeout: 5s,
-            source_address: Some(
-                2001:db8::1,
-            ),
-            ipv6: true,
-            ipv4: false,
-            tcp: false,
-        }
-        "#);
-    }
-
-    #[test]
-    fn with_source_address_v4_and_ipv6() {
-        let mut args =
-            Args::try_parse_from(["test", "example.com", "-6", "-S", "1.1.1.1"]).unwrap();
-        let validated = args.validate();
-
-        assert_debug_snapshot!(validated, @r#"
-        Err(
-            "Cannot use IPv6 only queries with an ipv4 source address (1.1.1.1)",
-        )
-        "#);
-    }
-
-    #[test]
-    fn with_source_address_v6_and_ipv4() {
-        let mut args =
-            Args::try_parse_from(["test", "example.com", "-4", "-S", "2001:db8::1"]).unwrap();
-        let validated = args.validate();
-
-        assert_debug_snapshot!(validated, @r#"
-        Err(
-            "Cannot use IPv4 only queries with an ipv6 source address (2001:db8::1)",
-        )
-        "#);
+        assert_debug_snapshot!(format!("not_valid_{name}"), validated);
     }
 }
