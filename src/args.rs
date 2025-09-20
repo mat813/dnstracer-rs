@@ -43,7 +43,7 @@ pub struct Args {
     pub overview: bool,
 
     /// The type of record (A, AAAA, NS ...)
-    #[arg(short = 'q', long, default_value = "A", value_parser = RecordType::from_str)]
+    #[arg(short = 'q', long, default_value = "A", value_parser = parse_record_type)]
     pub query_type: RecordType,
 
     /// amount of retries for DNS requests, default 3
@@ -76,6 +76,10 @@ pub struct Args {
     /// Force using TCP for DNS queries
     #[arg(short = 'T', long)]
     pub tcp: bool,
+}
+
+fn parse_record_type(s: &str) -> Result<RecordType> {
+    Ok(RecordType::from_str(&s.to_ascii_uppercase())?)
 }
 
 impl Args {
