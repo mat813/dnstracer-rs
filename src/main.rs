@@ -4,7 +4,7 @@ use crate::{args::Args, opt_name::OptName, resolver::RecursiveResolver};
 use clap::Parser as _;
 use eyre::Result;
 use hickory_proto::rr::Name;
-use std::{process, str::FromStr as _};
+use std::str::FromStr as _;
 
 /// The arguments
 mod args;
@@ -20,20 +20,11 @@ async fn main() -> Result<()> {
     // Parse command-line arguments into the Args struct
     let mut arguments = Args::parse();
 
-    if let Err(err) = arguments.validate() {
-        eprintln!("Error: {err}");
-        process::exit(1);
-    }
+    arguments.validate()?;
 
     let recursor = RecursiveResolver::new(&arguments)?;
 
-    let first_servers = match recursor.init().await {
-        Ok(s) => s,
-        Err(e) => {
-            eprintln!("Error: {e}");
-            process::exit(1);
-        }
-    };
+    let first_servers = recursor.init().await?;
 
     let name = Name::from_str(&arguments.domain)?;
 
@@ -59,10 +50,8 @@ async fn main() -> Result<()> {
         }
     }
 
-    if arguments.overview
-        && let Err(e) = recursor.show_overview()
-    {
-        eprintln!("error getting overview: {e}");
+    if arguments.overview {
+        recursor.show_overview()?;
     }
 
     Ok(())
