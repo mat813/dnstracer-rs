@@ -5,7 +5,93 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v1.1.9 (2025-11-15)
+
+### Chore
+
+ - <csr-id-0000102016da7394fbe44144af54219dc0676f51/> update lints
+ - <csr-id-66f57c3457e4be3ce5d9bac90d3c8a87558b828d/> lock file maintenance
+ - <csr-id-083849736e18eb05193a50fdb2d7841cd72a0465/> lock file maintenance
+ - <csr-id-0a00c10754bb6ee858715daeb7164c80f33ef348/> lock file maintenance
+ - <csr-id-89d5d79c6084439c4f7b0ffc48686eb8fc88634b/> lock file maintenance
+ - <csr-id-34add2dec82db0babb8932311445248c904e308c/> lock file maintenance
+ - <csr-id-71d60d9aed85a6358e3ebeb810e15c80c172a141/> lock file maintenance
+ - <csr-id-7af1fa3a881227b68d2b003bf72a86e3e2ce5f46/> lock file maintenance
+ - <csr-id-c8a1409651878f8f0841f0f869d4596f886e73e6/> lock file maintenance
+ - <csr-id-175a908e0a00bd17c5a482ba257028d8ad900941/> lock file maintenance
+ - <csr-id-8c0c37f78e399a7c42b49e96c295983954ef1934/> lock file maintenance
+ - <csr-id-fe4c00656df7cba865b041d89fd82c366fa20b01/> pin rust crate rstest to =0.26.1
+   | datasource | package | from   | to     |
+   | ---------- | ------- | ------ | ------ |
+   | crate      | rstest  | 0.26.1 | 0.26.1 |
+
+### Bug Fixes
+
+ - <csr-id-00001040632580cd0786210aca14d24875c88bec/> simplify main a bit
+ - <csr-id-00001030f0fa75a4bb6566fdba578b8443879390/> get less features from tokio
+ - <csr-id-16d0d25801a934667f92398923ce98d95fdf0ced/> update rust crate clap to v4.5.51
+   | datasource | package | from   | to     |
+   | ---------- | ------- | ------ | ------ |
+   | crate      | clap    | 4.5.50 | 4.5.51 |
+ - <csr-id-87fa83e2fe9f47df0159fa56aa1b4d651efe3664/> update rust crate clap to v4.5.50
+   | datasource | package | from   | to     |
+   | ---------- | ------- | ------ | ------ |
+   | crate      | clap    | 4.5.49 | 4.5.50 |
+ - <csr-id-5e32a8fbb06af5c6324d42162236a0f50ead30f2/> update rust crate tokio to v1.48.0
+   | datasource | package | from   | to     |
+   | ---------- | ------- | ------ | ------ |
+   | crate      | tokio   | 1.47.2 | 1.48.0 |
+ - <csr-id-4061a62a7e465ffc1cdc83c1250587bb361c9216/> update rust crate tokio to v1.47.2
+   | datasource | package | from   | to     |
+   | ---------- | ------- | ------ | ------ |
+   | crate      | tokio   | 1.47.1 | 1.47.2 |
+ - <csr-id-7e125b9daf14896a73136c88c523c78c3689f054/> update rust crate clap to v4.5.49
+   | datasource | package | from   | to     |
+   | ---------- | ------- | ------ | ------ |
+   | crate      | clap    | 4.5.48 | 4.5.49 |
+
+### Commit Statistics
+
+<csr-read-only-do-not-edit/>
+
+ - 19 commits contributed to the release.
+ - 19 commits were understood as [conventional](https://www.conventionalcommits.org).
+ - 0 issues like '(#ID)' were seen in commit messages
+
+### Commit Details
+
+<csr-read-only-do-not-edit/>
+
+<details><summary>view details</summary>
+
+ * **Uncategorized**
+    - Simplify main a bit (0000104)
+    - Get less features from tokio (0000103)
+    - Update lints (0000102)
+    - Lock file maintenance (66f57c3)
+    - Lock file maintenance (0838497)
+    - Update rust crate clap to v4.5.51 (16d0d25)
+    - Lock file maintenance (0a00c10)
+    - Update rust crate clap to v4.5.50 (87fa83e)
+    - Lock file maintenance (89d5d79)
+    - Lock file maintenance (34add2d)
+    - Update rust crate tokio to v1.48.0 (5e32a8f)
+    - Update rust crate tokio to v1.47.2 (4061a62)
+    - Update rust crate clap to v4.5.49 (7e125b9)
+    - Lock file maintenance (71d60d9)
+    - Lock file maintenance (7af1fa3)
+    - Lock file maintenance (c8a1409)
+    - Lock file maintenance (175a908)
+    - Lock file maintenance (8c0c37f)
+    - Pin rust crate rstest to =0.26.1 (fe4c006)
+</details>
+
 ## v1.1.8 (2025-09-20)
+
+<csr-id-76e66c24a7ba99684b0df875d2d227b14e1e437c/>
+<csr-id-c308d13e1284ad30d625b378492cd04f897cab27/>
+<csr-id-6e7d52e53b1d83d0cb0e896314fc5676b34b2e11/>
+<csr-id-0000084025a902cc26b19c78eab8fd321ff47b9e/>
 
 ### Chore
 
@@ -32,7 +118,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <csr-read-only-do-not-edit/>
 
- - 6 commits contributed to the release.
+ - 7 commits contributed to the release.
  - 16 days passed between releases.
  - 6 commits were understood as [conventional](https://www.conventionalcommits.org).
  - 0 issues like '(#ID)' were seen in commit messages
@@ -44,6 +130,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <details><summary>view details</summary>
 
  * **Uncategorized**
+    - Release dnstracer v1.1.8 (daf1f08)
     - Add a few tests, and use rstest+case (0000084)
     - Allow passing non uppercase record types (0000083)
     - Update rust crate clap to v4.5.48 (edc9246)
