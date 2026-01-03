@@ -16,7 +16,7 @@ hickory-client = "=0.25.2"
 hickory-proto = "=0.25.2"
 hickory-resolver = "=0.25.2"
 itertools = "=0.14.0"
-tokio = { version = "=1.48.0", features = ["net", "rt", "rt-multi-thread"] }
+tokio = { version = "=1.49.0", features = ["net", "rt", "rt-multi-thread"] }
 
 [lints.clippy]
 # https://github.com/rust-lang/rust-clippy/issues/11916
