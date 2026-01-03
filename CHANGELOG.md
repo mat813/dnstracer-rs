@@ -5,7 +5,99 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v1.1.10 (2026-01-03)
+
+### Chore
+
+ - <csr-id-5538467a65f118bd3e1555f53bb62065e98c37ee/> update rust crate insta to v1.45.1
+   | datasource | package | from   | to     |
+   | ---------- | ------- | ------ | ------ |
+   | crate      | insta   | 1.44.3 | 1.45.1 |
+ - <csr-id-acb223281aa88968e18d193b5573e3b674a5d7a8/> lock file maintenance
+ - <csr-id-4b68f3b48d7951738852ebf52d410b9c9da65ec2/> lock file maintenance
+ - <csr-id-93bb5f21f645c99add608023e0f3e0cfeb0e490a/> lock file maintenance
+ - <csr-id-1cf11e0067568701f8680332eed4015f868d10ff/> lock file maintenance
+ - <csr-id-9382ad1c6bae1beedc3dc8e0b52b58da3c6bf760/> lock file maintenance
+ - <csr-id-e90e7d256941addda900b77bca10a78dfb405c04/> update rust crate insta to v1.44.3
+   | datasource | package | from   | to     |
+   | ---------- | ------- | ------ | ------ |
+   | crate      | insta   | 1.44.2 | 1.44.3 |
+ - <csr-id-f630ceb5fba6bcf99ee98596d75ba8584dae808e/> update rust crate insta to v1.44.2
+   | datasource | package | from   | to     |
+   | ---------- | ------- | ------ | ------ |
+   | crate      | insta   | 1.44.1 | 1.44.2 |
+ - <csr-id-820e6b8252b1e062f31734a4081bf9c23c989326/> lock file maintenance
+ - <csr-id-212e334c50b66cab82dbd3d5abfe48bd3bc2e7ce/> update rust crate insta to v1.44.1
+   | datasource | package | from   | to     |
+   | ---------- | ------- | ------ | ------ |
+   | crate      | insta   | 1.43.2 | 1.44.1 |
+ - <csr-id-39987f5032f899fb117210ef234d41f9873bcc54/> lock file maintenance
+
+### Bug Fixes
+
+ - <csr-id-017d7ec2ce7636e8a52b974fa9e79d3ca4516b7b/> update rust crate tokio to v1.49.0
+   | datasource | package | from   | to     |
+   | ---------- | ------- | ------ | ------ |
+   | crate      | tokio   | 1.48.0 | 1.49.0 |
+ - <csr-id-cf9e8ff74aca49c7fbf0ce861890a5ed37c0cde1/> update rust crate clap to v4.5.54
+   | datasource | package | from   | to     |
+   | ---------- | ------- | ------ | ------ |
+   | crate      | clap    | 4.5.53 | 4.5.54 |
+ - <csr-id-59d864174db2a204a3805d70278785004dd4d928/> update rust crate clap to v4.5.53
+   | datasource | package | from   | to     |
+   | ---------- | ------- | ------ | ------ |
+   | crate      | clap    | 4.5.52 | 4.5.53 |
+ - <csr-id-e7d8bfc44a03612e9c6d26267ffd390aed2d9e7c/> update rust crate clap to v4.5.52
+   | datasource | package | from   | to     |
+   | ---------- | ------- | ------ | ------ |
+   | crate      | clap    | 4.5.51 | 4.5.52 |
+
+### Commit Statistics
+
+<csr-read-only-do-not-edit/>
+
+ - 15 commits contributed to the release over the course of 47 calendar days.
+ - 15 commits were understood as [conventional](https://www.conventionalcommits.org).
+ - 0 issues like '(#ID)' were seen in commit messages
+
+### Commit Details
+
+<csr-read-only-do-not-edit/>
+
+<details><summary>view details</summary>
+
+ * **Uncategorized**
+    - Update rust crate tokio to v1.49.0 (017d7ec)
+    - Update rust crate clap to v4.5.54 (cf9e8ff)
+    - Update rust crate insta to v1.45.1 (5538467)
+    - Lock file maintenance (acb2232)
+    - Lock file maintenance (4b68f3b)
+    - Lock file maintenance (93bb5f2)
+    - Lock file maintenance (1cf11e0)
+    - Lock file maintenance (9382ad1)
+    - Update rust crate insta to v1.44.3 (e90e7d2)
+    - Update rust crate insta to v1.44.2 (f630ceb)
+    - Lock file maintenance (820e6b8)
+    - Update rust crate insta to v1.44.1 (212e334)
+    - Update rust crate clap to v4.5.53 (59d8641)
+    - Update rust crate clap to v4.5.52 (e7d8bfc)
+    - Lock file maintenance (39987f5)
+</details>
+
 ## v1.1.9 (2025-11-15)
+
+<csr-id-0000102016da7394fbe44144af54219dc0676f51/>
+<csr-id-66f57c3457e4be3ce5d9bac90d3c8a87558b828d/>
+<csr-id-083849736e18eb05193a50fdb2d7841cd72a0465/>
+<csr-id-0a00c10754bb6ee858715daeb7164c80f33ef348/>
+<csr-id-89d5d79c6084439c4f7b0ffc48686eb8fc88634b/>
+<csr-id-34add2dec82db0babb8932311445248c904e308c/>
+<csr-id-71d60d9aed85a6358e3ebeb810e15c80c172a141/>
+<csr-id-7af1fa3a881227b68d2b003bf72a86e3e2ce5f46/>
+<csr-id-c8a1409651878f8f0841f0f869d4596f886e73e6/>
+<csr-id-175a908e0a00bd17c5a482ba257028d8ad900941/>
+<csr-id-8c0c37f78e399a7c42b49e96c295983954ef1934/>
+<csr-id-fe4c00656df7cba865b041d89fd82c366fa20b01/>
 
 ### Chore
 
@@ -54,7 +146,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <csr-read-only-do-not-edit/>
 
- - 19 commits contributed to the release.
+ - 20 commits contributed to the release.
  - 19 commits were understood as [conventional](https://www.conventionalcommits.org).
  - 0 issues like '(#ID)' were seen in commit messages
 
@@ -65,6 +157,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <details><summary>view details</summary>
 
  * **Uncategorized**
+    - Release dnstracer v1.1.9 (a9ae8ab)
     - Simplify main a bit (0000104)
     - Get less features from tokio (0000103)
     - Update lints (0000102)

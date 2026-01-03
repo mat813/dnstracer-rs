@@ -213,7 +213,7 @@ dependencies = [
 
 [[package]]
 name = "dnstracer"
-version = "1.1.9"
+version = "1.1.10"
 dependencies = [
  "clap",
  "eyre",
