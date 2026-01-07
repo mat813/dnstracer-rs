@@ -1,3 +1,4 @@
+use derive_more::PartialEq;
 use std::{
     cmp::Ordering,
     fmt, hash,
@@ -5,13 +6,14 @@ use std::{
 };
 
 /// `OptName` is a struct that represents an nameserver and the zone it is supposed to be authoritative for.
-#[derive(Debug, Clone, Eq)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct OptName {
     /// The name server IP address
     pub ip: IpAddr,
     /// Optionnally, the name server's FQDN
     pub name: Option<String>,
     /// The zone it is supposed to be authoritative for
+    #[partial_eq(skip)]
     pub zone: Option<String>,
 }
 
@@ -51,12 +53,6 @@ impl fmt::Display for OptName {
                 zone: Some(ref zone),
             } => write!(f, "{name} [{zone}] ({ip})",),
         }
-    }
-}
-
-impl PartialEq for OptName {
-    fn eq(&self, other: &Self) -> bool {
-        self.name == other.name && self.ip == other.ip
     }
 }
 

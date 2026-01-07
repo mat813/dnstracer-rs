@@ -1,5 +1,5 @@
 use crate::{args::Args, opt_name::OptName};
-use derive_more::Display;
+use derive_more::{Debug, Display};
 use exn::{Result, ResultExt as _, bail};
 use hickory_client::client::{Client, ClientHandle as _};
 use hickory_proto::{
@@ -56,10 +56,12 @@ struct FullResult {
 }
 
 /// Recursive resolver
+#[derive(Debug)]
 pub struct RecursiveResolver<'a> {
     /// Store the results, in case we need to display them
     results: RwLock<HashMap<OptName, FullResult>>,
     /// Single resolver for everything
+    #[debug(skip)]
     resolver: TokioResolver,
     /// Copy of all the arguments for easier processing
     arguments: &'a Args,
@@ -67,17 +69,6 @@ pub struct RecursiveResolver<'a> {
     positive_cache: Option<RwLock<Cache>>,
     /// Negative answer cache
     negative_cache: Option<RwLock<Cache>>,
-}
-
-impl fmt::Debug for RecursiveResolver<'_> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("RecursiveResolver")
-            .field("results", &self.results)
-            .field("args", &self.arguments)
-            .field("positive_cache", &self.positive_cache)
-            .field("negative_cache", &self.negative_cache)
-            .finish_non_exhaustive()
-    }
 }
 
 impl<'a> RecursiveResolver<'a> {
