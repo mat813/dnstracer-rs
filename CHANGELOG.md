@@ -5,7 +5,59 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v1.2.0 (2026-01-07)
+
+### Chore
+
+ - <csr-id-8f701e881fbe966034bd089ed7122d73a3852de8/> lock file maintenance
+ - <csr-id-12554ca0d8e142b9075f581b9d3c6d2b79888abd/> update rust crate insta to v1.46.0
+   | datasource | package | from   | to     |
+   | ---------- | ------- | ------ | ------ |
+   | crate      | insta   | 1.45.1 | 1.46.0 |
+
+### New Features
+
+ - <csr-id-000012403ab2dd2955f92e803861c9c1803b7cea/> move from eyre to exn, better errors and smaller runtime
+
+### Bug Fixes
+
+ - <csr-id-00001250ba6458a9c4e3e1b7356a888924303246/> use derive_more a bit more
+
+### Commit Statistics
+
+<csr-read-only-do-not-edit/>
+
+ - 4 commits contributed to the release.
+ - 3 days passed between releases.
+ - 4 commits were understood as [conventional](https://www.conventionalcommits.org).
+ - 0 issues like '(#ID)' were seen in commit messages
+
+### Commit Details
+
+<csr-read-only-do-not-edit/>
+
+<details><summary>view details</summary>
+
+ * **Uncategorized**
+    - Use derive_more a bit more (0000125)
+    - Move from eyre to exn, better errors and smaller runtime (0000124)
+    - Lock file maintenance (8f701e8)
+    - Update rust crate insta to v1.46.0 (12554ca)
+</details>
+
 ## v1.1.10 (2026-01-03)
+
+<csr-id-5538467a65f118bd3e1555f53bb62065e98c37ee/>
+<csr-id-acb223281aa88968e18d193b5573e3b674a5d7a8/>
+<csr-id-4b68f3b48d7951738852ebf52d410b9c9da65ec2/>
+<csr-id-93bb5f21f645c99add608023e0f3e0cfeb0e490a/>
+<csr-id-1cf11e0067568701f8680332eed4015f868d10ff/>
+<csr-id-9382ad1c6bae1beedc3dc8e0b52b58da3c6bf760/>
+<csr-id-e90e7d256941addda900b77bca10a78dfb405c04/>
+<csr-id-f630ceb5fba6bcf99ee98596d75ba8584dae808e/>
+<csr-id-820e6b8252b1e062f31734a4081bf9c23c989326/>
+<csr-id-212e334c50b66cab82dbd3d5abfe48bd3bc2e7ce/>
+<csr-id-39987f5032f899fb117210ef234d41f9873bcc54/>
 
 ### Chore
 
@@ -56,7 +108,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <csr-read-only-do-not-edit/>
 
- - 15 commits contributed to the release over the course of 47 calendar days.
+ - 16 commits contributed to the release.
+ - 49 days passed between releases.
  - 15 commits were understood as [conventional](https://www.conventionalcommits.org).
  - 0 issues like '(#ID)' were seen in commit messages
 
@@ -67,6 +120,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <details><summary>view details</summary>
 
  * **Uncategorized**
+    - Release dnstracer v1.1.10 (a066ad4)
     - Update rust crate tokio to v1.49.0 (017d7ec)
     - Update rust crate clap to v4.5.54 (cf9e8ff)
     - Update rust crate insta to v1.45.1 (5538467)
