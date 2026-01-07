@@ -2,4 +2,4 @@
 source: src/args.rs
 expression: validated
 ---
-"Cannot use IPv6 only queries with an ipv4 source address (1.1.1.1)"
+Cannot use IPv6 only queries with an ipv4 source address (1.1.1.1), at src/args.rs:99:21

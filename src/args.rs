@@ -1,7 +1,8 @@
 use clap::Parser;
-use eyre::{Result, WrapErr as _, bail};
-use hickory_proto::rr::RecordType;
-use std::{net::IpAddr, str::FromStr as _, time::Duration};
+use derive_more::Display;
+use exn::{Result, bail};
+use hickory_proto::{ProtoError, rr::RecordType};
+use std::{net::IpAddr, num::ParseIntError, time::Duration};
 
 // Original arguments
 // -c: disable local caching, default enabled
@@ -78,24 +79,35 @@ pub struct Args {
     pub tcp: bool,
 }
 
-fn parse_record_type(s: &str) -> Result<RecordType> {
-    Ok(RecordType::from_str(&s.to_ascii_uppercase())?)
+/// The argument parsing errors
+#[derive(Debug, Display)]
+pub struct ArgsError(String);
+
+impl std::error::Error for ArgsError {}
+
+/// Parsing record type
+fn parse_record_type(s: &str) -> std::result::Result<RecordType, ProtoError> {
+    s.to_ascii_uppercase().parse()
 }
 
 impl Args {
     /// Perform some validation on arguments
-    pub fn validate(&mut self) -> Result<()> {
+    pub fn validate(&mut self) -> Result<(), ArgsError> {
         match self.source_address {
             Some(IpAddr::V4(ip)) => {
                 if self.ipv6 {
-                    bail!("Cannot use IPv6 only queries with an ipv4 source address ({ip})");
+                    bail!(ArgsError(format!(
+                        "Cannot use IPv6 only queries with an ipv4 source address ({ip})"
+                    )));
                 }
                 // Also, force IPv4 queries everywhere, otherwise we'd get protocol errors
                 self.ipv4 = true;
             }
             Some(IpAddr::V6(ip)) => {
                 if self.ipv4 {
-                    bail!("Cannot use IPv4 only queries with an ipv6 source address ({ip})");
+                    bail!(ArgsError(format!(
+                        "Cannot use IPv4 only queries with an ipv6 source address ({ip})"
+                    )));
                 }
                 // Also, force IPv6 queries everywhere, otherwise we'd get protocol errors
                 self.ipv6 = true;
@@ -108,10 +120,8 @@ impl Args {
 }
 
 /// Duration parser for args
-fn parse_duration(src: &str) -> Result<Duration> {
-    src.parse::<u64>()
-        .map(Duration::from_secs)
-        .wrap_err_with(|| format!("Invalid duration: {src}"))
+fn parse_duration(src: &str) -> std::result::Result<Duration, ParseIntError> {
+    src.parse::<u64>().map(Duration::from_secs)
 }
 
 #[cfg(test)]

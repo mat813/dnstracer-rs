@@ -2,4 +2,4 @@
 source: src/args.rs
 expression: validated
 ---
-"Cannot use IPv4 only queries with an ipv6 source address (2001:db8::1)"
+Cannot use IPv4 only queries with an ipv6 source address (2001:db8::1), at src/args.rs:108:21

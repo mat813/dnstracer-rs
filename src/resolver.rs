@@ -1,5 +1,6 @@
 use crate::{args::Args, opt_name::OptName};
-use eyre::{Result, WrapErr as _, bail, eyre};
+use derive_more::Display;
+use exn::{Result, ResultExt as _, bail};
 use hickory_client::client::{Client, ClientHandle as _};
 use hickory_proto::{
     op::ResponseCode,
@@ -23,6 +24,12 @@ use std::{
     pin::Pin,
     sync::RwLock,
 };
+
+/// A container for all resolver errors
+#[derive(Debug, Display)]
+pub struct ResolverError(String);
+
+impl std::error::Error for ResolverError {}
 
 /// Is the ip allowed with regard to what the op asked.
 macro_rules! is_ip_allowed {
@@ -75,7 +82,7 @@ impl fmt::Debug for RecursiveResolver<'_> {
 
 impl<'a> RecursiveResolver<'a> {
     /// Create a new recursive resolver
-    pub fn new(args: &'a Args) -> Result<Self> {
+    pub fn new(args: &'a Args) -> Result<Self, ResolverError> {
         let mut resolver_opts = ResolverOpts::default();
         resolver_opts.ip_strategy = LookupIpStrategy::Ipv4AndIpv6;
         resolver_opts.attempts = args.retries;
@@ -83,7 +90,7 @@ impl<'a> RecursiveResolver<'a> {
         resolver_opts.edns0 = !args.no_edns0;
 
         let resolver = TokioResolver::builder(GenericConnector::new(TokioRuntimeProvider::new()))
-            .wrap_err("build tokio resolver")?
+            .or_raise(|| ResolverError("build tokio resolver".to_owned()))?
             .with_options(resolver_opts)
             .build();
 
@@ -99,7 +106,7 @@ impl<'a> RecursiveResolver<'a> {
 
 impl RecursiveResolver<'_> {
     /// Figure out the server we got as an argument
-    pub async fn init(&self) -> Result<Vec<OptName>> {
+    pub async fn init(&self) -> Result<Vec<OptName>, ResolverError> {
         let mut results: Vec<OptName> = vec![];
 
         // If it is an IP, use it directly
@@ -115,7 +122,7 @@ impl RecursiveResolver<'_> {
                 .resolver
                 .ns_lookup(".")
                 .await
-                .wrap_err("ns lookup")?
+                .or_raise(|| ResolverError("ns lookup".to_owned()))?
                 .iter()
                 .cloned()
                 .map(|ns| ns.0)
@@ -127,7 +134,7 @@ impl RecursiveResolver<'_> {
                         .resolver
                         .lookup_ip(ns.clone())
                         .await
-                        .wrap_err("ip lookup")?
+                        .or_raise(|| ResolverError("ip lookup".to_owned()))?
                         .iter()
                         .filter(|ip| is_ip_allowed!(self, ip))
                         .map(|ip| OptName {
@@ -145,7 +152,7 @@ impl RecursiveResolver<'_> {
                     .resolver
                     .lookup_ip(&self.arguments.server)
                     .await
-                    .wrap_err("ip lookup")?
+                    .or_raise(|| ResolverError("ip lookup".to_owned()))?
                     .iter()
                     .filter(|ip| is_ip_allowed!(self, ip))
                     .map(|ip| OptName {
@@ -158,10 +165,10 @@ impl RecursiveResolver<'_> {
         }
 
         if results.is_empty() {
-            bail!(
+            bail!(ResolverError(format!(
                 "no IP address found for hostname: {}",
                 self.arguments.server
-            );
+            )));
         }
 
         Ok(results)
@@ -174,7 +181,7 @@ impl RecursiveResolver<'_> {
         server: &'a OptName,
         depth: usize,
         last: Vec<bool>,
-    ) -> Pin<Box<dyn Future<Output = Result<()>> + 'a>> {
+    ) -> Pin<Box<dyn Future<Output = Result<(), ResolverError>> + 'a>> {
         Box::pin(async move {
             if self.cache_get(&(server.ip, name.clone())) {
                 Self::print(depth, server, "(cached)", &last);
@@ -258,7 +265,9 @@ impl RecursiveResolver<'_> {
                                 new_last
                             })
                             .await
-                            .wrap_err_with(|| format!("do recurse depth {}", depth + 1))?;
+                            .or_raise(|| {
+                                ResolverError(format!("do recurse depth {}", depth + 1))
+                            })?;
                         }
                     }
                 }
@@ -277,7 +286,7 @@ impl RecursiveResolver<'_> {
         server: &OptName,
         name: &Name,
         query_type: RecordType,
-    ) -> Result<DnsResponse> {
+    ) -> Result<DnsResponse, ResolverError> {
         let stream = UdpClientStream::builder(server.into(), TokioRuntimeProvider::new())
             .with_timeout(Some(self.arguments.timeout))
             .with_bind_addr(
@@ -286,7 +295,9 @@ impl RecursiveResolver<'_> {
                     .map(|ip| SocketAddr::new(ip, 0)),
             )
             .build();
-        let (mut client, bg) = Client::connect(stream).await.wrap_err("client connect")?;
+        let (mut client, bg) = Client::connect(stream)
+            .await
+            .or_raise(|| ResolverError("client connect".to_owned()))?;
 
         if self.arguments.no_edns0 {
             client.disable_edns();
@@ -300,7 +311,7 @@ impl RecursiveResolver<'_> {
         client
             .query(name.clone(), DNSClass::IN, query_type)
             .await
-            .wrap_err("client query")
+            .or_raise(|| ResolverError("client query".to_owned()))
     }
 
     /// Make a TCP DNS query
@@ -309,7 +320,7 @@ impl RecursiveResolver<'_> {
         server: &OptName,
         name: &Name,
         query_type: RecordType,
-    ) -> Result<DnsResponse> {
+    ) -> Result<DnsResponse, ResolverError> {
         let (stream, sender) = TcpClientStream::new(
             server.into(),
             self.arguments
@@ -321,7 +332,7 @@ impl RecursiveResolver<'_> {
 
         let (mut client, bg) = Client::new(stream, sender, None)
             .await
-            .wrap_err("client new")?;
+            .or_raise(|| ResolverError("client new".to_owned()))?;
 
         if self.arguments.no_edns0 {
             client.disable_edns();
@@ -335,7 +346,7 @@ impl RecursiveResolver<'_> {
         client
             .query(name.clone(), DNSClass::IN, query_type)
             .await
-            .wrap_err("client query")
+            .or_raise(|| ResolverError("client query".to_owned()))
     }
 
     /// Figure out the next servers in the recursion
@@ -430,11 +441,11 @@ impl RecursiveResolver<'_> {
 
     /// Print the overview
     #[expect(clippy::print_stdout, reason = "print")]
-    pub fn show_overview(&self) -> Result<()> {
+    pub fn show_overview(&self) -> Result<(), ResolverError> {
         for (key, values) in self
             .results
             .read()
-            .map_err(|e| eyre!("get read lock: {e:?}"))?
+            .map_err(|e| ResolverError(format!("get read lock: {e:?}")))?
             .iter()
         {
             if values.response_code != ResponseCode::NoError {
@@ -503,11 +514,11 @@ impl RecursiveResolver<'_> {
         server: OptName,
         response_code: ResponseCode,
         results: &[Record],
-    ) -> Result<()> {
+    ) -> Result<(), ResolverError> {
         let mut res = self
             .results
             .write()
-            .map_err(|e| eyre!("get write lock: {e:?}"))?;
+            .map_err(|e| ResolverError(format!("get write lock: {e:?}")))?;
         let full = res.entry(server).or_default();
 
         full.response_code = response_code;
