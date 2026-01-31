@@ -12,7 +12,7 @@ repository = "https://gitlab.com/mat813/dnstracer-rs"
 [dependencies]
 clap = { version = "=4.5.56", features = ["derive"] }
 derive_more = { version = "=2.1.1", features = ["debug", "display", "eq", "from_str"] }
-exn = "=0.2.1"
+exn = "=0.3.0"
 hickory-client = "=0.25.2"
 hickory-proto = "=0.25.2"
 hickory-resolver = "=0.25.2"
