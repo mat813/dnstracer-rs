@@ -78,5 +78,5 @@ unwrap_in_result = "warn"
 unwrap_used = "warn"
 
 [dev-dependencies]
-insta = "=1.46.2"
+insta = "=1.46.3"
 rstest = "=0.26.1"
