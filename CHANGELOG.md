@@ -5,7 +5,88 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v1.2.1 (2026-02-11)
+
+### Chore
+
+ - <csr-id-683a4dcc167754d3eb2d4da2e6b7c8a9f0ac989d/> lock file maintenance
+ - <csr-id-7b059778a0f205b02c0ef3021e6fc4eecb3611fb/> update rust crate insta to v1.46.3
+   | datasource | package | from   | to     |
+   | ---------- | ------- | ------ | ------ |
+   | crate      | insta   | 1.46.2 | 1.46.3 |
+ - <csr-id-3b67d5ab1c6aa0ba6b5f84a8fd2e90f23f1afdbf/> lock file maintenance
+ - <csr-id-7d669f1e1816bd39b18b6f2bdbba4536a543b7d7/> update rust crate insta to v1.46.2
+   | datasource | package | from   | to     |
+   | ---------- | ------- | ------ | ------ |
+   | crate      | insta   | 1.46.1 | 1.46.2 |
+ - <csr-id-16260b4307ec1e886e179211580ef63a63d0b5fe/> lock file maintenance
+ - <csr-id-26936d4b5da3ee13687440de97c8ddb9b4e6d2b5/> lock file maintenance
+ - <csr-id-67c4f1e2f0fa92bab2db9d0a62908787cb358e03/> lock file maintenance
+ - <csr-id-0d76b11be1be6a5c109466856f59d5f7745a4295/> update rust crate insta to v1.46.1
+   | datasource | package | from   | to     |
+   | ---------- | ------- | ------ | ------ |
+   | crate      | insta   | 1.46.0 | 1.46.1 |
+ - <csr-id-5deb3928a5d2a15c372ed2971232dfc19485b21f/> lock file maintenance
+
+### Bug Fixes
+
+ - <csr-id-b77d73fd406fd5d0325176cf32e014f337c059ec/> update rust crate clap to v4.5.57
+   | datasource | package | from   | to     |
+   | ---------- | ------- | ------ | ------ |
+   | crate      | clap    | 4.5.56 | 4.5.57 |
+ - <csr-id-01030373c9f2296858b3793d9477d7d96f510e91/> update rust crate exn to v0.3.0
+   | datasource | package | from  | to    |
+   | ---------- | ------- | ----- | ----- |
+   | crate      | exn     | 0.2.1 | 0.3.0 |
+ - <csr-id-370670b2e7e20cab0f69a4e27a8aa10b4b9169c7/> update rust crate clap to v4.5.56
+   | datasource | package | from   | to     |
+   | ---------- | ------- | ------ | ------ |
+   | crate      | clap    | 4.5.55 | 4.5.56 |
+ - <csr-id-7bdd596fdb92f9fca5bee1decc19453279bb1e9d/> update rust crate clap to v4.5.55
+   | datasource | package | from   | to     |
+   | ---------- | ------- | ------ | ------ |
+   | crate      | clap    | 4.5.54 | 4.5.55 |
+ - <csr-id-28c0fde55f2488993754dc3217eb80b13aa63793/> pin dependencies
+   | datasource | package     | from  | to    |
+   | ---------- | ----------- | ----- | ----- |
+   | crate      | derive_more | 2.1.1 | 2.1.1 |
+   | crate      | exn         | 0.2.1 | 0.2.1 |
+
+### Commit Statistics
+
+<csr-read-only-do-not-edit/>
+
+ - 14 commits contributed to the release over the course of 32 calendar days.
+ - 14 commits were understood as [conventional](https://www.conventionalcommits.org).
+ - 0 issues like '(#ID)' were seen in commit messages
+
+### Commit Details
+
+<csr-read-only-do-not-edit/>
+
+<details><summary>view details</summary>
+
+ * **Uncategorized**
+    - Lock file maintenance (683a4dc)
+    - Update rust crate clap to v4.5.57 (b77d73f)
+    - Update rust crate insta to v1.46.3 (7b05977)
+    - Lock file maintenance (3b67d5a)
+    - Update rust crate exn to v0.3.0 (0103037)
+    - Update rust crate insta to v1.46.2 (7d669f1)
+    - Update rust crate clap to v4.5.56 (370670b)
+    - Update rust crate clap to v4.5.55 (7bdd596)
+    - Lock file maintenance (16260b4)
+    - Lock file maintenance (26936d4)
+    - Lock file maintenance (67c4f1e)
+    - Update rust crate insta to v1.46.1 (0d76b11)
+    - Lock file maintenance (5deb392)
+    - Pin dependencies (28c0fde)
+</details>
+
 ## v1.2.0 (2026-01-07)
+
+<csr-id-8f701e881fbe966034bd089ed7122d73a3852de8/>
+<csr-id-12554ca0d8e142b9075f581b9d3c6d2b79888abd/>
 
 ### Chore
 
@@ -27,7 +108,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <csr-read-only-do-not-edit/>
 
- - 4 commits contributed to the release.
+ - 5 commits contributed to the release.
  - 3 days passed between releases.
  - 4 commits were understood as [conventional](https://www.conventionalcommits.org).
  - 0 issues like '(#ID)' were seen in commit messages
@@ -39,6 +120,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <details><summary>view details</summary>
 
  * **Uncategorized**
+    - Release dnstracer v1.2.0 (52848f8)
     - Use derive_more a bit more (0000125)
     - Move from eyre to exn, better errors and smaller runtime (0000124)
     - Lock file maintenance (8f701e8)
