@@ -227,8 +227,10 @@ mod tests {
 
     #[test]
     fn optname_hash() {
-        use std::collections::hash_map::DefaultHasher;
-        use std::hash::{Hash as _, Hasher as _};
+        use std::{
+            collections::hash_map::DefaultHasher,
+            hash::{Hash as _, Hasher as _},
+        };
 
         let opt1 = OptName {
             ip: IpAddr::V4(Ipv4Addr::new(192, 168, 1, 1)),

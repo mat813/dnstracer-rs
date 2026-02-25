@@ -1,0 +1,4 @@
+edition = "2024"
+imports_granularity = "Crate"
+reorder_impl_items = true
+where_single_line = false
