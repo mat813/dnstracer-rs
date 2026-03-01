@@ -51,7 +51,7 @@ impl fmt::Display for OptName {
                 ref ip,
                 name: Some(ref name),
                 zone: Some(ref zone),
-            } => write!(f, "{name} [{zone}] ({ip})",),
+            } => write!(f, "{name} [{zone}] ({ip})"),
         }
     }
 }
