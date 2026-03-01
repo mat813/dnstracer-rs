@@ -109,14 +109,13 @@ impl RecursiveResolver<'_> {
             });
         } else if self.arguments.server == "." {
             // It's a dot, we want to start at the root zone and iterate over all its name servers ips
-            let root_ns: Vec<Name> = self
+            let root_ns: Vec<_> = self
                 .resolver
                 .ns_lookup(".")
                 .await
                 .or_raise(|| ResolverError("ns lookup".to_owned()))?
                 .iter()
-                .cloned()
-                .map(|ns| ns.0)
+                .map(|ns| ns.0.clone())
                 .collect();
 
             for ns in root_ns {
