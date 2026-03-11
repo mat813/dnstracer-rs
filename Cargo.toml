@@ -79,5 +79,5 @@ unwrap_used = "warn"
 
 [dev-dependencies]
 insta = "=1.46.3"
-mockall = "=0.13.1"
+mockall = "=0.14.0"
 rstest = "=0.26.1"
