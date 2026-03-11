@@ -5,7 +5,84 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v1.2.2 (2026-03-11)
+
+### Chore
+
+ - <csr-id-432dd98b4b5a161a69c5389dc2554f3ccbda3eb3/> lock file maintenance
+ - <csr-id-191d4afef8cbba321a7d9cac0c292572100f1d92/> lock file maintenance
+ - <csr-id-4744efdc80728adc20e7334c8390764706e84a4a/> lock file maintenance
+ - <csr-id-eabc660f9f004d50103b5c3bca84fa40e2f062f1/> lock file maintenance
+ - <csr-id-fa554f7da174bd66aa17d525214468bd219543da/> lock file maintenance
+
+### Bug Fixes
+
+ - <csr-id-00001540a912adf8de03a4c370e7ac4899a82495/> add tests
+ - <csr-id-add39482e1a0e6f2bf77caa4b754025ed984d871/> update rust crate tokio to v1.50.0
+   | datasource | package | from   | to     |
+   | ---------- | ------- | ------ | ------ |
+   | crate      | tokio   | 1.49.0 | 1.50.0 |
+ - <csr-id-000014907e7ed9f8bea1e9e3259636ae9dd92725/> simplifier
+ - <csr-id-1fa8492593c53c6d455283e0ca7319215cded8e4/> update rust crate clap to v4.5.60
+   | datasource | package | from   | to     |
+   | ---------- | ------- | ------ | ------ |
+   | crate      | clap    | 4.5.59 | 4.5.60 |
+ - <csr-id-80abbaf434a869ca5ca1a7ee60011161fabe9a69/> update rust crate clap to v4.5.59
+   | datasource | package | from   | to     |
+   | ---------- | ------- | ------ | ------ |
+   | crate      | clap    | 4.5.58 | 4.5.59 |
+ - <csr-id-b4c47ab88e11adcddee8a9612c5610f99317e60a/> update rust crate clap to v4.5.58
+   | datasource | package | from   | to     |
+   | ---------- | ------- | ------ | ------ |
+   | crate      | clap    | 4.5.57 | 4.5.58 |
+
+### Style
+
+ - <csr-id-00001480ad98c240c5fd8e999d1b2bb7d4bb346d/> lint
+ - <csr-id-000014702f16cdc21e5a781aa6b48c57405ed52d/> fmt
+
+### Commit Statistics
+
+<csr-read-only-do-not-edit/>
+
+ - 13 commits contributed to the release.
+ - 28 days passed between releases.
+ - 13 commits were understood as [conventional](https://www.conventionalcommits.org).
+ - 0 issues like '(#ID)' were seen in commit messages
+
+### Commit Details
+
+<csr-read-only-do-not-edit/>
+
+<details><summary>view details</summary>
+
+ * **Uncategorized**
+    - Add tests (0000154)
+    - Lock file maintenance (432dd98)
+    - Update rust crate tokio to v1.50.0 (add3948)
+    - Lock file maintenance (191d4af)
+    - Lock file maintenance (4744efd)
+    - Simplifier (0000149)
+    - Lint (0000148)
+    - Fmt (0000147)
+    - Lock file maintenance (eabc660)
+    - Update rust crate clap to v4.5.60 (1fa8492)
+    - Update rust crate clap to v4.5.59 (80abbaf)
+    - Lock file maintenance (fa554f7)
+    - Update rust crate clap to v4.5.58 (b4c47ab)
+</details>
+
 ## v1.2.1 (2026-02-11)
+
+<csr-id-683a4dcc167754d3eb2d4da2e6b7c8a9f0ac989d/>
+<csr-id-7b059778a0f205b02c0ef3021e6fc4eecb3611fb/>
+<csr-id-3b67d5ab1c6aa0ba6b5f84a8fd2e90f23f1afdbf/>
+<csr-id-7d669f1e1816bd39b18b6f2bdbba4536a543b7d7/>
+<csr-id-16260b4307ec1e886e179211580ef63a63d0b5fe/>
+<csr-id-26936d4b5da3ee13687440de97c8ddb9b4e6d2b5/>
+<csr-id-67c4f1e2f0fa92bab2db9d0a62908787cb358e03/>
+<csr-id-0d76b11be1be6a5c109466856f59d5f7745a4295/>
+<csr-id-5deb3928a5d2a15c372ed2971232dfc19485b21f/>
 
 ### Chore
 
@@ -56,7 +133,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <csr-read-only-do-not-edit/>
 
- - 14 commits contributed to the release over the course of 32 calendar days.
+ - 15 commits contributed to the release.
+ - 34 days passed between releases.
  - 14 commits were understood as [conventional](https://www.conventionalcommits.org).
  - 0 issues like '(#ID)' were seen in commit messages
 
@@ -67,6 +145,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <details><summary>view details</summary>
 
  * **Uncategorized**
+    - Release dnstracer v1.2.1 (62ba7f9)
     - Lock file maintenance (683a4dc)
     - Update rust crate clap to v4.5.57 (b77d73f)
     - Update rust crate insta to v1.46.3 (7b05977)
