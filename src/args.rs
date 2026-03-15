@@ -133,7 +133,7 @@ fn parse_duration(src: &str) -> std::result::Result<Duration, ParseIntError> {
 
 #[cfg(test)]
 mod tests {
-    #![allow(clippy::expect_used, clippy::unwrap_used, reason = "test")]
+    #![expect(clippy::expect_used, reason = "test")]
 
     use super::*;
     use insta::assert_debug_snapshot;
@@ -195,7 +195,7 @@ mod tests {
     #[case("invalid_ipv6", vec!["test", "example.com", "-S", "2a0x::1"])]
     #[trace]
     fn bad_args(#[case] name: &str, #[case] input: Vec<&str>) {
-        let args = Args::try_parse_from(input).unwrap_err();
+        let args = Args::try_parse_from(input).expect_err("input should be rejected by the parser");
 
         assert_debug_snapshot!(format!("bad_{name}"), args);
     }
@@ -206,7 +206,9 @@ mod tests {
     #[trace]
     fn not_valid(#[case] name: &str, #[case] input: Vec<&str>) {
         let mut args = Args::parse_from(input);
-        let validated = args.validate().unwrap_err();
+        let validated = args
+            .validate()
+            .expect_err("incompatible flags should fail validation");
 
         assert_debug_snapshot!(format!("not_valid_{name}"), validated);
     }

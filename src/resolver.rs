@@ -682,12 +682,7 @@ impl<R: NameResolver, Q: DnsQuerier> RecursiveResolver<'_, R, Q> {
 
 #[cfg(test)]
 mod tests {
-    #![allow(
-        clippy::expect_used,
-        clippy::unwrap_used,
-        clippy::indexing_slicing,
-        reason = "test"
-    )]
+    #![allow(clippy::expect_used, clippy::indexing_slicing, reason = "test")]
 
     use super::*;
     use crate::args::Args;
@@ -735,8 +730,8 @@ mod tests {
 
     /// Build a `QueryResult` representing a non-authoritative NS delegation with glue records
     fn delegation_response(ns_name: &str, ns_ip: Ipv4Addr, zone: &str) -> QueryResult {
-        let ns_name_parsed = Name::from_str(ns_name).unwrap();
-        let zone_name = Name::from_str(zone).unwrap();
+        let ns_name_parsed = Name::from_str(ns_name).expect("ns_name is a valid DNS name literal");
+        let zone_name = Name::from_str(zone).expect("zone is a valid DNS name literal");
 
         let ns_record = Record::from_rdata(
             zone_name,
@@ -756,8 +751,11 @@ mod tests {
 
     /// Build a `QueryResult` representing an authoritative answer with one A record
     fn authoritative_a_response(domain: &str, ip: Ipv4Addr) -> QueryResult {
-        let record =
-            Record::from_rdata(Name::from_str(domain).unwrap(), 300, RData::A(rdata::A(ip)));
+        let record = Record::from_rdata(
+            Name::from_str(domain).expect("domain is a valid DNS name literal"),
+            300,
+            RData::A(rdata::A(ip)),
+        );
         QueryResult {
             authoritative: true,
             answers: vec![record],
@@ -772,7 +770,8 @@ mod tests {
     #[test]
     fn recursive_resolver_new() {
         let args = default_args();
-        let resolver = RecursiveResolver::new(&args).unwrap();
+        let resolver = RecursiveResolver::new(&args)
+            .expect("resolver creation with default args should succeed");
 
         assert_eq!(*resolver.arguments, args);
         assert!(resolver.positive_cache.is_some());
@@ -786,7 +785,8 @@ mod tests {
             negative_cache: true,
             ..default_args()
         };
-        let resolver = RecursiveResolver::new(&args).unwrap();
+        let resolver = RecursiveResolver::new(&args)
+            .expect("resolver creation with default args should succeed");
 
         assert_eq!(*resolver.arguments, args);
         assert!(resolver.positive_cache.is_none());
@@ -799,11 +799,13 @@ mod tests {
             server: "8.8.8.8".to_owned(),
             ..default_args()
         };
-        let resolver = RecursiveResolver::new(&args).unwrap();
+        let resolver =
+            RecursiveResolver::new(&args).expect("resolver creation with IP server should succeed");
 
-        let result = resolver.init().await;
-        assert!(result.is_ok());
-        let servers = result.unwrap();
+        let servers = resolver
+            .init()
+            .await
+            .expect("init with an IP server should succeed");
         assert_eq!(servers.len(), 1);
         assert_eq!(servers[0].ip, IpAddr::V4(Ipv4Addr::new(8, 8, 8, 8)));
         assert!(servers[0].name.is_none());
@@ -819,14 +821,19 @@ mod tests {
         nr.expect_ns_lookup()
             .with(predicate::eq("."))
             .once()
-            .returning(|_| Ok(vec![Name::from_str("a.root-servers.net.").unwrap()]));
+            .returning(|_| {
+                Ok(vec![
+                    Name::from_str("a.root-servers.net.")
+                        .expect("a.root-servers.net. is a valid DNS name"),
+                ])
+            });
         nr.expect_lookup_ip()
             .with(predicate::eq("a.root-servers.net."))
             .once()
             .returning(|_| Ok(vec![IpAddr::from([198, 41, 0, 4])]));
 
         let resolver = mock_resolver(&args, nr, MockDnsQuerier::new());
-        let servers = resolver.init().await.unwrap();
+        let servers = resolver.init().await.expect("init with dot should succeed");
 
         assert_eq!(servers.len(), 1);
         assert_eq!(servers[0].ip, IpAddr::from([198, 41, 0, 4]));
@@ -839,17 +846,22 @@ mod tests {
         let args = default_args(); // ipv4 = true, ipv6 = false
 
         let mut nr = MockNameResolver::new();
-        nr.expect_ns_lookup()
-            .once()
-            .returning(|_| Ok(vec![Name::from_str("a.root-servers.net.").unwrap()]));
+        nr.expect_ns_lookup().once().returning(|_| {
+            Ok(vec![
+                Name::from_str("a.root-servers.net.")
+                    .expect("a.root-servers.net. is a valid DNS name"),
+            ])
+        });
         // Return both an IPv4 and an IPv6 address
         nr.expect_lookup_ip().once().returning(|_| {
-            let ipv6: IpAddr = "2001:503:ba3e::2:30".parse().unwrap();
+            let ipv6: IpAddr = "2001:503:ba3e::2:30"
+                .parse()
+                .expect("2001:503:ba3e::2:30 is a valid IPv6 address");
             Ok(vec![IpAddr::from([198, 41, 0, 4]), ipv6])
         });
 
         let resolver = mock_resolver(&args, nr, MockDnsQuerier::new());
-        let servers = resolver.init().await.unwrap();
+        let servers = resolver.init().await.expect("init with dot should succeed");
 
         // Only the IPv4 address should be kept
         assert_eq!(servers.len(), 1);
@@ -875,7 +887,10 @@ mod tests {
             });
 
         let resolver = mock_resolver(&args, nr, MockDnsQuerier::new());
-        let servers = resolver.init().await.unwrap();
+        let servers = resolver
+            .init()
+            .await
+            .expect("init with hostname should succeed");
 
         assert_eq!(servers.len(), 2);
         assert!(
@@ -896,7 +911,9 @@ mod tests {
         let mut nr = MockNameResolver::new();
         // Return only an IPv6 address but ipv4=true means it gets filtered out
         nr.expect_lookup_ip().once().returning(|_| {
-            let ipv6: IpAddr = "2001:db8::1".parse().unwrap();
+            let ipv6: IpAddr = "2001:db8::1"
+                .parse()
+                .expect("2001:db8::1 is a valid IPv6 address");
             Ok(vec![ipv6])
         });
 
@@ -909,7 +926,7 @@ mod tests {
     #[tokio::test]
     async fn do_recurse_authoritative_answer_stored_in_results() {
         let args = default_args();
-        let name = Name::from_str("example.com.").unwrap();
+        let name = Name::from_str("example.com.").expect("example.com. is a valid DNS name");
         let server = OptName {
             ip: IpAddr::from([192, 0, 2, 1]),
             name: Some("ns1.example.com.".to_owned()),
@@ -928,11 +945,17 @@ mod tests {
         resolver
             .do_recurse(&name, &server, 1, vec![true])
             .await
-            .unwrap();
+            .expect("do_recurse should succeed");
 
-        let results = resolver.results.read().unwrap();
+        let results = resolver
+            .results
+            .read()
+            .expect("results lock should not be poisoned");
         assert_eq!(results.len(), 1);
-        let result = results.values().next().unwrap();
+        let result = results
+            .values()
+            .next()
+            .expect("results map should contain at least one entry");
         assert_eq!(result.response_code, ResponseCode::NoError);
         assert_eq!(result.records.len(), 1);
         drop(results);
@@ -941,7 +964,7 @@ mod tests {
     #[tokio::test]
     async fn do_recurse_uses_ns_at_depth_zero() {
         let args = default_args();
-        let name = Name::from_str("example.com.").unwrap();
+        let name = Name::from_str("example.com.").expect("example.com. is a valid DNS name");
         let server = OptName {
             ip: IpAddr::from([192, 0, 2, 1]),
             name: Some("ns1.example.com.".to_owned()),
@@ -959,13 +982,13 @@ mod tests {
         resolver
             .do_recurse(&name, &server, 0, vec![])
             .await
-            .unwrap();
+            .expect("do_recurse should succeed");
     }
 
     #[tokio::test]
     async fn do_recurse_follows_ns_delegation() {
         let args = default_args();
-        let name = Name::from_str("example.com.").unwrap();
+        let name = Name::from_str("example.com.").expect("example.com. is a valid DNS name");
         let first_server = OptName {
             ip: IpAddr::from([192, 0, 2, 1]),
             name: Some("ns1.example.com.".to_owned()),
@@ -999,9 +1022,12 @@ mod tests {
         resolver
             .do_recurse(&name, &first_server, 1, vec![])
             .await
-            .unwrap();
+            .expect("do_recurse should succeed");
 
-        let results = resolver.results.read().unwrap();
+        let results = resolver
+            .results
+            .read()
+            .expect("results lock should not be poisoned");
         assert_eq!(results.len(), 1);
         drop(results);
     }
@@ -1009,7 +1035,7 @@ mod tests {
     #[tokio::test]
     async fn do_recurse_skips_cached_servers() {
         let args = default_args();
-        let name = Name::from_str("example.com.").unwrap();
+        let name = Name::from_str("example.com.").expect("example.com. is a valid DNS name");
         let server = OptName {
             ip: IpAddr::from([192, 0, 2, 1]),
             name: Some("ns1.example.com.".to_owned()),
@@ -1023,15 +1049,15 @@ mod tests {
         resolver
             .positive_cache
             .as_ref()
-            .unwrap()
+            .expect("positive cache should be initialized")
             .write()
-            .unwrap()
+            .expect("positive cache lock should not be poisoned")
             .insert((server.ip, name.clone()));
 
         resolver
             .do_recurse(&name, &server, 1, vec![])
             .await
-            .unwrap();
+            .expect("do_recurse should succeed");
         // The mock verifies query was never called
     }
 
@@ -1041,7 +1067,7 @@ mod tests {
             negative_cache: true,
             ..default_args()
         };
-        let name = Name::from_str("example.com.").unwrap();
+        let name = Name::from_str("example.com.").expect("example.com. is a valid DNS name");
         let server = OptName {
             ip: IpAddr::from([192, 0, 2, 1]),
             name: Some("ns1.example.com.".to_owned()),
@@ -1058,9 +1084,14 @@ mod tests {
         resolver
             .do_recurse(&name, &server, 1, vec![])
             .await
-            .unwrap();
+            .expect("do_recurse should succeed even when the query errors (error is printed, not propagated)");
 
-        let neg = resolver.negative_cache.as_ref().unwrap().read().unwrap();
+        let neg = resolver
+            .negative_cache
+            .as_ref()
+            .expect("negative cache should be initialized")
+            .read()
+            .expect("negative cache lock should not be poisoned");
         assert!(neg.contains(&(server.ip, name.clone())));
         drop(neg);
     }
@@ -1068,7 +1099,7 @@ mod tests {
     #[tokio::test]
     async fn get_next_servers_uses_glue_records_from_additionals() {
         let args = default_args();
-        let name = Name::from_str("example.com.").unwrap();
+        let name = Name::from_str("example.com.").expect("example.com. is a valid DNS name");
         let current_server = OptName {
             ip: IpAddr::from([192, 0, 2, 1]),
             name: None,
@@ -1078,8 +1109,9 @@ mod tests {
         // No lookup_ip call expected — glue records in additionals are sufficient
         let nr = MockNameResolver::new();
 
-        let ns_name = Name::from_str("ns1.example.com.").unwrap();
-        let zone_name = Name::from_str("example.com.").unwrap();
+        let ns_name =
+            Name::from_str("ns1.example.com.").expect("ns1.example.com. is a valid DNS name");
+        let zone_name = Name::from_str("example.com.").expect("example.com. is a valid DNS name");
         let ns_record = Record::from_rdata(zone_name, 3600, RData::NS(rdata::NS(ns_name.clone())));
         let glue = Record::from_rdata(ns_name, 3600, RData::A(rdata::A(Ipv4Addr::new(1, 2, 3, 4))));
 
@@ -1095,7 +1127,7 @@ mod tests {
     #[tokio::test]
     async fn get_next_servers_falls_back_to_lookup_when_no_glue() {
         let args = default_args();
-        let name = Name::from_str("example.com.").unwrap();
+        let name = Name::from_str("example.com.").expect("example.com. is a valid DNS name");
         let current_server = OptName {
             ip: IpAddr::from([192, 0, 2, 1]),
             name: None,
@@ -1108,8 +1140,9 @@ mod tests {
             .once()
             .returning(|_| Ok(vec![IpAddr::from([5, 6, 7, 8])]));
 
-        let ns_name = Name::from_str("ns1.example.com.").unwrap();
-        let zone_name = Name::from_str("example.com.").unwrap();
+        let ns_name =
+            Name::from_str("ns1.example.com.").expect("ns1.example.com. is a valid DNS name");
+        let zone_name = Name::from_str("example.com.").expect("example.com. is a valid DNS name");
         let ns_record = Record::from_rdata(zone_name, 3600, RData::NS(rdata::NS(ns_name)));
 
         let resolver = mock_resolver(&args, nr, MockDnsQuerier::new());
