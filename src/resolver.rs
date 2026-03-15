@@ -20,9 +20,10 @@ use std::{
     collections::{BTreeSet, HashMap, HashSet},
     fmt,
     future::Future,
+    io::{self, Write},
     net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr},
     pin::Pin,
-    sync::RwLock,
+    sync::{Mutex, RwLock},
 };
 
 /// A container for all resolver errors
@@ -49,6 +50,8 @@ pub enum ResolverError {
     ReadLock,
     #[display("Failed to acquire write lock")]
     WriteLock,
+    #[display("Write error")]
+    Write,
 }
 
 impl std::error::Error for ResolverError {}
@@ -266,7 +269,7 @@ impl DnsQuerier for DefaultDnsQuerier {
 
 /// Recursive resolver
 #[derive(Debug)]
-pub struct RecursiveResolver<'a, R = TokioNameResolver, Q = DefaultDnsQuerier> {
+pub struct RecursiveResolver<'a, R = TokioNameResolver, Q = DefaultDnsQuerier, W = io::Stdout> {
     /// Store the results, in case we need to display them
     results: RwLock<HashMap<OptName, FullResult>>,
     /// Resolver for bootstrapping and NS name resolution
@@ -281,6 +284,9 @@ pub struct RecursiveResolver<'a, R = TokioNameResolver, Q = DefaultDnsQuerier> {
     positive_cache: Option<RwLock<Cache>>,
     /// Negative answer cache
     negative_cache: Option<RwLock<Cache>>,
+    /// Output writer
+    #[debug(skip)]
+    output: Mutex<W>,
 }
 
 impl<'a> RecursiveResolver<'a> {
@@ -304,11 +310,12 @@ impl<'a> RecursiveResolver<'a> {
             positive_cache: (!args.no_positive_cache).then(|| RwLock::new(HashSet::new())),
             negative_cache: args.negative_cache.then(|| RwLock::new(HashSet::new())),
             arguments: args,
+            output: Mutex::new(io::stdout()),
         })
     }
 }
 
-impl<R: NameResolver, Q: DnsQuerier> RecursiveResolver<'_, R, Q> {
+impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q, W> {
     /// Figure out the server we got as an argument
     pub async fn init(&self) -> Result<Vec<OptName>, ResolverError> {
         let mut results: Vec<OptName> = vec![];
@@ -380,7 +387,7 @@ impl<R: NameResolver, Q: DnsQuerier> RecursiveResolver<'_, R, Q> {
     ) -> Pin<Box<dyn Future<Output = Result<(), ResolverError>> + 'b>> {
         Box::pin(async move {
             if self.cache_get(&(server.ip, name.clone())) {
-                Self::print(depth, server, "(cached)", &last);
+                self.print(depth, server, "(cached)", &last);
                 return Ok(());
             }
 
@@ -398,7 +405,7 @@ impl<R: NameResolver, Q: DnsQuerier> RecursiveResolver<'_, R, Q> {
                     if response.authoritative {
                         // If the response is authoritative, we are probaby at the end of the journey.
                         let result = &response.answers;
-                        Self::print(depth, server, "found authoritative answer", &last);
+                        self.print(depth, server, "found authoritative answer", &last);
                         self.cache_set(true, (server.ip, name.clone()));
                         self.add_result(server.clone(), response.response_code, result)?;
 
@@ -428,7 +435,7 @@ impl<R: NameResolver, Q: DnsQuerier> RecursiveResolver<'_, R, Q> {
                             }
                         }
                     } else {
-                        Self::print(depth, server, "", &last);
+                        self.print(depth, server, "", &last);
 
                         let (records, additionals) = if depth == 0 && !response.answers.is_empty() {
                             // If we're at the start and we get answers, it means it was a recursive name server, so use those answers.
@@ -459,7 +466,7 @@ impl<R: NameResolver, Q: DnsQuerier> RecursiveResolver<'_, R, Q> {
                 }
                 Err(e) => {
                     self.cache_set(false, (server.ip, name.clone()));
-                    Self::print(
+                    self.print(
                         depth,
                         server,
                         format!(
@@ -543,7 +550,7 @@ impl<R: NameResolver, Q: DnsQuerier> RecursiveResolver<'_, R, Q> {
                     self.cache_set(true, (server.ip, name.clone()));
                 } else {
                     // If we cannot find an IP address, we create a fake server to give an error
-                    Self::print(
+                    self.print(
                         depth,
                         &OptName {
                             ip: [0, 0, 0, 0].into(),
@@ -563,16 +570,15 @@ impl<R: NameResolver, Q: DnsQuerier> RecursiveResolver<'_, R, Q> {
     }
 
     /// Print the overview
-    #[expect(clippy::print_stdout, reason = "print")]
     pub fn show_overview(&self) -> Result<(), ResolverError> {
-        for (key, values) in self
-            .results
-            .read()
-            .map_err(|_| ResolverError::ReadLock)?
-            .iter()
-        {
+        use fmt::Write as _;
+
+        let results = self.results.read().map_err(|_| ResolverError::ReadLock)?;
+        let mut buf = String::new();
+        for (key, values) in results.iter() {
             if values.response_code != ResponseCode::NoError {
-                println!(
+                let _ = writeln!(
+                    buf,
                     "{} ({})\t{}",
                     key.name.as_deref().unwrap_or_default(),
                     key.ip,
@@ -586,13 +592,20 @@ impl<R: NameResolver, Q: DnsQuerier> RecursiveResolver<'_, R, Q> {
                 // Don't use Record's Ord impl, it sorts things in a strange way
                 .sorted_by_cached_key(|r| format!("{r}"))
             {
-                println!(
+                let _ = writeln!(
+                    buf,
                     "{} ({}) \t{record}",
                     key.name.as_deref().unwrap_or_default(),
                     key.ip
                 );
             }
         }
+        drop(results);
+        self.output
+            .lock()
+            .map_err(|_| ResolverError::WriteLock)?
+            .write_all(buf.as_bytes())
+            .map_err(|_| ResolverError::Write)?;
         Ok(())
     }
 
@@ -652,30 +665,32 @@ impl<R: NameResolver, Q: DnsQuerier> RecursiveResolver<'_, R, Q> {
     }
 
     /// Try to give a nice out, as the original did
-    #[expect(clippy::print_stdout, reason = "called print")]
-    fn print(depth: usize, server: &OptName, rest: impl fmt::Display, last: &[bool]) {
-        let mut output = String::new();
+    fn print(&self, depth: usize, server: &OptName, rest: impl fmt::Display, last: &[bool]) {
+        let mut prefix = String::new();
 
         for i in 0..depth {
             if *last.get(i).unwrap_or(&false) {
-                output.push_str("  ");
+                prefix.push_str("  ");
             } else {
-                output.push_str(" |");
+                prefix.push_str(" |");
             }
             if i < depth - 1 {
-                output.push_str("     ");
+                prefix.push_str("     ");
             }
         }
 
         if depth > 0 {
-            output.push_str(r"\___ ");
+            prefix.push_str(r"\___ ");
         }
 
         let rest = format!("{rest}");
-        if rest.is_empty() {
-            println!("{output}{server}");
+        let line = if rest.is_empty() {
+            format!("{prefix}{server}\n")
         } else {
-            println!("{output}{server} {rest}");
+            format!("{prefix}{server} {rest}\n")
+        };
+        if let Ok(mut w) = self.output.lock() {
+            let _ = w.write_all(line.as_bytes());
         }
     }
 }
@@ -687,6 +702,7 @@ mod tests {
     use super::*;
     use crate::args::Args;
     use hickory_proto::rr::{Name, RData, Record, RecordType, rdata};
+    use insta::assert_debug_snapshot;
     use mockall::predicate;
     use std::{
         net::{IpAddr, Ipv4Addr},
@@ -712,12 +728,12 @@ mod tests {
         }
     }
 
-    /// Build a `RecursiveResolver` with mock implementations for testing
+    /// Build a `RecursiveResolver` with mock implementations for testing (output discarded)
     fn mock_resolver(
         args: &Args,
         name_resolver: MockNameResolver,
         querier: MockDnsQuerier,
-    ) -> RecursiveResolver<'_, MockNameResolver, MockDnsQuerier> {
+    ) -> RecursiveResolver<'_, MockNameResolver, MockDnsQuerier, Vec<u8>> {
         RecursiveResolver {
             results: RwLock::new(HashMap::new()),
             name_resolver,
@@ -725,6 +741,7 @@ mod tests {
             arguments: args,
             positive_cache: (!args.no_positive_cache).then(|| RwLock::new(HashSet::new())),
             negative_cache: args.negative_cache.then(|| RwLock::new(HashSet::new())),
+            output: Mutex::new(Vec::<u8>::new()),
         }
     }
 
@@ -763,6 +780,18 @@ mod tests {
             additionals: vec![],
             response_code: ResponseCode::NoError,
         }
+    }
+
+    fn get_output(
+        resolver: RecursiveResolver<'_, MockNameResolver, MockDnsQuerier, Vec<u8>>,
+    ) -> String {
+        String::from_utf8(
+            resolver
+                .output
+                .into_inner()
+                .expect("output lock should not be poisoned"),
+        )
+        .expect("output should be valid UTF-8")
     }
 
     // ── Existing tests (kept as-is) ───────────────────────────────────────────
@@ -839,6 +868,7 @@ mod tests {
         assert_eq!(servers[0].ip, IpAddr::from([198, 41, 0, 4]));
         assert_eq!(servers[0].name, Some("a.root-servers.net.".to_owned()));
         assert_eq!(servers[0].zone, Some(".".to_owned()));
+        assert_debug_snapshot!(get_output(resolver), @r#""""#);
     }
 
     #[tokio::test]
@@ -866,6 +896,7 @@ mod tests {
         // Only the IPv4 address should be kept
         assert_eq!(servers.len(), 1);
         assert!(servers[0].ip.is_ipv4());
+        assert_debug_snapshot!(get_output(resolver), @r#""""#);
     }
 
     #[tokio::test]
@@ -899,6 +930,7 @@ mod tests {
                 .all(|s| s.name == Some("ns1.example.com".to_owned()))
         );
         assert!(servers.iter().all(|s| s.zone.is_none()));
+        assert_debug_snapshot!(get_output(resolver), @r#""""#);
     }
 
     #[tokio::test]
@@ -921,6 +953,7 @@ mod tests {
         let result = resolver.init().await;
 
         assert!(result.is_err());
+        assert_debug_snapshot!(get_output(resolver), @r#""""#);
     }
 
     #[tokio::test]
@@ -959,6 +992,7 @@ mod tests {
         assert_eq!(result.response_code, ResponseCode::NoError);
         assert_eq!(result.records.len(), 1);
         drop(results);
+        assert_debug_snapshot!(get_output(resolver), @r#""  \\___ ns1.example.com. (192.0.2.1) found authoritative answer\n""#);
     }
 
     #[tokio::test]
@@ -983,6 +1017,7 @@ mod tests {
             .do_recurse(&name, &server, 0, vec![])
             .await
             .expect("do_recurse should succeed");
+        assert_debug_snapshot!(get_output(resolver), @r#""ns1.example.com. (192.0.2.1)\n""#);
     }
 
     #[tokio::test]
@@ -1030,6 +1065,7 @@ mod tests {
             .expect("results lock should not be poisoned");
         assert_eq!(results.len(), 1);
         drop(results);
+        assert_debug_snapshot!(get_output(resolver), @r#"" |\\___ ns1.example.com. (192.0.2.1)\n        |\\___ ns2.example.com. [example.com.] (192.0.2.2) found authoritative answer\n""#);
     }
 
     #[tokio::test]
@@ -1059,6 +1095,7 @@ mod tests {
             .await
             .expect("do_recurse should succeed");
         // The mock verifies query was never called
+        assert_debug_snapshot!(get_output(resolver), @r#"" |\\___ ns1.example.com. (192.0.2.1) (cached)\n""#);
     }
 
     #[tokio::test]
@@ -1094,6 +1131,7 @@ mod tests {
             .expect("negative cache lock should not be poisoned");
         assert!(neg.contains(&(server.ip, name.clone())));
         drop(neg);
+        assert_debug_snapshot!(get_output(resolver), @r#"" |\\___ ns1.example.com. (192.0.2.1) Client query failed for A example.com. -> unknown error\n""#);
     }
 
     #[tokio::test]
@@ -1122,6 +1160,7 @@ mod tests {
 
         assert_eq!(next.len(), 1);
         assert_eq!(next[0].ip, IpAddr::from([1, 2, 3, 4]));
+        assert_debug_snapshot!(get_output(resolver), @r#""""#);
     }
 
     #[tokio::test]
@@ -1159,6 +1198,8 @@ mod tests {
 
         assert_eq!(next.len(), 1);
         assert_eq!(next[0].ip, IpAddr::from([5, 6, 7, 8]));
+
+        assert_debug_snapshot!(get_output(resolver), @r#""""#);
     }
 
     #[test]
@@ -1179,6 +1220,8 @@ mod tests {
         resolver
             .show_overview()
             .expect("show_overview on empty results should succeed");
+
+        assert_debug_snapshot!(get_output(resolver), @r#""""#);
     }
 
     #[test]
@@ -1211,6 +1254,8 @@ mod tests {
         resolver
             .show_overview()
             .expect("show_overview with a record should succeed");
+
+        assert_debug_snapshot!(get_output(resolver), @r#""ns1.example.com. (192.0.2.1) \texample.com. 300 IN A 93.184.216.34\n""#);
     }
 
     #[test]
@@ -1238,5 +1283,7 @@ mod tests {
         resolver
             .show_overview()
             .expect("show_overview with an error response code should succeed");
+
+        assert_debug_snapshot!(get_output(resolver), @r#""ns1.example.com. (192.0.2.1)\tNon-Existent Domain\n""#);
     }
 }
