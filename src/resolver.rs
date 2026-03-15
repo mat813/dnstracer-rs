@@ -43,8 +43,8 @@ pub enum ResolverError {
     BuildTokioResolver,
     #[display("No IP address found for hostname: {_0}")]
     NoIpForHostname(String),
-    #[display("do recurse depth {_0}")]
-    DoRecurse(usize),
+    #[display("do recurse failed")]
+    DoRecurse,
     #[display("Failed to acquire read lock")]
     ReadLock,
     #[display("Failed to acquire write lock")]
@@ -453,7 +453,7 @@ impl<R: NameResolver, Q: DnsQuerier> RecursiveResolver<'_, R, Q> {
                                 new_last
                             })
                             .await
-                            .or_raise(|| ResolverError::DoRecurse(depth + 1))?;
+                            .or_raise(|| ResolverError::DoRecurse)?;
                         }
                     }
                 }
