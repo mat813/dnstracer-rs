@@ -70,7 +70,7 @@ impl Ord for OptName {
 
 #[cfg(test)]
 mod tests {
-    #![expect(clippy::expect_used, clippy::unwrap_used, reason = "test")]
+    #![expect(clippy::expect_used, reason = "test")]
 
     use super::*;
     use std::net::{Ipv4Addr, Ipv6Addr};
@@ -112,6 +112,54 @@ mod tests {
         assert_ne!(
             opt1, opt2,
             "OptNames with different IPs or names should not be equal"
+        );
+    }
+
+    #[test]
+    fn optname_eq_ignores_zone() {
+        let opt1 = OptName {
+            ip: IpAddr::V4(Ipv4Addr::new(192, 168, 1, 1)),
+            name: Some("ns1.example.com".to_owned()),
+            zone: Some("example.com.".to_owned()),
+        };
+
+        let opt2 = OptName {
+            ip: IpAddr::V4(Ipv4Addr::new(192, 168, 1, 1)),
+            name: Some("ns1.example.com".to_owned()),
+            zone: Some("other.com.".to_owned()),
+        };
+
+        assert_eq!(opt1, opt2, "zone should be ignored in equality");
+    }
+
+    #[test]
+    fn optname_hash_ignores_zone() {
+        use std::{
+            collections::hash_map::DefaultHasher,
+            hash::{Hash as _, Hasher as _},
+        };
+
+        let opt1 = OptName {
+            ip: IpAddr::V4(Ipv4Addr::new(192, 168, 1, 1)),
+            name: Some("ns1.example.com".to_owned()),
+            zone: Some("example.com.".to_owned()),
+        };
+
+        let opt2 = OptName {
+            ip: IpAddr::V4(Ipv4Addr::new(192, 168, 1, 1)),
+            name: Some("ns1.example.com".to_owned()),
+            zone: Some("other.com.".to_owned()),
+        };
+
+        let mut hasher1 = DefaultHasher::new();
+        let mut hasher2 = DefaultHasher::new();
+        opt1.hash(&mut hasher1);
+        opt2.hash(&mut hasher2);
+
+        assert_eq!(
+            hasher1.finish(),
+            hasher2.finish(),
+            "zone should be ignored in hash"
         );
     }
 
@@ -205,7 +253,12 @@ mod tests {
         };
 
         let socket_addr: SocketAddr = opt.into();
-        assert_eq!(socket_addr, "192.168.1.1:53".parse().unwrap());
+        assert_eq!(
+            socket_addr,
+            "192.168.1.1:53"
+                .parse()
+                .expect("192.168.1.1:53 is a valid socket address")
+        );
     }
 
     #[test]
@@ -221,7 +274,9 @@ mod tests {
         let socket_addr: SocketAddr = opt.into();
         assert_eq!(
             socket_addr,
-            "[fe80::202:b3ff:fe1e:8329]:53".parse().unwrap()
+            "[fe80::202:b3ff:fe1e:8329]:53"
+                .parse()
+                .expect("[fe80::202:b3ff:fe1e:8329]:53 is a valid socket address")
         );
     }
 

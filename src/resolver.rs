@@ -1170,4 +1170,73 @@ mod tests {
         assert!(qr.name_servers.is_empty());
         assert!(qr.additionals.is_empty());
     }
+
+    #[test]
+    fn show_overview_empty() {
+        let args = default_args();
+        let resolver = mock_resolver(&args, MockNameResolver::new(), MockDnsQuerier::new());
+
+        resolver
+            .show_overview()
+            .expect("show_overview on empty results should succeed");
+    }
+
+    #[test]
+    fn show_overview_with_record() {
+        let args = default_args();
+        let resolver = mock_resolver(&args, MockNameResolver::new(), MockDnsQuerier::new());
+
+        let server = OptName {
+            ip: IpAddr::from([192, 0, 2, 1]),
+            name: Some("ns1.example.com.".to_owned()),
+            zone: None,
+        };
+        let record = Record::from_rdata(
+            Name::from_str("example.com.").expect("example.com. is a valid DNS name"),
+            300,
+            RData::A(rdata::A(Ipv4Addr::new(93, 184, 216, 34))),
+        );
+        resolver
+            .results
+            .write()
+            .expect("results lock should not be poisoned")
+            .insert(
+                server,
+                FullResult {
+                    records: std::collections::BTreeSet::from([record]),
+                    response_code: ResponseCode::NoError,
+                },
+            );
+
+        resolver
+            .show_overview()
+            .expect("show_overview with a record should succeed");
+    }
+
+    #[test]
+    fn show_overview_with_error_response_code() {
+        let args = default_args();
+        let resolver = mock_resolver(&args, MockNameResolver::new(), MockDnsQuerier::new());
+
+        let server = OptName {
+            ip: IpAddr::from([192, 0, 2, 1]),
+            name: Some("ns1.example.com.".to_owned()),
+            zone: None,
+        };
+        resolver
+            .results
+            .write()
+            .expect("results lock should not be poisoned")
+            .insert(
+                server,
+                FullResult {
+                    records: std::collections::BTreeSet::new(),
+                    response_code: ResponseCode::NXDomain,
+                },
+            );
+
+        resolver
+            .show_overview()
+            .expect("show_overview with an error response code should succeed");
+    }
 }
