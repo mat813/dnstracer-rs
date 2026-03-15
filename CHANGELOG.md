@@ -5,7 +5,63 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v1.2.3 (2026-03-15)
+
+### Chore
+
+ - <csr-id-b6519e912b7f0fee38e365dc5cd11886d83f9b41/> update rust crate mockall to v0.14.0
+   | datasource | package | from   | to     |
+   | ---------- | ------- | ------ | ------ |
+   | crate      | mockall | 0.13.1 | 0.14.0 |
+
+### Bug Fixes
+
+ - <csr-id-00001590668e052f8f1a3c5cc8c31140cf096525/> refactor errors and make resolution errors better
+ - <csr-id-ba0d47f349da1c30937e3f7b34315c1026686a1c/> update rust crate clap to v4.6.0
+   | datasource | package | from   | to    |
+   | ---------- | ------- | ------ | ----- |
+   | crate      | clap    | 4.5.61 | 4.6.0 |
+ - <csr-id-4920b927f77232298a4043058b47c9bdd41e2c2a/> update rust crate clap to v4.5.61
+   | datasource | package | from   | to     |
+   | ---------- | ------- | ------ | ------ |
+   | crate      | clap    | 4.5.60 | 4.5.61 |
+
+### Test
+
+ - <csr-id-0000160043e08beb64c622e3d21bb3ad913510d2/> use expect instead of unwrap
+
+### Commit Statistics
+
+<csr-read-only-do-not-edit/>
+
+ - 5 commits contributed to the release.
+ - 3 days passed between releases.
+ - 5 commits were understood as [conventional](https://www.conventionalcommits.org).
+ - 0 issues like '(#ID)' were seen in commit messages
+
+### Commit Details
+
+<csr-read-only-do-not-edit/>
+
+<details><summary>view details</summary>
+
+ * **Uncategorized**
+    - Use expect instead of unwrap (0000160)
+    - Refactor errors and make resolution errors better (0000159)
+    - Update rust crate clap to v4.6.0 (ba0d47f)
+    - Update rust crate clap to v4.5.61 (4920b92)
+    - Update rust crate mockall to v0.14.0 (b6519e9)
+</details>
+
 ## v1.2.2 (2026-03-11)
+
+<csr-id-432dd98b4b5a161a69c5389dc2554f3ccbda3eb3/>
+<csr-id-191d4afef8cbba321a7d9cac0c292572100f1d92/>
+<csr-id-4744efdc80728adc20e7334c8390764706e84a4a/>
+<csr-id-eabc660f9f004d50103b5c3bca84fa40e2f062f1/>
+<csr-id-fa554f7da174bd66aa17d525214468bd219543da/>
+<csr-id-00001480ad98c240c5fd8e999d1b2bb7d4bb346d/>
+<csr-id-000014702f16cdc21e5a781aa6b48c57405ed52d/>
 
 ### Chore
 
@@ -45,7 +101,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <csr-read-only-do-not-edit/>
 
- - 13 commits contributed to the release.
+ - 14 commits contributed to the release.
  - 28 days passed between releases.
  - 13 commits were understood as [conventional](https://www.conventionalcommits.org).
  - 0 issues like '(#ID)' were seen in commit messages
@@ -57,6 +113,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <details><summary>view details</summary>
 
  * **Uncategorized**
+    - Release dnstracer v1.2.2 (fba30bb)
     - Add tests (0000154)
     - Lock file maintenance (432dd98)
     - Update rust crate tokio to v1.50.0 (add3948)
