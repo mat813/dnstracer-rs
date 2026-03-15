@@ -868,6 +868,19 @@ mod tests {
         assert_eq!(servers[0].ip, IpAddr::from([198, 41, 0, 4]));
         assert_eq!(servers[0].name, Some("a.root-servers.net.".to_owned()));
         assert_eq!(servers[0].zone, Some(".".to_owned()));
+        assert_debug_snapshot!(servers, @r#"
+        [
+            OptName {
+                ip: 198.41.0.4,
+                name: Some(
+                    "a.root-servers.net.",
+                ),
+                zone: Some(
+                    ".",
+                ),
+            },
+        ]
+        "#);
         assert_debug_snapshot!(get_output(resolver), @r#""""#);
     }
 
@@ -896,6 +909,19 @@ mod tests {
         // Only the IPv4 address should be kept
         assert_eq!(servers.len(), 1);
         assert!(servers[0].ip.is_ipv4());
+        assert_debug_snapshot!(servers, @r#"
+        [
+            OptName {
+                ip: 198.41.0.4,
+                name: Some(
+                    "a.root-servers.net.",
+                ),
+                zone: Some(
+                    ".",
+                ),
+            },
+        ]
+        "#);
         assert_debug_snapshot!(get_output(resolver), @r#""""#);
     }
 
@@ -930,6 +956,24 @@ mod tests {
                 .all(|s| s.name == Some("ns1.example.com".to_owned()))
         );
         assert!(servers.iter().all(|s| s.zone.is_none()));
+        assert_debug_snapshot!(servers, @r#"
+        [
+            OptName {
+                ip: 192.0.2.1,
+                name: Some(
+                    "ns1.example.com",
+                ),
+                zone: None,
+            },
+            OptName {
+                ip: 192.0.2.2,
+                name: Some(
+                    "ns1.example.com",
+                ),
+                zone: None,
+            },
+        ]
+        "#);
         assert_debug_snapshot!(get_output(resolver), @r#""""#);
     }
 
@@ -953,6 +997,11 @@ mod tests {
         let result = resolver.init().await;
 
         assert!(result.is_err());
+        assert_debug_snapshot!(result, @"
+        Err(
+            No IP address found for hostname: ns1.example.com, at src/resolver.rs:372:13,
+        )
+        ");
         assert_debug_snapshot!(get_output(resolver), @r#""""#);
     }
 
@@ -991,6 +1040,31 @@ mod tests {
             .expect("results map should contain at least one entry");
         assert_eq!(result.response_code, ResponseCode::NoError);
         assert_eq!(result.records.len(), 1);
+        assert_debug_snapshot!(results, @r#"
+        {
+            OptName {
+                ip: 192.0.2.1,
+                name: Some(
+                    "ns1.example.com.",
+                ),
+                zone: None,
+            }: FullResult {
+                records: {
+                    Record {
+                        name_labels: Name("example.com."),
+                        dns_class: IN,
+                        ttl: 300,
+                        rdata: A(
+                            A(
+                                93.184.216.34,
+                            ),
+                        ),
+                    },
+                },
+                response_code: NoError,
+            },
+        }
+        "#);
         drop(results);
         assert_debug_snapshot!(get_output(resolver), @r#""  \\___ ns1.example.com. (192.0.2.1) found authoritative answer\n""#);
     }
@@ -1017,6 +1091,12 @@ mod tests {
             .do_recurse(&name, &server, 0, vec![])
             .await
             .expect("do_recurse should succeed");
+        let results = resolver
+            .results
+            .read()
+            .expect("results lock should not be poisoned");
+        assert!(results.is_empty());
+        drop(results);
         assert_debug_snapshot!(get_output(resolver), @r#""ns1.example.com. (192.0.2.1)\n""#);
     }
 
@@ -1064,6 +1144,33 @@ mod tests {
             .read()
             .expect("results lock should not be poisoned");
         assert_eq!(results.len(), 1);
+        assert_debug_snapshot!(results, @r#"
+        {
+            OptName {
+                ip: 192.0.2.2,
+                name: Some(
+                    "ns2.example.com.",
+                ),
+                zone: Some(
+                    "example.com.",
+                ),
+            }: FullResult {
+                records: {
+                    Record {
+                        name_labels: Name("example.com."),
+                        dns_class: IN,
+                        ttl: 300,
+                        rdata: A(
+                            A(
+                                93.184.216.34,
+                            ),
+                        ),
+                    },
+                },
+                response_code: NoError,
+            },
+        }
+        "#);
         drop(results);
         assert_debug_snapshot!(get_output(resolver), @r#"" |\\___ ns1.example.com. (192.0.2.1)\n        |\\___ ns2.example.com. [example.com.] (192.0.2.2) found authoritative answer\n""#);
     }
@@ -1094,6 +1201,12 @@ mod tests {
             .do_recurse(&name, &server, 1, vec![])
             .await
             .expect("do_recurse should succeed");
+        let results = resolver
+            .results
+            .read()
+            .expect("results lock should not be poisoned");
+        assert!(results.is_empty());
+        drop(results);
         // The mock verifies query was never called
         assert_debug_snapshot!(get_output(resolver), @r#"" |\\___ ns1.example.com. (192.0.2.1) (cached)\n""#);
     }
@@ -1130,7 +1243,21 @@ mod tests {
             .read()
             .expect("negative cache lock should not be poisoned");
         assert!(neg.contains(&(server.ip, name.clone())));
+        assert_debug_snapshot!(neg, @r#"
+        {
+            (
+                192.0.2.1,
+                Name("example.com."),
+            ),
+        }
+        "#);
         drop(neg);
+        let results = resolver
+            .results
+            .read()
+            .expect("results lock should not be poisoned");
+        assert!(results.is_empty());
+        drop(results);
         assert_debug_snapshot!(get_output(resolver), @r#"" |\\___ ns1.example.com. (192.0.2.1) Client query failed for A example.com. -> unknown error\n""#);
     }
 
@@ -1160,6 +1287,12 @@ mod tests {
 
         assert_eq!(next.len(), 1);
         assert_eq!(next[0].ip, IpAddr::from([1, 2, 3, 4]));
+        let results = resolver
+            .results
+            .read()
+            .expect("results lock should not be poisoned");
+        assert!(results.is_empty());
+        drop(results);
         assert_debug_snapshot!(get_output(resolver), @r#""""#);
     }
 
@@ -1199,6 +1332,12 @@ mod tests {
         assert_eq!(next.len(), 1);
         assert_eq!(next[0].ip, IpAddr::from([5, 6, 7, 8]));
 
+        let results = resolver
+            .results
+            .read()
+            .expect("results lock should not be poisoned");
+        assert!(results.is_empty());
+        drop(results);
         assert_debug_snapshot!(get_output(resolver), @r#""""#);
     }
 
@@ -1255,6 +1394,36 @@ mod tests {
             .show_overview()
             .expect("show_overview with a record should succeed");
 
+        let results = resolver
+            .results
+            .read()
+            .expect("results lock should not be poisoned");
+        assert_debug_snapshot!(results, @r#"
+        {
+            OptName {
+                ip: 192.0.2.1,
+                name: Some(
+                    "ns1.example.com.",
+                ),
+                zone: None,
+            }: FullResult {
+                records: {
+                    Record {
+                        name_labels: Name("example.com."),
+                        dns_class: IN,
+                        ttl: 300,
+                        rdata: A(
+                            A(
+                                93.184.216.34,
+                            ),
+                        ),
+                    },
+                },
+                response_code: NoError,
+            },
+        }
+        "#);
+        drop(results);
         assert_debug_snapshot!(get_output(resolver), @r#""ns1.example.com. (192.0.2.1) \texample.com. 300 IN A 93.184.216.34\n""#);
     }
 
@@ -1284,6 +1453,25 @@ mod tests {
             .show_overview()
             .expect("show_overview with an error response code should succeed");
 
+        let results = resolver
+            .results
+            .read()
+            .expect("results lock should not be poisoned");
+        assert_debug_snapshot!(results, @r#"
+        {
+            OptName {
+                ip: 192.0.2.1,
+                name: Some(
+                    "ns1.example.com.",
+                ),
+                zone: None,
+            }: FullResult {
+                records: {},
+                response_code: NXDomain,
+            },
+        }
+        "#);
+        drop(results);
         assert_debug_snapshot!(get_output(resolver), @r#""ns1.example.com. (192.0.2.1)\tNon-Existent Domain\n""#);
     }
 }
