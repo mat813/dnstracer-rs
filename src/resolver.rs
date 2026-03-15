@@ -653,7 +653,7 @@ impl<R: NameResolver, Q: DnsQuerier> RecursiveResolver<'_, R, Q> {
 
     /// Try to give a nice out, as the original did
     #[expect(clippy::print_stdout, reason = "called print")]
-    fn print<S: fmt::Display>(depth: usize, server: &OptName, rest: S, last: &[bool]) {
+    fn print(depth: usize, server: &OptName, rest: impl fmt::Display, last: &[bool]) {
         let mut output = String::new();
 
         for i in 0..depth {
