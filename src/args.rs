@@ -2,7 +2,11 @@ use clap::Parser;
 use derive_more::Display;
 use exn::{Result, bail};
 use hickory_proto::{ProtoError, rr::RecordType};
-use std::{net::IpAddr, num::ParseIntError, time::Duration};
+use std::{
+    net::{IpAddr, Ipv4Addr, Ipv6Addr},
+    num::ParseIntError,
+    time::Duration,
+};
 
 // Original arguments
 // -c: disable local caching, default enabled
@@ -81,7 +85,14 @@ pub struct Args {
 
 /// The argument parsing errors
 #[derive(Debug, Display)]
-pub struct ArgsError(String);
+pub enum ArgsError {
+    /// IPv6-only mode requested but source address is IPv4
+    #[display("Cannot use IPv6 only queries with an ipv4 source address ({_0})")]
+    Ipv6WithIpv4Source(Ipv4Addr),
+    /// IPv4-only mode requested but source address is IPv6
+    #[display("Cannot use IPv4 only queries with an ipv6 source address ({_0})")]
+    Ipv4WithIpv6Source(Ipv6Addr),
+}
 
 impl std::error::Error for ArgsError {}
 
@@ -96,18 +107,14 @@ impl Args {
         match self.source_address {
             Some(IpAddr::V4(ip)) => {
                 if self.ipv6 {
-                    bail!(ArgsError(format!(
-                        "Cannot use IPv6 only queries with an ipv4 source address ({ip})"
-                    )));
+                    bail!(ArgsError::Ipv6WithIpv4Source(ip));
                 }
                 // Also, force IPv4 queries everywhere, otherwise we'd get protocol errors
                 self.ipv4 = true;
             }
             Some(IpAddr::V6(ip)) => {
                 if self.ipv4 {
-                    bail!(ArgsError(format!(
-                        "Cannot use IPv4 only queries with an ipv6 source address ({ip})"
-                    )));
+                    bail!(ArgsError::Ipv4WithIpv6Source(ip));
                 }
                 // Also, force IPv6 queries everywhere, otherwise we'd get protocol errors
                 self.ipv6 = true;

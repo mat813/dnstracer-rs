@@ -16,7 +16,19 @@ mod resolver;
 
 /// The main body error
 #[derive(Debug, Display)]
-struct MainError(String);
+#[allow(clippy::missing_docs_in_private_items, reason = "self explainatory")]
+enum MainError {
+    #[display("Arguments validation error")]
+    ArgumentsValidation,
+    #[display("Resolver creation")]
+    ResolverCreation,
+    #[display("Getting first servers")]
+    GettingFirstServers,
+    #[display("Converting {_0} to a DNS Name")]
+    DnsNameConversion(String),
+    #[display("Creating overview")]
+    CreatingOverview,
+}
 
 impl std::error::Error for MainError {}
 
@@ -29,18 +41,17 @@ async fn main() -> Result<(), MainError> {
 
     arguments
         .validate()
-        .map_err(|e| MainError(format!("Arguments validation error: {e:?}")))?;
+        .or_raise(|| MainError::ArgumentsValidation)?;
 
-    let recursor = RecursiveResolver::new(&arguments)
-        .or_raise(|| MainError("Resolver creation".to_owned()))?;
+    let recursor = RecursiveResolver::new(&arguments).or_raise(|| MainError::ResolverCreation)?;
 
     let first_servers = recursor
         .init()
         .await
-        .or_raise(|| MainError("Getting first servers".to_owned()))?;
+        .or_raise(|| MainError::GettingFirstServers)?;
 
     let name = Name::from_str(&arguments.domain)
-        .or_raise(|| MainError(format!("Converting {} to a DNS Name", arguments.domain)))?;
+        .or_raise(|| MainError::DnsNameConversion(arguments.domain.clone()))?;
 
     for (index, first_server) in first_servers.iter().enumerate() {
         if index == 0 {
@@ -67,7 +78,7 @@ async fn main() -> Result<(), MainError> {
     if arguments.overview {
         recursor
             .show_overview()
-            .or_raise(|| MainError("Creating overview".to_owned()))?;
+            .or_raise(|| MainError::CreatingOverview)?;
     }
 
     Ok(())

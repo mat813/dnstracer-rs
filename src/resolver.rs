@@ -27,7 +27,29 @@ use std::{
 
 /// A container for all resolver errors
 #[derive(Debug, Display)]
-pub struct ResolverError(String);
+#[allow(clippy::missing_docs_in_private_items, reason = "self explainatory")]
+pub enum ResolverError {
+    #[display("NS lookup failed for {_0}")]
+    NsLookup(String),
+    #[display("IP lookup failed for {_0}")]
+    IpLookup(String),
+    #[display("Client connect failed for {_0}")]
+    ClientConnect(OptName),
+    #[display("Client query failed for {_1} {_0}")]
+    ClientQuery(Name, RecordType),
+    #[display("Client creation failed")]
+    ClientNew(OptName),
+    #[display("Failed to build tokio resolver")]
+    BuildTokioResolver,
+    #[display("No IP address found for hostname: {_0}")]
+    NoIpForHostname(String),
+    #[display("do recurse depth {_0}")]
+    DoRecurse(usize),
+    #[display("Failed to acquire read lock")]
+    ReadLock,
+    #[display("Failed to acquire write lock")]
+    WriteLock,
+}
 
 impl std::error::Error for ResolverError {}
 
@@ -124,7 +146,7 @@ impl NameResolver for TokioNameResolver {
             .0
             .ns_lookup(name)
             .await
-            .or_raise(|| ResolverError("ns lookup".to_owned()))?
+            .or_raise(|| ResolverError::NsLookup(name.to_owned()))?
             .iter()
             .map(|ns| ns.0.clone())
             .collect())
@@ -135,7 +157,7 @@ impl NameResolver for TokioNameResolver {
             .0
             .lookup_ip(name)
             .await
-            .or_raise(|| ResolverError("ip lookup".to_owned()))?
+            .or_raise(|| ResolverError::IpLookup(name.to_owned()))?
             .iter()
             .collect())
     }
@@ -177,7 +199,7 @@ impl DefaultDnsQuerier {
             .build();
         let (mut client, bg) = Client::connect(stream)
             .await
-            .or_raise(|| ResolverError("client connect".to_owned()))?;
+            .or_raise(|| ResolverError::ClientConnect(server.clone()))?;
 
         if self.no_edns0 {
             client.disable_edns();
@@ -190,7 +212,7 @@ impl DefaultDnsQuerier {
         client
             .query(name.clone(), DNSClass::IN, query_type)
             .await
-            .or_raise(|| ResolverError("client query".to_owned()))
+            .or_raise(|| ResolverError::ClientQuery(name.clone(), query_type))
     }
 
     /// Make a TCP DNS query
@@ -209,7 +231,7 @@ impl DefaultDnsQuerier {
 
         let (mut client, bg) = Client::new(stream, sender, None)
             .await
-            .or_raise(|| ResolverError("client new".to_owned()))?;
+            .or_raise(|| ResolverError::ClientNew(server.clone()))?;
 
         if self.no_edns0 {
             client.disable_edns();
@@ -222,7 +244,7 @@ impl DefaultDnsQuerier {
         client
             .query(name.clone(), DNSClass::IN, query_type)
             .await
-            .or_raise(|| ResolverError("client query".to_owned()))
+            .or_raise(|| ResolverError::ClientQuery(name.clone(), query_type))
     }
 }
 
@@ -271,7 +293,7 @@ impl<'a> RecursiveResolver<'a> {
         resolver_opts.edns0 = !args.no_edns0;
 
         let resolver = TokioResolver::builder(GenericConnector::new(TokioRuntimeProvider::new()))
-            .or_raise(|| ResolverError("build tokio resolver".to_owned()))?
+            .or_raise(|| ResolverError::BuildTokioResolver)?
             .with_options(resolver_opts)
             .build();
 
@@ -309,7 +331,7 @@ impl<R: NameResolver, Q: DnsQuerier> RecursiveResolver<'_, R, Q> {
                         .name_resolver
                         .lookup_ip(&ns_str)
                         .await
-                        .or_raise(|| ResolverError("ip lookup".to_owned()))?
+                        .or_raise(|| ResolverError::IpLookup(ns_str))?
                         .into_iter()
                         .filter(|ip| is_ip_allowed!(self, ip))
                         .map(|ip| OptName {
@@ -327,7 +349,7 @@ impl<R: NameResolver, Q: DnsQuerier> RecursiveResolver<'_, R, Q> {
                     .name_resolver
                     .lookup_ip(&self.arguments.server)
                     .await
-                    .or_raise(|| ResolverError("ip lookup".to_owned()))?
+                    .or_raise(|| ResolverError::IpLookup(self.arguments.server.clone()))?
                     .into_iter()
                     .filter(|ip| is_ip_allowed!(self, ip))
                     .map(|ip| OptName {
@@ -340,10 +362,9 @@ impl<R: NameResolver, Q: DnsQuerier> RecursiveResolver<'_, R, Q> {
         }
 
         if results.is_empty() {
-            bail!(ResolverError(format!(
-                "no IP address found for hostname: {}",
-                self.arguments.server
-            )));
+            bail!(ResolverError::NoIpForHostname(
+                self.arguments.server.clone()
+            ));
         }
 
         Ok(results)
@@ -432,15 +453,24 @@ impl<R: NameResolver, Q: DnsQuerier> RecursiveResolver<'_, R, Q> {
                                 new_last
                             })
                             .await
-                            .or_raise(|| {
-                                ResolverError(format!("do recurse depth {}", depth + 1))
-                            })?;
+                            .or_raise(|| ResolverError::DoRecurse(depth + 1))?;
                         }
                     }
                 }
                 Err(e) => {
                     self.cache_set(false, (server.ip, name.clone()));
-                    Self::print(depth, server, format!("resolution error: {e}"), &last);
+                    Self::print(
+                        depth,
+                        server,
+                        format!(
+                            "{e} -> {}",
+                            e.frame().children().first().map_or_else(
+                                || "unknown error".to_owned(),
+                                std::string::ToString::to_string
+                            )
+                        ),
+                        &last,
+                    );
                 }
             }
             Ok(())
@@ -538,7 +568,7 @@ impl<R: NameResolver, Q: DnsQuerier> RecursiveResolver<'_, R, Q> {
         for (key, values) in self
             .results
             .read()
-            .map_err(|e| ResolverError(format!("get read lock: {e:?}")))?
+            .map_err(|_| ResolverError::ReadLock)?
             .iter()
         {
             if values.response_code != ResponseCode::NoError {
@@ -609,10 +639,7 @@ impl<R: NameResolver, Q: DnsQuerier> RecursiveResolver<'_, R, Q> {
         response_code: ResponseCode,
         results: &[Record],
     ) -> Result<(), ResolverError> {
-        let mut res = self
-            .results
-            .write()
-            .map_err(|e| ResolverError(format!("get write lock: {e:?}")))?;
+        let mut res = self.results.write().map_err(|_| ResolverError::WriteLock)?;
         let full = res.entry(server).or_default();
 
         full.response_code = response_code;
@@ -1022,9 +1049,10 @@ mod tests {
         };
 
         let mut q = MockDnsQuerier::new();
-        q.expect_query()
-            .once()
-            .returning(|_, _, _| Err(ResolverError("simulated timeout".to_owned()).into()));
+        q.expect_query().once().returning({
+            let name = name.clone();
+            move |_, _, _| Err(ResolverError::ClientQuery(name.clone(), RecordType::A).into())
+        });
 
         let resolver = mock_resolver(&args, MockNameResolver::new(), q);
         resolver
@@ -1033,7 +1061,7 @@ mod tests {
             .unwrap();
 
         let neg = resolver.negative_cache.as_ref().unwrap().read().unwrap();
-        assert!(neg.contains(&(server.ip, name)));
+        assert!(neg.contains(&(server.ip, name.clone())));
         drop(neg);
     }
 
