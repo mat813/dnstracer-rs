@@ -46,6 +46,8 @@ pub enum ResolverError {
     NoIpForHostname(String),
     #[display("do recurse failed")]
     DoRecurse,
+    #[display("Maximum recursion depth ({_0}) exceeded")]
+    MaxDepthExceeded(usize),
     #[display("Failed to acquire read lock")]
     ReadLock,
     #[display("Failed to acquire write lock")]
@@ -55,6 +57,9 @@ pub enum ResolverError {
 }
 
 impl std::error::Error for ResolverError {}
+
+/// Maximum DNS delegation depth to prevent infinite recursion
+const MAX_RECURSION_DEPTH: usize = 32;
 
 /// Cache key
 type CacheKey = (IpAddr, Name);
@@ -384,6 +389,10 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
         last: Vec<bool>,
     ) -> Pin<Box<dyn Future<Output = Result<(), ResolverError>> + 'b>> {
         Box::pin(async move {
+            if depth > MAX_RECURSION_DEPTH {
+                bail!(ResolverError::MaxDepthExceeded(MAX_RECURSION_DEPTH));
+            }
+
             if self.cache_get(&(server.ip, name.clone())) {
                 self.print(depth, server, "(cached)", &last);
                 return Ok(());
@@ -997,7 +1006,7 @@ mod tests {
         assert!(result.is_err());
         assert_debug_snapshot!(result, @"
         Err(
-            No IP address found for hostname: ns1.example.com, at src/resolver.rs:370:13,
+            No IP address found for hostname: ns1.example.com, at src/resolver.rs:375:13,
         )
         ");
         assert_debug_snapshot!(get_output(resolver), @r#""""#);
