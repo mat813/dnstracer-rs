@@ -56,15 +56,6 @@ pub enum ResolverError {
 
 impl std::error::Error for ResolverError {}
 
-/// Is the ip allowed with regard to what the op asked.
-macro_rules! is_ip_allowed {
-    ($self:expr, $ip:expr ) => {
-        $ip.is_ipv4() && $self.arguments.ipv4 // if we asked for ipv4 only
-                || $ip.is_ipv6() && $self.arguments.ipv6 // if we asked for ipv6 only
-                || !($self.arguments.ipv4 || $self.arguments.ipv6) // if we did not ask anything
-    };
-}
-
 /// Cache key
 type CacheKey = (IpAddr, Name);
 
@@ -316,6 +307,13 @@ impl<'a> RecursiveResolver<'a> {
 }
 
 impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q, W> {
+    /// Is the given IP allowed given the user's IPv4/IPv6 preferences?
+    const fn is_ip_allowed(&self, ip: IpAddr) -> bool {
+        ip.is_ipv4() && self.arguments.ipv4 // if we asked for ipv4 only
+            || ip.is_ipv6() && self.arguments.ipv6 // if we asked for ipv6 only
+            || !(self.arguments.ipv4 || self.arguments.ipv6) // if we did not ask anything
+    }
+
     /// Figure out the server we got as an argument
     pub async fn init(&self) -> Result<Vec<OptName>, ResolverError> {
         let mut results: Vec<OptName> = vec![];
@@ -340,7 +338,7 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
                         .await
                         .or_raise(|| ResolverError::IpLookup(ns_str))?
                         .into_iter()
-                        .filter(|ip| is_ip_allowed!(self, ip))
+                        .filter(|ip| self.is_ip_allowed(*ip))
                         .map(|ip| OptName {
                             ip,
                             name: Some(ns.to_string()),
@@ -358,7 +356,7 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
                     .await
                     .or_raise(|| ResolverError::IpLookup(self.arguments.server.clone()))?
                     .into_iter()
-                    .filter(|ip| is_ip_allowed!(self, ip))
+                    .filter(|ip| self.is_ip_allowed(*ip))
                     .map(|ip| OptName {
                         ip,
                         name: Some(self.arguments.server.clone()),
@@ -517,7 +515,7 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
                         }
                         _ => None,
                     })
-                    .filter(|&(_, ip)| is_ip_allowed!(self, ip))
+                    .filter(|&(_, ip)| self.is_ip_allowed(ip))
                     .map(|(additional, ip)| OptName {
                         ip,
                         name: Some(additional.name().to_string()),
@@ -536,7 +534,7 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
                     next_servers.append(
                         &mut ips
                             .into_iter()
-                            .filter(|ip| is_ip_allowed!(self, ip))
+                            .filter(|ip| self.is_ip_allowed(*ip))
                             .map(|ip| OptName {
                                 ip,
                                 name: Some(ns.to_string()),
@@ -999,7 +997,7 @@ mod tests {
         assert!(result.is_err());
         assert_debug_snapshot!(result, @"
         Err(
-            No IP address found for hostname: ns1.example.com, at src/resolver.rs:372:13,
+            No IP address found for hostname: ns1.example.com, at src/resolver.rs:370:13,
         )
         ");
         assert_debug_snapshot!(get_output(resolver), @r#""""#);
