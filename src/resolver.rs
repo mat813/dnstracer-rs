@@ -422,13 +422,14 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
                             && result.iter().all(|r| r.record_type() == RecordType::CNAME)
                             && !response.name_servers.is_empty()
                         {
+                            let mut accumulated: Vec<OptName> = vec![];
                             for cname in response
                                 .answers
                                 .iter()
                                 // We already checked every entry was a CNAME
                                 .filter_map(|r| r.data().as_cname())
                             {
-                                next_servers = Some(
+                                accumulated.extend(
                                     self.get_next_servers(
                                         &response.name_servers,
                                         &response.additionals,
@@ -439,6 +440,9 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
                                     )
                                     .await,
                                 );
+                            }
+                            if !accumulated.is_empty() {
+                                next_servers = Some(accumulated);
                             }
                         }
                     } else {
@@ -460,7 +464,7 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
 
                     if let Some(next) = next_servers {
                         let len = next.len();
-                        for (index, ns) in next.iter().sorted().enumerate() {
+                        for (index, ns) in next.iter().unique().sorted().enumerate() {
                             self.do_recurse(name, ns, depth + 1, {
                                 let mut new_last = last.clone();
                                 new_last.push(index == (len - 1));
