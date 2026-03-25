@@ -5,7 +5,65 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v1.2.4 (2026-03-25)
+
+### Chore
+
+ - <csr-id-000016901c945d4ea5b9d3382023e279e0af29e9/> typo
+ - <csr-id-5420e34e2468b5a4f0b557819cfe5bfcf01b4b4d/> lock file maintenance
+ - <csr-id-dee20ba891fb8c409dbd46e262656e162f92db3f/> lock file maintenance
+ - <csr-id-000016400e06131be745c20ff36a380c4890d46a/> remove unneeded genericity
+
+### Bug Fixes
+
+ - <csr-id-00001730912e5a8e67f2fb9dbf860cdec7010172/> don't buffer too much to show the overview
+ - <csr-id-00001720b1a3431a625748d02a09ae9fa8f1ab3a/> don't clobber cnames
+ - <csr-id-000017102ca6a7effc581ecff8f0e28cc4029201/> add a recursion limit
+ - <csr-id-000017007219a2e6e9310b5c3b65311cfb6b5789/> replace macro is_ip_allowed with a const fn
+ - <csr-id-00001620a12891de1b6cf1ba0bbe200f99bc72af/> depth is not really useful here
+
+### Test
+
+ - <csr-id-00001740c176a91af33ef9ebef01f9743a8449c8/> use rstest's Context
+ - <csr-id-0000166044d71cb9228fb4bbe252a0b88a1da663/> a bit more
+ - <csr-id-00001650c0146fcd425e97e565f65cc2c42f71f6/> test output
+ - <csr-id-00001630e634bfb404ff7bf75471e20b0059988c/> a few more tests
+
+### Commit Statistics
+
+<csr-read-only-do-not-edit/>
+
+ - 13 commits contributed to the release over the course of 9 calendar days.
+ - 10 days passed between releases.
+ - 13 commits were understood as [conventional](https://www.conventionalcommits.org).
+ - 0 issues like '(#ID)' were seen in commit messages
+
+### Commit Details
+
+<csr-read-only-do-not-edit/>
+
+<details><summary>view details</summary>
+
+ * **Uncategorized**
+    - Use rstest's Context (0000174)
+    - Don't buffer too much to show the overview (0000173)
+    - Don't clobber cnames (0000172)
+    - Add a recursion limit (0000171)
+    - Replace macro is_ip_allowed with a const fn (0000170)
+    - Typo (0000169)
+    - Lock file maintenance (5420e34)
+    - Lock file maintenance (dee20ba)
+    - A bit more (0000166)
+    - Test output (0000165)
+    - Remove unneeded genericity (0000164)
+    - A few more tests (0000163)
+    - Depth is not really useful here (0000162)
+</details>
+
 ## v1.2.3 (2026-03-15)
+
+<csr-id-b6519e912b7f0fee38e365dc5cd11886d83f9b41/>
+<csr-id-0000160043e08beb64c622e3d21bb3ad913510d2/>
 
 ### Chore
 
@@ -34,7 +92,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <csr-read-only-do-not-edit/>
 
- - 5 commits contributed to the release.
+ - 6 commits contributed to the release.
  - 3 days passed between releases.
  - 5 commits were understood as [conventional](https://www.conventionalcommits.org).
  - 0 issues like '(#ID)' were seen in commit messages
@@ -46,6 +104,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <details><summary>view details</summary>
 
  * **Uncategorized**
+    - Release dnstracer v1.2.3 (d0fdbc6)
     - Use expect instead of unwrap (0000160)
     - Refactor errors and make resolution errors better (0000159)
     - Update rust crate clap to v4.6.0 (ba0d47f)
