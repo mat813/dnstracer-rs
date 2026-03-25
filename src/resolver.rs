@@ -403,7 +403,7 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
                     let mut next_servers: Option<Vec<OptName>> = None;
 
                     if response.authoritative {
-                        // If the response is authoritative, we are probaby at the end of the journey.
+                        // If the response is authoritative, we are probably at the end of the journey.
                         let result = &response.answers;
                         self.print(depth, server, "found authoritative answer", &last);
                         self.cache_set(true, (server.ip, name.clone()));
