@@ -137,11 +137,11 @@ mod tests {
 
     use super::*;
     use insta::assert_debug_snapshot;
-    use rstest::rstest;
+    use rstest::{Context, rstest};
 
     #[rstest]
-    #[case("default_values", vec!["test", "example.com"])]
-    #[case("all_flags", vec![
+    #[case::default_values(vec!["test", "example.com"])]
+    #[case::all_flags(vec![
             "test",
             "-c", // no_positive_cache
             "-C", // negative_cache
@@ -161,16 +161,24 @@ mod tests {
             "-T",          // use TCP
             "example.com",
         ])]
-    #[case("ipv4_flag", vec!["test", "example.com", "-4"])]
-    #[case("server_override", vec!["test", "-s", "1.1.1.1", "example.com"])]
-    #[case("query_type", vec!["test", "example.com", "-q", "AAAA"])]
-    #[case("source_v4", vec!["test", "example.com", "-S", "1.1.1.1"])]
-    #[case("source_v6", vec!["test", "example.com", "-S", "2001:db8::1"])]
+    #[case::ipv4_flag(vec!["test", "example.com", "-4"])]
+    #[case::server_override(vec!["test", "-s", "1.1.1.1", "example.com"])]
+    #[case::query_type(vec!["test", "example.com", "-q", "AAAA"])]
+    #[case::source_v4(vec!["test", "example.com", "-S", "1.1.1.1"])]
+    #[case::source_v6(vec!["test", "example.com", "-S", "2001:db8::1"])]
     #[trace]
-    fn args(#[case] name: &str, #[case] input: Vec<&str>) {
+    fn args(
+        #[notrace]
+        #[context]
+        ctx: Context,
+        #[case] input: Vec<&str>,
+    ) {
         let args = Args::parse_from(input);
 
-        assert_debug_snapshot!(format!("args_{name}"), args);
+        assert_debug_snapshot!(
+            format!("{}_{}", ctx.name, ctx.description.unwrap_or_default()),
+            args
+        );
     }
 
     #[rstest]
@@ -189,27 +197,43 @@ mod tests {
     }
 
     #[rstest]
-    #[case("invalid_query_type", vec!["test", "example.com", "-q", "INVALID"])]
-    #[case("invalid_retries", vec!["test", "example.com", "-r", "INVALID"])]
-    #[case("invalid_ipv4", vec!["test", "example.com", "-S", "5432.5432.234.12"])]
-    #[case("invalid_ipv6", vec!["test", "example.com", "-S", "2a0x::1"])]
+    #[case::invalid_query_type(vec!["test", "example.com", "-q", "INVALID"])]
+    #[case::invalid_retries(vec!["test", "example.com", "-r", "INVALID"])]
+    #[case::invalid_ipv4(vec!["test", "example.com", "-S", "5432.5432.234.12"])]
+    #[case::invalid_ipv6(vec!["test", "example.com", "-S", "2a0x::1"])]
     #[trace]
-    fn bad_args(#[case] name: &str, #[case] input: Vec<&str>) {
+    fn bad_args(
+        #[notrace]
+        #[context]
+        ctx: Context,
+        #[case] input: Vec<&str>,
+    ) {
         let args = Args::try_parse_from(input).expect_err("input should be rejected by the parser");
 
-        assert_debug_snapshot!(format!("bad_{name}"), args);
+        assert_debug_snapshot!(
+            format!("{}_{}", ctx.name, ctx.description.unwrap_or_default()),
+            args
+        );
     }
 
     #[rstest]
-    #[case("source_v4_plus_ipv6_flag", vec!["test", "example.com", "-6", "-S", "1.1.1.1"])]
-    #[case("source_v6_plus_ipv4_flag", vec!["test", "example.com", "-4", "-S", "2001:db8::1"])]
+    #[case::source_v4_plus_ipv6_flag(vec!["test", "example.com", "-6", "-S", "1.1.1.1"])]
+    #[case::source_v6_plus_ipv4_flag(vec!["test", "example.com", "-4", "-S", "2001:db8::1"])]
     #[trace]
-    fn not_valid(#[case] name: &str, #[case] input: Vec<&str>) {
+    fn not_valid(
+        #[notrace]
+        #[context]
+        ctx: Context,
+        #[case] input: Vec<&str>,
+    ) {
         let mut args = Args::parse_from(input);
         let validated = args
             .validate()
             .expect_err("incompatible flags should fail validation");
 
-        assert_debug_snapshot!(format!("not_valid_{name}"), validated);
+        assert_debug_snapshot!(
+            format!("{}_{}", ctx.name, ctx.description.unwrap_or_default()),
+            validated
+        );
     }
 }
