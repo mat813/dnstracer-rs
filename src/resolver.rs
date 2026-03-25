@@ -582,19 +582,18 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
 
     /// Print the overview
     pub fn show_overview(&self) -> Result<(), ResolverError> {
-        use fmt::Write as _;
-
         let results = self.results.read().map_err(|_| ResolverError::ReadLock)?;
-        let mut buf = String::new();
+        let mut output = self.output.lock().map_err(|_| ResolverError::WriteLock)?;
         for (key, values) in results.iter() {
             if values.response_code != ResponseCode::NoError {
-                let _ = writeln!(
-                    buf,
+                writeln!(
+                    output,
                     "{} ({})\t{}",
                     key.name.as_deref().unwrap_or_default(),
                     key.ip,
                     values.response_code
-                );
+                )
+                .map_err(|_| ResolverError::Write)?;
             }
 
             for record in values
@@ -603,20 +602,17 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
                 // Don't use Record's Ord impl, it sorts things in a strange way
                 .sorted_by_cached_key(|r| format!("{r}"))
             {
-                let _ = writeln!(
-                    buf,
+                writeln!(
+                    output,
                     "{} ({}) \t{record}",
                     key.name.as_deref().unwrap_or_default(),
                     key.ip
-                );
+                )
+                .map_err(|_| ResolverError::Write)?;
             }
         }
+        drop(output);
         drop(results);
-        self.output
-            .lock()
-            .map_err(|_| ResolverError::WriteLock)?
-            .write_all(buf.as_bytes())
-            .map_err(|_| ResolverError::Write)?;
         Ok(())
     }
 
