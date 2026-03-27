@@ -78,6 +78,6 @@ unwrap_in_result = "warn"
 unwrap_used = "warn"
 
 [dev-dependencies]
-insta = "=1.46.3"
+insta = "=1.47.0"
 mockall = "=0.14.0"
 rstest = "=0.26.1"
