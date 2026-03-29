@@ -1,12 +1,13 @@
-use clap::Parser;
-use derive_more::Display;
-use exn::{Result, bail};
-use hickory_proto::{ProtoError, rr::RecordType};
 use std::{
     net::{IpAddr, Ipv4Addr, Ipv6Addr},
     num::ParseIntError,
     time::Duration,
 };
+
+use clap::Parser;
+use derive_more::Display;
+use exn::{Result, bail};
+use hickory_proto::{ProtoError, rr::RecordType};
 
 // Original arguments
 // -c: disable local caching, default enabled
@@ -111,14 +112,14 @@ impl Args {
                 }
                 // Also, force IPv4 queries everywhere, otherwise we'd get protocol errors
                 self.ipv4 = true;
-            }
+            },
             Some(IpAddr::V6(ip)) => {
                 if self.ipv4 {
                     bail!(ArgsError::Ipv4WithIpv6Source(ip));
                 }
                 // Also, force IPv6 queries everywhere, otherwise we'd get protocol errors
                 self.ipv6 = true;
-            }
+            },
             None => (),
         }
 
@@ -135,9 +136,10 @@ fn parse_duration(src: &str) -> std::result::Result<Duration, ParseIntError> {
 mod tests {
     #![expect(clippy::expect_used, reason = "test")]
 
-    use super::*;
     use insta::assert_debug_snapshot;
     use rstest::{Context, rstest};
+
+    use super::*;
 
     #[rstest]
     #[case::default_values(vec!["test", "example.com"])]

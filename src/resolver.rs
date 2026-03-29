@@ -1,4 +1,13 @@
-use crate::{args::Args, opt_name::OptName};
+use std::{
+    collections::{BTreeSet, HashMap, HashSet},
+    fmt,
+    future::Future,
+    io::{self, Write},
+    net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr},
+    pin::Pin,
+    sync::{Mutex, RwLock},
+};
+
 use derive_more::{Debug, Display};
 use exn::{Result, ResultExt as _, bail};
 use hickory_client::client::{Client, ClientHandle as _};
@@ -16,15 +25,8 @@ use hickory_resolver::{
     name_server::GenericConnector,
 };
 use itertools::Itertools as _;
-use std::{
-    collections::{BTreeSet, HashMap, HashSet},
-    fmt,
-    future::Future,
-    io::{self, Write},
-    net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr},
-    pin::Pin,
-    sync::{Mutex, RwLock},
-};
+
+use crate::{args::Args, opt_name::OptName};
 
 /// A container for all resolver errors
 #[derive(Debug, Display)]
@@ -474,7 +476,7 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
                             .or_raise(|| ResolverError::DoRecurse)?;
                         }
                     }
-                }
+                },
                 Err(e) => {
                     self.cache_set(false, (server.ip, name.clone()));
                     self.print(
@@ -489,7 +491,7 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
                         ),
                         &last,
                     );
-                }
+                },
             }
             Ok(())
         })
@@ -522,10 +524,10 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
                     .filter_map(|additional| match *additional.data() {
                         RData::A(ref a) => {
                             Some((additional, IpAddr::from(Into::<Ipv4Addr>::into(*a))))
-                        }
+                        },
                         RData::AAAA(ref a) => {
                             Some((additional, IpAddr::from(Into::<Ipv6Addr>::into(*a))))
-                        }
+                        },
                         _ => None,
                     })
                     .filter(|&(_, ip)| self.is_ip_allowed(ip))
@@ -640,10 +642,10 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
             match locked_cache.write() {
                 Ok(mut c) => {
                     c.insert(key);
-                }
+                },
                 Err(error) => {
                     eprintln!("cache set error {error}");
-                }
+                },
             }
         }
     }
@@ -706,16 +708,18 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
 mod tests {
     #![allow(clippy::expect_used, clippy::indexing_slicing, reason = "test")]
 
-    use super::*;
-    use crate::args::Args;
-    use hickory_proto::rr::{Name, RData, Record, RecordType, rdata};
-    use insta::assert_debug_snapshot;
-    use mockall::predicate;
     use std::{
         net::{IpAddr, Ipv4Addr},
         str::FromStr as _,
         time::Duration,
     };
+
+    use hickory_proto::rr::{Name, RData, Record, RecordType, rdata};
+    use insta::assert_debug_snapshot;
+    use mockall::predicate;
+
+    use super::*;
+    use crate::args::Args;
 
     fn default_args() -> Args {
         Args {
@@ -1006,7 +1010,7 @@ mod tests {
         assert!(result.is_err());
         assert_debug_snapshot!(result, @"
         Err(
-            No IP address found for hostname: ns1.example.com, at src/resolver.rs:375:13,
+            No IP address found for hostname: ns1.example.com, at src/resolver.rs:377:13,
         )
         ");
         assert_debug_snapshot!(get_output(resolver), @r#""""#);
@@ -1389,13 +1393,10 @@ mod tests {
             .results
             .write()
             .expect("results lock should not be poisoned")
-            .insert(
-                server,
-                FullResult {
-                    records: std::collections::BTreeSet::from([record]),
-                    response_code: ResponseCode::NoError,
-                },
-            );
+            .insert(server, FullResult {
+                records: std::collections::BTreeSet::from([record]),
+                response_code: ResponseCode::NoError,
+            });
 
         resolver
             .show_overview()
@@ -1448,13 +1449,10 @@ mod tests {
             .results
             .write()
             .expect("results lock should not be poisoned")
-            .insert(
-                server,
-                FullResult {
-                    records: std::collections::BTreeSet::new(),
-                    response_code: ResponseCode::NXDomain,
-                },
-            );
+            .insert(server, FullResult {
+                records: std::collections::BTreeSet::new(),
+                response_code: ResponseCode::NXDomain,
+            });
 
         resolver
             .show_overview()

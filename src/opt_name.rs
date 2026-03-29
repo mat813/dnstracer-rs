@@ -1,9 +1,10 @@
-use derive_more::PartialEq;
 use std::{
     cmp::Ordering,
     fmt, hash,
     net::{IpAddr, SocketAddr},
 };
+
+use derive_more::PartialEq;
 
 /// `OptName` is a struct that represents an nameserver and the zone it is supposed to be authoritative for.
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -72,8 +73,9 @@ impl Ord for OptName {
 mod tests {
     #![expect(clippy::expect_used, reason = "test")]
 
-    use super::*;
     use std::net::{Ipv4Addr, Ipv6Addr};
+
+    use super::*;
 
     #[test]
     fn optname_eq() {

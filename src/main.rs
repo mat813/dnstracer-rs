@@ -1,11 +1,13 @@
 #![doc = include_str!("../README.md")]
 
-use crate::{args::Args, opt_name::OptName, resolver::RecursiveResolver};
+use std::str::FromStr as _;
+
 use clap::Parser as _;
 use derive_more::Display;
 use exn::{Result, ResultExt as _};
 use hickory_proto::rr::Name;
-use std::str::FromStr as _;
+
+use crate::{args::Args, opt_name::OptName, resolver::RecursiveResolver};
 
 /// The arguments
 mod args;
