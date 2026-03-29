@@ -30,7 +30,7 @@ use crate::{args::Args, opt_name::OptName};
 
 /// A container for all resolver errors
 #[derive(Debug, Display)]
-#[allow(clippy::missing_docs_in_private_items, reason = "self explainatory")]
+#[allow(clippy::missing_docs_in_private_items, reason = "self explanatory")]
 pub enum ResolverError {
     #[display("NS lookup failed for {_0}")]
     NsLookup(String),
@@ -618,7 +618,7 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
         Ok(())
     }
 
-    /// Did we already ask for this, wether it turned out ok or not ?
+    /// Did we already ask for this, whether it turned out ok or not ?
     fn cache_get(&self, key: &CacheKey) -> bool {
         self.positive_cache
             .as_ref()

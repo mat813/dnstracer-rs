@@ -18,7 +18,7 @@ mod resolver;
 
 /// The main body error
 #[derive(Debug, Display)]
-#[allow(clippy::missing_docs_in_private_items, reason = "self explainatory")]
+#[allow(clippy::missing_docs_in_private_items, reason = "self explanatory")]
 enum MainError {
     #[display("Arguments validation error")]
     ArgumentsValidation,

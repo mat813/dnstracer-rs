@@ -11,7 +11,7 @@ use derive_more::PartialEq;
 pub struct OptName {
     /// The name server IP address
     pub ip: IpAddr,
-    /// Optionnally, the name server's FQDN
+    /// Optionally, the name server's FQDN
     pub name: Option<String>,
     /// The zone it is supposed to be authoritative for
     #[partial_eq(skip)]
