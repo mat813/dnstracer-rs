@@ -482,13 +482,16 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
                     self.print(
                         depth,
                         server,
-                        format!(
-                            "{e} -> {}",
-                            e.frame().children().first().map_or_else(
-                                || "unknown error".to_owned(),
-                                std::string::ToString::to_string
+                        std::fmt::from_fn(|f| {
+                            write!(
+                                f,
+                                "{e} -> {}",
+                                e.frame().children().first().map_or_else(
+                                    || "unknown error".to_owned(),
+                                    std::string::ToString::to_string
+                                )
                             )
-                        ),
+                        }),
                         &last,
                     );
                 },
