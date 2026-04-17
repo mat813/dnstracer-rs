@@ -5,7 +5,109 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v1.2.5 (2026-04-17)
+
+### Chore
+
+ - <csr-id-b06818faffd51a4565bf4fe8f545d44a1ce5d007/> lock file maintenance
+ - <csr-id-5deaed07053c14d52170a1d09952fc11c482a910/> lock file maintenance
+ - <csr-id-f01d6af7359e28d9fac62c40d0079173373b87fc/> update rust crate insta to v1.47.2
+   | datasource | package | from   | to     |
+   | ---------- | ------- | ------ | ------ |
+   | crate      | insta   | 1.47.1 | 1.47.2 |
+ - <csr-id-b0858c82c672acb4a56555dc9580b9bebf0f2257/> lock file maintenance
+ - <csr-id-00001790dfdad3da38f1e54a5b731671de76bdd1/> typos
+ - <csr-id-8b229ea7be48042620411dc76eaecc2fe3c8190f/> update rust crate insta to v1.47.1
+   | datasource | package | from   | to     |
+   | ---------- | ------- | ------ | ------ |
+   | crate      | insta   | 1.47.0 | 1.47.1 |
+ - <csr-id-72bb8b14603d5214d88b6f1cb34b97a01b244686/> update rust crate insta to v1.47.0
+   | datasource | package | from   | to     |
+   | ---------- | ------- | ------ | ------ |
+   | crate      | insta   | 1.46.3 | 1.47.0 |
+
+### Bug Fixes
+
+ - <csr-id-00001920619de84cb17b5c340e9d749de6849dd8/> update to hickory-dns 0.26
+ - <csr-id-7e23410fde60385da1e092399d0e30192518181a/> update hickory-dns monorepo to v0.26.0
+   | datasource | package          | from   | to     |
+   | ---------- | ---------------- | ------ | ------ |
+   | crate      | hickory-proto    | 0.25.2 | 0.26.0 |
+   | crate      | hickory-resolver | 0.25.2 | 0.26.0 |
+ - <csr-id-c9e3917634ba0533389f6d4cfd56ca6cdcb1dedd/> update rust crate tokio to v1.52.1
+   | datasource | package | from   | to     |
+   | ---------- | ------- | ------ | ------ |
+   | crate      | tokio   | 1.52.0 | 1.52.1 |
+ - <csr-id-c287fa0b5c0e0ba6c6ae040154f229c839412267/> update rust crate clap to v4.6.1
+   | datasource | package | from  | to    |
+   | ---------- | ------- | ----- | ----- |
+   | crate      | clap    | 4.6.0 | 4.6.1 |
+ - <csr-id-000018803c4b724e1b874c89d8cd48e91ab5ddaf/> delegate formatting to std::fmt::from_fn
+ - <csr-id-451739b7f36fa130c57cdc5b52b2a7fd7feec33b/> update rust crate tokio to v1.52.0
+   | datasource | package | from   | to     |
+   | ---------- | ------- | ------ | ------ |
+   | crate      | tokio   | 1.51.1 | 1.52.0 |
+ - <csr-id-c482bb7c60af4875d2ce0e13b70a2c0d0f46cf4d/> update rust crate tokio to v1.51.1
+   | datasource | package | from   | to     |
+   | ---------- | ------- | ------ | ------ |
+   | crate      | tokio   | 1.51.0 | 1.51.1 |
+ - <csr-id-ed1eadf96019f319c42c9d1291986d562e979a94/> update rust crate tokio to v1.51.0
+   | datasource | package | from   | to     |
+   | ---------- | ------- | ------ | ------ |
+   | crate      | tokio   | 1.50.0 | 1.51.0 |
+
+### Other
+
+ - <csr-id-0000180085ec9ea052db908c14b5610909433c86/> fmt → nightly
+
+### Style
+
+ - <csr-id-00001780aa6351a86ddf57aaec12fc24014290a0/> lints
+
+### Commit Statistics
+
+<csr-read-only-do-not-edit/>
+
+ - 17 commits contributed to the release.
+ - 17 commits were understood as [conventional](https://www.conventionalcommits.org).
+ - 0 issues like '(#ID)' were seen in commit messages
+
+### Commit Details
+
+<csr-read-only-do-not-edit/>
+
+<details><summary>view details</summary>
+
+ * **Uncategorized**
+    - Update to hickory-dns 0.26 (0000192)
+    - Update hickory-dns monorepo to v0.26.0 (7e23410)
+    - Update rust crate tokio to v1.52.1 (c9e3917)
+    - Update rust crate clap to v4.6.1 (c287fa0)
+    - Delegate formatting to std::fmt::from_fn (0000188)
+    - Update rust crate tokio to v1.52.0 (451739b)
+    - Lock file maintenance (b06818f)
+    - Update rust crate tokio to v1.51.1 (c482bb7)
+    - Lock file maintenance (5deaed0)
+    - Update rust crate tokio to v1.51.0 (ed1eadf)
+    - Update rust crate insta to v1.47.2 (f01d6af)
+    - Lock file maintenance (b0858c8)
+    - Fmt → nightly (0000180)
+    - Typos (0000179)
+    - Lints (0000178)
+    - Update rust crate insta to v1.47.1 (8b229ea)
+    - Update rust crate insta to v1.47.0 (72bb8b1)
+</details>
+
 ## v1.2.4 (2026-03-25)
+
+<csr-id-000016901c945d4ea5b9d3382023e279e0af29e9/>
+<csr-id-5420e34e2468b5a4f0b557819cfe5bfcf01b4b4d/>
+<csr-id-dee20ba891fb8c409dbd46e262656e162f92db3f/>
+<csr-id-000016400e06131be745c20ff36a380c4890d46a/>
+<csr-id-00001740c176a91af33ef9ebef01f9743a8449c8/>
+<csr-id-0000166044d71cb9228fb4bbe252a0b88a1da663/>
+<csr-id-00001650c0146fcd425e97e565f65cc2c42f71f6/>
+<csr-id-00001630e634bfb404ff7bf75471e20b0059988c/>
 
 ### Chore
 
@@ -33,7 +135,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <csr-read-only-do-not-edit/>
 
- - 13 commits contributed to the release over the course of 9 calendar days.
+ - 14 commits contributed to the release over the course of 10 calendar days.
  - 10 days passed between releases.
  - 13 commits were understood as [conventional](https://www.conventionalcommits.org).
  - 0 issues like '(#ID)' were seen in commit messages
@@ -45,6 +147,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <details><summary>view details</summary>
 
  * **Uncategorized**
+    - Release dnstracer v1.2.4 (645b87e)
     - Use rstest's Context (0000174)
     - Don't buffer too much to show the overview (0000173)
     - Don't clobber cnames (0000172)
