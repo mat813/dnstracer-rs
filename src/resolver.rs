@@ -10,19 +10,19 @@ use std::{
 
 use derive_more::{Debug, Display};
 use exn::{Result, ResultExt as _, bail};
-use hickory_client::client::{Client, ClientHandle as _};
-use hickory_proto::{
-    op::ResponseCode,
-    rr::{DNSClass, Name, RData, Record, RecordType},
+use hickory_net::{
+    client::{Client, ClientHandle as _},
     runtime::TokioRuntimeProvider,
     tcp::TcpClientStream,
     udp::UdpClientStream,
-    xfer::DnsResponse,
+};
+use hickory_proto::{
+    op::{DnsResponse, ResponseCode},
+    rr::{DNSClass, Name, RData, Record, RecordType},
 };
 use hickory_resolver::{
     TokioResolver,
     config::{LookupIpStrategy, ResolverOpts},
-    name_server::GenericConnector,
 };
 use itertools::Itertools as _;
 
@@ -36,8 +36,6 @@ pub enum ResolverError {
     NsLookup(String),
     #[display("IP lookup failed for {_0}")]
     IpLookup(String),
-    #[display("Client connect failed for {_0}")]
-    ClientConnect(OptName),
     #[display("Client query failed for {_1} {_0}")]
     ClientQuery(Name, RecordType),
     #[display("Client creation failed")]
@@ -117,11 +115,11 @@ impl Default for QueryResult {
 impl From<DnsResponse> for QueryResult {
     fn from(resp: DnsResponse) -> Self {
         Self {
-            authoritative: resp.authoritative(),
-            answers: resp.answers().to_vec(),
-            name_servers: resp.name_servers().to_vec(),
-            additionals: resp.additionals().to_vec(),
-            response_code: resp.response_code(),
+            authoritative: resp.metadata.authoritative,
+            answers: resp.answers.clone(),
+            name_servers: resp.authorities.clone(),
+            additionals: resp.additionals.clone(),
+            response_code: resp.metadata.response_code,
         }
     }
 }
@@ -148,8 +146,9 @@ impl NameResolver for TokioNameResolver {
             .ns_lookup(name)
             .await
             .or_raise(|| ResolverError::NsLookup(name.to_owned()))?
+            .authorities()
             .iter()
-            .map(|ns| ns.0.clone())
+            .map(|ns| ns.name.clone())
             .collect())
     }
 
@@ -198,9 +197,7 @@ impl DefaultDnsQuerier {
             .with_timeout(Some(self.timeout))
             .with_bind_addr(self.source_address.map(|ip| SocketAddr::new(ip, 0)))
             .build();
-        let (mut client, bg) = Client::connect(stream)
-            .await
-            .or_raise(|| ResolverError::ClientConnect(server.clone()))?;
+        let (mut client, bg) = Client::<TokioRuntimeProvider>::from_sender(stream);
 
         if self.no_edns0 {
             client.disable_edns();
@@ -223,16 +220,19 @@ impl DefaultDnsQuerier {
         name: &Name,
         query_type: RecordType,
     ) -> Result<DnsResponse, ResolverError> {
-        let (stream, sender) = TcpClientStream::new(
+        let (future, sender) = TcpClientStream::new(
             server.into(),
             self.source_address.map(|ip| SocketAddr::new(ip, 0)),
             Some(self.timeout),
             TokioRuntimeProvider::new(),
         );
 
-        let (mut client, bg) = Client::new(stream, sender, None)
-            .await
-            .or_raise(|| ResolverError::ClientNew(server.clone()))?;
+        let (mut client, bg) = Client::<TokioRuntimeProvider>::new(
+            future
+                .await
+                .or_raise(|| ResolverError::ClientNew(server.clone()))?,
+            sender,
+        );
 
         if self.no_edns0 {
             client.disable_edns();
@@ -296,10 +296,11 @@ impl<'a> RecursiveResolver<'a> {
         resolver_opts.timeout = args.timeout;
         resolver_opts.edns0 = !args.no_edns0;
 
-        let resolver = TokioResolver::builder(GenericConnector::new(TokioRuntimeProvider::new()))
+        let resolver = TokioResolver::builder(TokioRuntimeProvider::new())
             .or_raise(|| ResolverError::BuildTokioResolver)?
             .with_options(resolver_opts)
-            .build();
+            .build()
+            .or_raise(|| ResolverError::BuildTokioResolver)?;
 
         Ok(Self {
             results: RwLock::new(HashMap::new()),
@@ -429,7 +430,10 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
                                 .answers
                                 .iter()
                                 // We already checked every entry was a CNAME
-                                .filter_map(|r| r.data().as_cname())
+                                .filter_map(|r| match r.data {
+                                    RData::CNAME(ref cname) => Some(cname),
+                                    _ => None,
+                                })
                             {
                                 accumulated.extend(
                                     self.get_next_servers(
@@ -514,7 +518,7 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
 
         for record in records {
             // Here, we know it's a NS, so unwrap all that.
-            let Some(ns) = record.data().as_ns() else {
+            let RData::NS(ref ns) = record.data else {
                 continue;
             };
 
@@ -523,8 +527,8 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
             next_servers.append(
                 &mut additionals
                     .iter()
-                    .filter(|r| *r.name() == ns.0)
-                    .filter_map(|additional| match *additional.data() {
+                    .filter(|r| r.name == ns.0)
+                    .filter_map(|additional| match additional.data {
                         RData::A(ref a) => {
                             Some((additional, IpAddr::from(Into::<Ipv4Addr>::into(*a))))
                         },
@@ -536,8 +540,8 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
                     .filter(|&(_, ip)| self.is_ip_allowed(ip))
                     .map(|(additional, ip)| OptName {
                         ip,
-                        name: Some(additional.name().to_string()),
-                        zone: Some(record.name().to_string()),
+                        name: Some(additional.name.to_string()),
+                        zone: Some(record.name.to_string()),
                     })
                     .collect(),
             );
@@ -556,7 +560,7 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
                             .map(|ip| OptName {
                                 ip,
                                 name: Some(ns.to_string()),
-                                zone: Some(record.name().to_string()),
+                                zone: Some(record.name.to_string()),
                             })
                             .collect(),
                     );
@@ -571,7 +575,7 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
                         &OptName {
                             ip: [0, 0, 0, 0].into(),
                             name: Some(ns.to_string()),
-                            zone: Some(record.name().to_string()),
+                            zone: Some(record.name.to_string()),
                         },
                         "no ip found",
                         last,
@@ -1013,7 +1017,7 @@ mod tests {
         assert!(result.is_err());
         assert_debug_snapshot!(result, @"
         Err(
-            No IP address found for hostname: ns1.example.com, at src/resolver.rs:377:13,
+            No IP address found for hostname: ns1.example.com, at src/resolver.rs:378:13,
         )
         ");
         assert_debug_snapshot!(get_output(resolver), @r#""""#);
@@ -1065,10 +1069,10 @@ mod tests {
             }: FullResult {
                 records: {
                     Record {
-                        name_labels: Name("example.com."),
+                        name: Name("example.com."),
                         dns_class: IN,
                         ttl: 300,
-                        rdata: A(
+                        data: A(
                             A(
                                 93.184.216.34,
                             ),
@@ -1171,10 +1175,10 @@ mod tests {
             }: FullResult {
                 records: {
                     Record {
-                        name_labels: Name("example.com."),
+                        name: Name("example.com."),
                         dns_class: IN,
                         ttl: 300,
-                        rdata: A(
+                        data: A(
                             A(
                                 93.184.216.34,
                             ),
@@ -1420,10 +1424,10 @@ mod tests {
             }: FullResult {
                 records: {
                     Record {
-                        name_labels: Name("example.com."),
+                        name: Name("example.com."),
                         dns_class: IN,
                         ttl: 300,
-                        rdata: A(
+                        data: A(
                             A(
                                 93.184.216.34,
                             ),

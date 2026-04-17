@@ -20,11 +20,9 @@ ErrorInner {
     },
     message: None,
     source: Some(
-        ProtoError {
-            kind: UnknownRecordTypeStr(
-                "INVALID",
-            ),
-        },
+        UnknownRecordTypeStr(
+            "INVALID",
+        ),
     ),
     help_flag: Some(
         "--help",

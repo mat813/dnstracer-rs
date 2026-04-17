@@ -7,7 +7,7 @@ use std::{
 use clap::Parser;
 use derive_more::Display;
 use exn::{Result, bail};
-use hickory_proto::{ProtoError, rr::RecordType};
+use hickory_proto::{rr::RecordType, serialize::binary::DecodeError};
 
 // Original arguments
 // -c: disable local caching, default enabled
@@ -98,7 +98,7 @@ pub enum ArgsError {
 impl std::error::Error for ArgsError {}
 
 /// Parsing record type
-fn parse_record_type(s: &str) -> std::result::Result<RecordType, ProtoError> {
+fn parse_record_type(s: &str) -> std::result::Result<RecordType, DecodeError> {
     s.to_ascii_uppercase().parse()
 }
 
