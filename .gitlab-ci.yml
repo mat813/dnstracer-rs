@@ -74,6 +74,6 @@ publish:
         exit 1
       fi
 
-      echo "$CRATES_IO_PUBLISH_TOKEN"
+      echo "Token received, running cargo publish"
 
       CARGO_REGISTRY_TOKEN="$CRATES_IO_PUBLISH_TOKEN" cargo publish
