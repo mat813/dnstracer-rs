@@ -137,7 +137,7 @@ cargo clippy nightly:
     CARGO_PROFILE_RELEASE_LTO: "true"
     CARGO_PROFILE_RELEASE_CODEGEN_UNITS: "1"
     CARGO_CACHE_POLICY: pull-push
-    PROJECT_NAME: imap-tools
+    PROJECT_NAME: dnstracer
   cache:
     - key: ${CI_COMMIT_REF_SLUG}-cross-rustup-${TARGET}
       policy: ${CARGO_CACHE_POLICY}
