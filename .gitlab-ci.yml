@@ -1,53 +1,258 @@
+variables:
+  CARGO_HOME_REL: .cargo-${RUST_VERSION}
+  CARGO_HOME: ${CI_PROJECT_DIR}/${CARGO_HOME_REL}
+  CARGO_CACHE: ${CI_COMMIT_REF_SLUG}-cargo
+  CARGO_INCREMENTAL: false
+  CARGO_BUILD_JOBS: 4
+  TEST_IMAGE: $CI_REGISTRY_IMAGE/test:$CI_PIPELINE_ID
+  RUSTFLAGS: -Dwarnings
+  # renovate: datasource=github-releases depName=rust-lang/rust
+  RUST_VERSION: 1.95.0
+  # renovate: datasource=crate depName=cargo-cache
+  CARGO_CACHE_VERSION: 0.8.3
+  # renovate: datasource=crate depName=cargo-nextest
+  CARGO_NEXTEST_VERSION: 0.9.133
+  # renovate: datasource=crate depName=cargo-hack
+  CARGO_HACK_VERSION: 0.6.44
+  # renovate: datasource=crate depName=cargo-sweep
+  CARGO_SWEEP_VERSION: 0.8.0
+  # renovate: datasource=crate depName=zipsign
+  ZIPSIGN_VERSION: 0.2.1
+  # l'installation de binstall a besoin de cette variable là
+  # renovate: datasource=crate depName=cargo-binstall
+  BINSTALL_VERSION: 1.18.1
+  BINSTALL_DISABLE_TELEMETRY: true
+
 default:
   interruptible: true
+  # yamllint disable-line rule:line-length
+  image: docker.io/library/rust:1.95.0
 
-.build:
-  stage: build
+# TODO: gérer le cache pour les composants dans rustup
+
+.rust-cache-paths: &rust-cache-path
+  - ${CARGO_HOME_REL}
+
+.cache:
+  needs:
+    - cargo fetch
+  dependencies:
+    - cargo fetch
   cache:
-    key: ${CI_COMMIT_REF_SLUG}-${RUST_VERSION}
-    paths:
-      - target/
+    - key: ${CARGO_CACHE}
+      policy: pull
+      paths: *rust-cache-path
+      unprotect: true
+      fallback_keys:
+        - ${CI_DEFAULT_BRANCH_SLUG}-cargo
+    - key: ${CI_COMMIT_REF_SLUG}-${CI_JOB_NAME_SLUG}-target
+      policy: pull-push
+      when: always
+      paths:
+        - target
+      unprotect: true
+      fallback_keys:
+        - ${CI_DEFAULT_BRANCH_SLUG}-${CI_JOB_NAME_SLUG}-target
+
+.cargo sweep:
+  # before_script:
+  #   - cargo sweep --verbose --stamp
+  after_script:
+    # - cargo sweep --verbose --file
+    - cargo sweep --verbose --time 1
+
+cargo fetch:
+  stage: .pre
+  needs: []
+  cache:
+    - key: ${CARGO_CACHE}
+      policy: pull-push
+      paths: *rust-cache-path
+      unprotect: true
+      fallback_keys:
+        - ${CI_DEFAULT_BRANCH_SLUG}-cargo
   rules:
     - if: $CI_COMMIT_BRANCH
   script:
-    - cargo build --verbose
-    - cargo test --verbose
+    - apt update && apt install -y cmake
+    # yamllint disable rule:line-length
+    - |
+      if [ -x ${CARGO_HOME_REL}/bin/cargo-binstall ]; then
+        cargo binstall --locked cargo-binstall@${BINSTALL_VERSION}
+      else
+        curl -L --proto '=https' --tlsv1.2 -sSf \
+          https://raw.githubusercontent.com/cargo-bins/cargo-binstall/v${BINSTALL_VERSION}/install-from-binstall-release.sh \
+          | bash
+      fi
+    # yamllint enable rule:line-length
+    - cargo binstall --locked cargo-cache@${CARGO_CACHE_VERSION}
+    - cargo binstall --locked cargo-nextest@${CARGO_NEXTEST_VERSION}
+    - cargo binstall --locked cargo-hack@${CARGO_HACK_VERSION}
+    - cargo binstall --locked cargo-sweep@${CARGO_SWEEP_VERSION}
+    - cargo fetch
+    - "cargo cache clean-unref || :"
 
-build:
-  extends: .build
-  image: rust:latest
+cargo fmt:
+  needs: []
+  rules:
+    - if: $CI_COMMIT_BRANCH
+  image: docker.io/rustlang/rust:nightly
+  script:
+    - rustup component add rustfmt
+    - cargo fmt --check --all
 
-build-nightly:
-  extends: .build
-  image: rustlang/rust:nightly
+cargo clippy:
+  extends:
+    - .cache
+    - .cargo sweep
+  rules:
+    - if: $CI_COMMIT_BRANCH
+  script:
+    - rustup component add clippy
+    - |
+      if [ -x ./clippy.sh ]; then
+        ./clippy.sh clippy --all-targets --release
+      else
+        cargo hack --feature-powerset clippy --all-targets --release
+      fi
+
+cargo clippy nightly:
+  image: docker.io/rustlang/rust:nightly
+  extends:
+    - cargo clippy
   allow_failure: true
 
-fmt:
-  stage: test
-  image: docker.io/rustlang/rust:nightly
+.cross:
+  parallel:
+    matrix:
+      - TARGET: x86_64-unknown-linux-musl
+      - TARGET: x86_64-unknown-linux-gnu
+      - TARGET: x86_64-pc-windows-gnu
+  image: ghcr.io/cross-rs/$TARGET:edge
+  stage: build
+  variables:
+    RUSTUP_HOME_REL: .rustup-${RUST_VERSION}
+    RUSTUP_HOME: ${CI_PROJECT_DIR}/${RUSTUP_HOME_REL}
+    CARGO_PROFILE_RELEASE_OPT_LEVEL: z
+    CARGO_PROFILE_RELEASE_LTO: "true"
+    CARGO_PROFILE_RELEASE_CODEGEN_UNITS: "1"
+    CARGO_CACHE_POLICY: pull-push
+    PROJECT_NAME: imap-tools
+  cache:
+    - key: ${CI_COMMIT_REF_SLUG}-cross-rustup-${TARGET}
+      policy: ${CARGO_CACHE_POLICY}
+      paths:
+        - ${RUSTUP_HOME_REL}
+        - ${CARGO_HOME_REL}
+      unprotect: true
+      fallback_keys:
+        - ${CI_DEFAULT_BRANCH_SLUG}-cross-rustup-${TARGET}
+    - key: ${CI_COMMIT_REF_SLUG}-cross-target-${TARGET}
+      policy: ${CARGO_CACHE_POLICY}
+      when: always
+      paths:
+        - target
+      unprotect: true
+      fallback_keys:
+        - ${CI_DEFAULT_BRANCH_SLUG}-cross-target-${TARGET}
   needs: []
-  rules:
-    - if: $CI_COMMIT_BRANCH
-  before_script:
-    - rustup component add rustfmt
   script:
-    - cargo fmt --check
+    - apt-get update && apt-get install --yes nasm zip
+    - >
+      if [ ! -f "$RUSTUP_HOME/settings.toml" ]; then
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs |
+          sh -s -- -y --quiet --default-toolchain $RUST_VERSION --profile minimal --target $TARGET
+      fi
+    - source $CARGO_HOME/env
+    - cargo install --locked zipsign@${ZIPSIGN_VERSION}
+    - cargo build --target $TARGET --release
+    - |
+      case $TARGET in
+      *-windows-*)
+        name=${PROJECT_NAME}.exe
+        ;;
+      *)
+        name=${PROJECT_NAME}
+        ;;
+      esac
+      zip -j -v -9 $ARCHIVE_FILE.zip target/$TARGET/release/$name
+      ls -l target/$TARGET/release/$name $ARCHIVE_FILE.*
+    # TODO: simplifier tout ça quand zipsign supportera les PEM
+    - |
+      if [ -n "$ZIPSIGN_PRIVATE_KEYS" ] && [ -f "$ZIPSIGN_PRIVATE_KEYS" ]; then
+        # Découper l'entrée en une clef par fichier
+        awk '
+          /^-----BEGIN/ { n++; file="key_" n ".pem" }
+          !/^# clef/ { print > file }
+        ' $ZIPSIGN_PRIVATE_KEYS
 
-clippy:
-  stage: test
-  needs: []
-  image: rust:latest
+        # Extraire le PEM base64 en brut
+        for file in key_*.pem; do
+          openssl base64 -d -in <(grep -v "^-----" $file) > ${file}.key
+        done
+
+        # Signer
+        zipsign sign zip $ARCHIVE_FILE.zip key_*.pem.key
+      fi
+    - ls -l $ARCHIVE_FILE.*
+  after_script:
+    - |
+      source $CARGO_HOME/env
+      cargo install --locked cargo-sweep@${CARGO_SWEEP_VERSION}
+      cargo sweep --verbose --time 1
+  artifacts:
+    expire_in: 1 hour
+    paths:
+      - ${ARCHIVE_FILE}.zip
+
+cross:
+  extends: .cross
+  variables:
+    ARCHIVE_FILE: ${PROJECT_NAME}-${CI_COMMIT_SHORT_SHA}-${TARGET}
   rules:
     - if: $CI_COMMIT_BRANCH
-  before_script:
-    - rustup component add clippy
+
+cross release:
+  extends: .cross
+  variables:
+    ARCHIVE_FILE: ${PROJECT_NAME}-${CI_COMMIT_TAG}-${TARGET}
+    CARGO_CACHE_POLICY: pull
+  rules:
+    - if: $CI_COMMIT_TAG
   script:
-    - cargo clippy
+    - !reference [.cross, script]
+    - >
+      for file in ${ARCHIVE_FILE}.zip; do
+        package_url="${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/${PROJECT_NAME}/${CI_COMMIT_TAG}/$file"
+        curl --fail \
+          --header "JOB-TOKEN: ${CI_JOB_TOKEN}" \
+          --upload-file $file \
+          "$package_url"
+      done
+  interruptible: false
+
+cargo nextest:
+  needs:
+    - cargo fetch
+  extends:
+    - .cache
+    - .cargo sweep
+  script:
+    - cargo nextest run --workspace --profile ci --release
+  rules:
+    - if: $CI_COMMIT_BRANCH
+  artifacts:
+    when: always
+    reports:
+      # point GitLab to the junit test report: it will automatically display it in a dashboard
+      junit: $CI_PROJECT_DIR/target/nextest/ci/junit.xml
 
 publish:
   image: rust:alpine
   stage: deploy
   environment: release
+  interruptible: false
+  needs: []
   rules:
     - if: $CI_COMMIT_TAG
   id_tokens:
@@ -76,4 +281,5 @@ publish:
 
       echo "Token received, running cargo publish"
 
+      unset CARGO_HOME
       CARGO_REGISTRY_TOKEN="$CRATES_IO_PUBLISH_TOKEN" cargo publish
