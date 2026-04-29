@@ -122,6 +122,22 @@ cargo clippy nightly:
     - cargo clippy
   allow_failure: true
 
+cargo nextest:
+  needs:
+    - cargo fetch
+  extends:
+    - .cache
+    - .cargo sweep
+  script:
+    - cargo nextest run --workspace --profile ci --release
+  rules:
+    - if: $CI_COMMIT_BRANCH
+  artifacts:
+    when: always
+    reports:
+      # point GitLab to the junit test report: it will automatically display it in a dashboard
+      junit: $CI_PROJECT_DIR/target/nextest/ci/junit.xml
+
 .cross:
   parallel:
     matrix:
@@ -212,40 +228,40 @@ cross:
   rules:
     - if: $CI_COMMIT_BRANCH
 
+release:
+  stage: .pre
+  image: registry.gitlab.com/gitlab-org/cli:latest
+  rules:
+    - if: $CI_COMMIT_TAG
+  script:
+    - glab release create "$CI_COMMIT_TAG" --name "Release $CI_COMMIT_TAG"
+
 cross release:
   extends: .cross
   variables:
     ARCHIVE_FILE: ${PROJECT_NAME}-${CI_COMMIT_TAG}-${TARGET}
     CARGO_CACHE_POLICY: pull
+    PACKAGE_REGISTRY_URL: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/${PROJECT_NAME}/${CI_COMMIT_TAG}"
   rules:
     - if: $CI_COMMIT_TAG
   script:
     - !reference [.cross, script]
     - >
       for file in ${ARCHIVE_FILE}.zip; do
-        package_url="${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/${PROJECT_NAME}/${CI_COMMIT_TAG}/$file"
         curl --fail \
           --header "JOB-TOKEN: ${CI_JOB_TOKEN}" \
           --upload-file $file \
-          "$package_url"
+          "${PACKAGE_REGISTRY_URL}/$file"
+        curl --fail \
+          --request POST \
+          --header "JOB-TOKEN: ${CI_JOB_TOKEN}" \
+          --data name="$file" \
+          --data url="${PACKAGE_REGISTRY_URL}/$file" \
+          --data direct_asset_path="/$file" \
+          --data link_type="package" \
+          "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/releases/${CI_COMMIT_TAG}/assets/links"
       done
   interruptible: false
-
-cargo nextest:
-  needs:
-    - cargo fetch
-  extends:
-    - .cache
-    - .cargo sweep
-  script:
-    - cargo nextest run --workspace --profile ci --release
-  rules:
-    - if: $CI_COMMIT_BRANCH
-  artifacts:
-    when: always
-    reports:
-      # point GitLab to the junit test report: it will automatically display it in a dashboard
-      junit: $CI_PROJECT_DIR/target/nextest/ci/junit.xml
 
 publish:
   image: rust:alpine
