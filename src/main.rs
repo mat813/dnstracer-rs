@@ -34,12 +34,41 @@ enum MainError {
 
 impl std::error::Error for MainError {}
 
+#[cfg_attr(
+    feature = "tracing",
+    tracing::instrument(level = "trace", skip(), err(level = "debug"))
+)]
 #[tokio::main]
 #[allow(clippy::exit, reason = "error")]
 #[expect(clippy::print_stderr, clippy::print_stdout, reason = "main")]
 async fn main() -> Result<(), MainError> {
+    #[cfg(feature = "tracing")]
+    {
+        use std::io::{IsTerminal as _, stdout};
+
+        use tracing_subscriber::{
+            EnvFilter, Layer as _, Registry,
+            fmt::{self, format::FmtSpan},
+            layer::SubscriberExt as _,
+            util::SubscriberInitExt as _,
+        };
+
+        Registry::default()
+            .with(
+                fmt::layer()
+                    .with_span_events(FmtSpan::NEW | FmtSpan::CLOSE)
+                    .event_format(fmt::format().pretty())
+                    .with_ansi(stdout().is_terminal())
+                    .with_filter(EnvFilter::from_default_env()),
+            )
+            .init();
+    }
+
     // Parse command-line arguments into the Args struct
     let mut arguments = Args::parse();
+
+    #[cfg(feature = "tracing")]
+    tracing::debug!(?arguments);
 
     arguments
         .validate()

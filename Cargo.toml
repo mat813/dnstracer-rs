@@ -19,6 +19,12 @@ hickory-proto = "=0.26.0"
 hickory-resolver = "=0.26.0"
 itertools = "=0.14.0"
 tokio = { version = "=1.52.1", features = ["net", "rt", "rt-multi-thread"] }
+tracing = { version = "=0.1.44", features = ["log"], optional = true }
+tracing-subscriber = { version = "=0.3.23", features = ["chrono", "env-filter", "serde"], optional = true }
+
+[features]
+default = ["tracing"]
+tracing = ["dep:tracing", "dep:tracing-subscriber"]
 
 [lints.clippy]
 # https://github.com/rust-lang/rust-clippy/issues/11916

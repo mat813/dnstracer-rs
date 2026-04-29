@@ -101,6 +101,7 @@ pub struct QueryResult {
 }
 
 impl Default for QueryResult {
+    #[cfg_attr(feature = "tracing", tracing::instrument(level = "trace", skip()))]
     fn default() -> Self {
         Self {
             authoritative: false,
@@ -113,7 +114,14 @@ impl Default for QueryResult {
 }
 
 impl From<DnsResponse> for QueryResult {
+    #[cfg_attr(
+        feature = "tracing",
+        tracing::instrument(level = "trace", skip(resp), ret)
+    )]
     fn from(resp: DnsResponse) -> Self {
+        #[cfg(feature = "tracing")]
+        tracing::debug!(?resp);
+
         Self {
             authoritative: resp.metadata.authoritative,
             answers: resp.answers.clone(),
@@ -140,7 +148,14 @@ pub trait DnsQuerier: Send + Sync {
 pub struct TokioNameResolver(TokioResolver);
 
 impl NameResolver for TokioNameResolver {
+    #[cfg_attr(
+        feature = "tracing",
+        tracing::instrument(level = "trace", skip(self, name), ret, err(level = "debug"))
+    )]
     async fn ns_lookup(&self, name: &str) -> Result<Vec<Name>, ResolverError> {
+        #[cfg(feature = "tracing")]
+        tracing::debug!(?name);
+
         Ok(self
             .0
             .ns_lookup(name)
@@ -152,7 +167,14 @@ impl NameResolver for TokioNameResolver {
             .collect())
     }
 
+    #[cfg_attr(
+        feature = "tracing",
+        tracing::instrument(level = "trace", skip(self, name), ret, err(level = "debug"))
+    )]
     async fn lookup_ip(&self, name: &str) -> Result<Vec<IpAddr>, ResolverError> {
+        #[cfg(feature = "tracing")]
+        tracing::debug!(?name);
+
         Ok(self
             .0
             .lookup_ip(name)
@@ -186,6 +208,15 @@ impl DefaultDnsQuerier {
         }
     }
 
+    #[cfg_attr(
+        feature = "tracing",
+        tracing::instrument(
+            level = "trace",
+            skip(self, server, name, query_type),
+            ret,
+            err(level = "debug")
+        )
+    )]
     /// Make a UDP DNS query
     async fn udp_query(
         &self,
@@ -193,6 +224,9 @@ impl DefaultDnsQuerier {
         name: &Name,
         query_type: RecordType,
     ) -> Result<DnsResponse, ResolverError> {
+        #[cfg(feature = "tracing")]
+        tracing::debug!(?server, ?name, ?query_type);
+
         let stream = UdpClientStream::builder(server.into(), TokioRuntimeProvider::new())
             .with_timeout(Some(self.timeout))
             .with_bind_addr(self.source_address.map(|ip| SocketAddr::new(ip, 0)))
@@ -213,6 +247,15 @@ impl DefaultDnsQuerier {
             .or_raise(|| ResolverError::ClientQuery(name.clone(), query_type))
     }
 
+    #[cfg_attr(
+        feature = "tracing",
+        tracing::instrument(
+            level = "trace",
+            skip(self, server, name, query_type),
+            ret,
+            err(level = "debug")
+        )
+    )]
     /// Make a TCP DNS query
     async fn tcp_query(
         &self,
@@ -220,6 +263,9 @@ impl DefaultDnsQuerier {
         name: &Name,
         query_type: RecordType,
     ) -> Result<DnsResponse, ResolverError> {
+        #[cfg(feature = "tracing")]
+        tracing::debug!(?server, ?name, ?query_type);
+
         let (future, sender) = TcpClientStream::new(
             server.into(),
             self.source_address.map(|ip| SocketAddr::new(ip, 0)),
@@ -250,12 +296,24 @@ impl DefaultDnsQuerier {
 }
 
 impl DnsQuerier for DefaultDnsQuerier {
+    #[cfg_attr(
+        feature = "tracing",
+        tracing::instrument(
+            level = "trace",
+            skip(self, server, name, query_type),
+            ret,
+            err(level = "debug")
+        )
+    )]
     async fn query(
         &self,
         server: &OptName,
         name: &Name,
         query_type: RecordType,
     ) -> Result<QueryResult, ResolverError> {
+        #[cfg(feature = "tracing")]
+        tracing::debug!(?server, ?name, ?query_type);
+
         let response = if self.tcp {
             self.tcp_query(server, name, query_type).await
         } else {
@@ -288,8 +346,15 @@ pub struct RecursiveResolver<'a, R = TokioNameResolver, Q = DefaultDnsQuerier, W
 }
 
 impl<'a> RecursiveResolver<'a> {
+    #[cfg_attr(
+        feature = "tracing",
+        tracing::instrument(level = "trace", skip(args), ret, err(level = "debug"))
+    )]
     /// Create a new recursive resolver with real DNS implementations
     pub fn new(args: &'a Args) -> Result<Self, ResolverError> {
+        #[cfg(feature = "tracing")]
+        tracing::debug!(?args);
+
         let mut resolver_opts = ResolverOpts::default();
         resolver_opts.ip_strategy = LookupIpStrategy::Ipv4AndIpv6;
         resolver_opts.attempts = args.retries;
@@ -322,6 +387,10 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
             || !(self.arguments.ipv4 || self.arguments.ipv6) // if we did not ask anything
     }
 
+    #[cfg_attr(
+        feature = "tracing",
+        tracing::instrument(level = "trace", skip(self), ret, err(level = "debug"))
+    )]
     /// Figure out the server we got as an argument
     pub async fn init(&self) -> Result<Vec<OptName>, ResolverError> {
         let mut results: Vec<OptName> = vec![];
@@ -383,6 +452,10 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
         Ok(results)
     }
 
+    #[cfg_attr(
+        feature = "tracing",
+        tracing::instrument(level = "trace", skip(self, name, server, depth, last))
+    )]
     /// Recurse through the internet looking for answers
     pub fn do_recurse<'b>(
         &'b self,
@@ -392,6 +465,9 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
         last: Vec<bool>,
     ) -> Pin<Box<dyn Future<Output = Result<(), ResolverError>> + 'b>> {
         Box::pin(async move {
+            #[cfg(feature = "tracing")]
+            tracing::debug!(?name, ?server, ?depth, ?last);
+
             if depth > MAX_RECURSION_DEPTH {
                 bail!(ResolverError::MaxDepthExceeded(MAX_RECURSION_DEPTH));
             }
@@ -504,6 +580,14 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
         })
     }
 
+    #[cfg_attr(
+        feature = "tracing",
+        tracing::instrument(
+            level = "trace",
+            skip(self, records, additionals, server, name, depth, last),
+            ret
+        )
+    )]
     /// Figure out the next servers in the recursion
     async fn get_next_servers(
         &self,
@@ -514,6 +598,9 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
         depth: usize,
         last: &[bool],
     ) -> Vec<OptName> {
+        #[cfg(feature = "tracing")]
+        tracing::debug!(?records, ?additionals, ?server, ?name, ?depth, ?last);
+
         let mut next_servers: Vec<OptName> = vec![];
 
         for record in records {
@@ -589,6 +676,10 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
         next_servers
     }
 
+    #[cfg_attr(
+        feature = "tracing",
+        tracing::instrument(level = "trace", skip(self), err(level = "debug"))
+    )]
     /// Print the overview
     pub fn show_overview(&self) -> Result<(), ResolverError> {
         let results = self.results.read().map_err(|_| ResolverError::ReadLock)?;
@@ -625,8 +716,15 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
         Ok(())
     }
 
+    #[cfg_attr(
+        feature = "tracing",
+        tracing::instrument(level = "trace", skip(self, key), ret)
+    )]
     /// Did we already ask for this, whether it turned out ok or not ?
     fn cache_get(&self, key: &CacheKey) -> bool {
+        #[cfg(feature = "tracing")]
+        tracing::debug!(?key);
+
         self.positive_cache
             .as_ref()
             .is_some_and(|o| o.read().ok().as_ref().and_then(|r| r.get(key)).is_some())
@@ -636,9 +734,16 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
                 .is_some_and(|o| o.read().ok().as_ref().and_then(|r| r.get(key)).is_some())
     }
 
+    #[cfg_attr(
+        feature = "tracing",
+        tracing::instrument(level = "trace", skip(self, positive, key))
+    )]
     /// Set one of the caches
     #[expect(clippy::print_stderr, reason = "non fatal error")]
     fn cache_set(&self, positive: bool, key: CacheKey) {
+        #[cfg(feature = "tracing")]
+        tracing::debug!(?positive, ?key);
+
         let cache = if positive {
             &self.positive_cache
         } else {
@@ -657,6 +762,14 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
         }
     }
 
+    #[cfg_attr(
+        feature = "tracing",
+        tracing::instrument(
+            level = "trace",
+            skip(self, server, response_code, results),
+            err(level = "debug")
+        )
+    )]
     /// Add a result to the pile
     #[expect(
         clippy::significant_drop_tightening,
@@ -668,6 +781,9 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
         response_code: ResponseCode,
         results: &[Record],
     ) -> Result<(), ResolverError> {
+        #[cfg(feature = "tracing")]
+        tracing::debug!(?server, ?response_code, ?results);
+
         let mut res = self.results.write().map_err(|_| ResolverError::WriteLock)?;
         let full = res.entry(server).or_default();
 
@@ -680,8 +796,15 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
         Ok(())
     }
 
+    #[cfg_attr(
+        feature = "tracing",
+        tracing::instrument(level = "trace", skip(self, depth, server, rest, last))
+    )]
     /// Try to give a nice out, as the original did
     fn print(&self, depth: usize, server: &OptName, rest: impl fmt::Display, last: &[bool]) {
+        #[cfg(feature = "tracing")]
+        tracing::debug!(?depth, ?server, %rest, ?last);
+
         let mut prefix = String::new();
 
         for i in 0..depth {
@@ -728,6 +851,7 @@ mod tests {
     use super::*;
     use crate::args::Args;
 
+    #[cfg_attr(feature = "tracing", tracing::instrument(level = "trace", skip()))]
     fn default_args() -> Args {
         Args {
             domain: "example.com".to_owned(),
@@ -746,6 +870,10 @@ mod tests {
         }
     }
 
+    #[cfg_attr(
+        feature = "tracing",
+        tracing::instrument(level = "trace", skip(args, name_resolver, querier))
+    )]
     /// Build a `RecursiveResolver` with mock implementations for testing (output discarded)
     fn mock_resolver(
         args: &Args,
@@ -763,6 +891,10 @@ mod tests {
         }
     }
 
+    #[cfg_attr(
+        feature = "tracing",
+        tracing::instrument(level = "trace", skip(ns_name, ns_ip, zone))
+    )]
     /// Build a `QueryResult` representing a non-authoritative NS delegation with glue records
     fn delegation_response(ns_name: &str, ns_ip: Ipv4Addr, zone: &str) -> QueryResult {
         let ns_name_parsed = Name::from_str(ns_name).expect("ns_name is a valid DNS name literal");
@@ -784,6 +916,10 @@ mod tests {
         }
     }
 
+    #[cfg_attr(
+        feature = "tracing",
+        tracing::instrument(level = "trace", skip(domain, ip))
+    )]
     /// Build a `QueryResult` representing an authoritative answer with one A record
     fn authoritative_a_response(domain: &str, ip: Ipv4Addr) -> QueryResult {
         let record = Record::from_rdata(
@@ -800,6 +936,10 @@ mod tests {
         }
     }
 
+    #[cfg_attr(
+        feature = "tracing",
+        tracing::instrument(level = "trace", skip(resolver))
+    )]
     fn get_output(
         resolver: RecursiveResolver<'_, MockNameResolver, MockDnsQuerier, Vec<u8>>,
     ) -> String {
@@ -1017,7 +1157,7 @@ mod tests {
         assert!(result.is_err());
         assert_debug_snapshot!(result, @"
         Err(
-            No IP address found for hostname: ns1.example.com, at src/resolver.rs:378:13,
+            No IP address found for hostname: ns1.example.com, at src/resolver.rs:447:13,
         )
         ");
         assert_debug_snapshot!(get_output(resolver), @r#""""#);

@@ -97,14 +97,26 @@ pub enum ArgsError {
 
 impl std::error::Error for ArgsError {}
 
+#[cfg_attr(
+    feature = "tracing",
+    tracing::instrument(level = "trace", skip(s), ret, err(level = "debug"))
+)]
 /// Parsing record type
 fn parse_record_type(s: &str) -> std::result::Result<RecordType, DecodeError> {
+    #[cfg(feature = "tracing")]
+    tracing::debug!(?s);
     s.to_ascii_uppercase().parse()
 }
 
 impl Args {
+    #[cfg_attr(
+        feature = "tracing",
+        tracing::instrument(level = "trace", skip(self), err(level = "debug"))
+    )]
     /// Perform some validation on arguments
     pub fn validate(&mut self) -> Result<(), ArgsError> {
+        #[cfg(feature = "tracing")]
+        tracing::debug!(?self);
         match self.source_address {
             Some(IpAddr::V4(ip)) => {
                 if self.ipv6 {
@@ -127,8 +139,14 @@ impl Args {
     }
 }
 
+#[cfg_attr(
+    feature = "tracing",
+    tracing::instrument(level = "trace", skip(src), ret, err(level = "debug"))
+)]
 /// Duration parser for args
 fn parse_duration(src: &str) -> std::result::Result<Duration, ParseIntError> {
+    #[cfg(feature = "tracing")]
+    tracing::debug!(?src);
     src.parse::<u64>().map(Duration::from_secs)
 }
 
@@ -141,6 +159,10 @@ mod tests {
 
     use super::*;
 
+    #[cfg_attr(
+        feature = "tracing",
+        tracing::instrument(level = "trace", skip(ctx, input))
+    )]
     #[rstest]
     #[case::default_values(vec!["test", "example.com"])]
     #[case::all_flags(vec![
@@ -183,6 +205,10 @@ mod tests {
         );
     }
 
+    #[cfg_attr(
+        feature = "tracing",
+        tracing::instrument(level = "trace", skip(record))
+    )]
     #[rstest]
     #[case("soa")]
     #[case("SoA")]
@@ -198,6 +224,10 @@ mod tests {
         assert_debug_snapshot!(format!("record_{record}"), args);
     }
 
+    #[cfg_attr(
+        feature = "tracing",
+        tracing::instrument(level = "trace", skip(ctx, input))
+    )]
     #[rstest]
     #[case::invalid_query_type(vec!["test", "example.com", "-q", "INVALID"])]
     #[case::invalid_retries(vec!["test", "example.com", "-r", "INVALID"])]
@@ -218,6 +248,10 @@ mod tests {
         );
     }
 
+    #[cfg_attr(
+        feature = "tracing",
+        tracing::instrument(level = "trace", skip(ctx, input))
+    )]
     #[rstest]
     #[case::source_v4_plus_ipv6_flag(vec!["test", "example.com", "-6", "-S", "1.1.1.1"])]
     #[case::source_v6_plus_ipv4_flag(vec!["test", "example.com", "-4", "-S", "2001:db8::1"])]

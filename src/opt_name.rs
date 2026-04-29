@@ -19,6 +19,10 @@ pub struct OptName {
 }
 
 impl hash::Hash for OptName {
+    #[cfg_attr(
+        feature = "tracing",
+        tracing::instrument(level = "trace", skip(self, state))
+    )]
     fn hash<H: hash::Hasher>(&self, state: &mut H) {
         self.ip.hash(state);
         self.name.hash(state);
@@ -26,19 +30,38 @@ impl hash::Hash for OptName {
 }
 
 impl From<OptName> for SocketAddr {
+    #[cfg_attr(
+        feature = "tracing",
+        tracing::instrument(level = "trace", skip(opt_name), ret)
+    )]
     fn from(opt_name: OptName) -> Self {
+        #[cfg(feature = "tracing")]
+        tracing::debug!(?opt_name);
         Self::new(opt_name.ip, 53)
     }
 }
 
 impl From<&OptName> for SocketAddr {
+    #[cfg_attr(
+        feature = "tracing",
+        tracing::instrument(level = "trace", skip(opt_name), ret)
+    )]
     fn from(opt_name: &OptName) -> Self {
+        #[cfg(feature = "tracing")]
+        tracing::debug!(?opt_name);
         Self::new(opt_name.ip, 53)
     }
 }
 
 impl fmt::Display for OptName {
+    #[cfg_attr(
+        feature = "tracing",
+        tracing::instrument(level = "trace", skip(self, f), err(level = "debug"))
+    )]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        #[cfg(feature = "tracing")]
+        tracing::debug!(?self);
+
         match *self {
             Self {
                 ref ip, name: None, ..
@@ -57,14 +80,30 @@ impl fmt::Display for OptName {
     }
 }
 
+#[cfg_attr(
+    feature = "tracing",
+    expect(clippy::non_canonical_partial_ord_impl, reason = "only tracing")
+)]
 impl PartialOrd for OptName {
+    #[cfg_attr(
+        feature = "tracing",
+        tracing::instrument(level = "trace", skip(self, other), ret)
+    )]
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        #[cfg(feature = "tracing")]
+        tracing::debug!(?self, ?other);
         Some(self.cmp(other)) // Delegate to the full cmp function
     }
 }
 
 impl Ord for OptName {
+    #[cfg_attr(
+        feature = "tracing",
+        tracing::instrument(level = "trace", skip(self, other), ret)
+    )]
     fn cmp(&self, other: &Self) -> Ordering {
+        #[cfg(feature = "tracing")]
+        tracing::debug!(?self, ?other);
         (self.name.as_ref(), &self.ip).cmp(&(other.name.as_ref(), &other.ip))
     }
 }
