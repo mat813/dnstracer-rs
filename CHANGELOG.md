@@ -5,7 +5,64 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v1.2.6 (2026-04-29)
+
+### Chore
+
+ - <csr-id-7c368292770a8ec1c400fff68b3332a286d5dd92/> lock file maintenance
+ - <csr-id-000019501570a5d116a3503df36e5f1a3490bd70/> set rust-version
+ - <csr-id-4eda9890d2e9a92c23abc42a862a47f258634588/> lock file maintenance
+
+### Bug Fixes
+
+ - <csr-id-00002020e2ebbba425111bad2eebfcbf6fc1c801/> add tracing
+
+### Other
+
+ - <csr-id-000020103a72eac413e17d2859610a0781eb3f20/> with release creation
+ - <csr-id-00002000c998a043e8e1a39a853a69ab81cf070b/> correct PROJECT_NAME
+ - <csr-id-000019904b4506ba9baef572c6ad461ed7a79417/> so much better
+ - <csr-id-00001970adb305fb653358a4bcc99cf22f401fcc/> better message
+ - <csr-id-000019608e5f3db05dcf860f9298c0092990c953/> add publish via OIDC
+
+### Commit Statistics
+
+<csr-read-only-do-not-edit/>
+
+ - 9 commits contributed to the release.
+ - 11 days passed between releases.
+ - 9 commits were understood as [conventional](https://www.conventionalcommits.org).
+ - 0 issues like '(#ID)' were seen in commit messages
+
+### Commit Details
+
+<csr-read-only-do-not-edit/>
+
+<details><summary>view details</summary>
+
+ * **Uncategorized**
+    - Add tracing (0000202)
+    - With release creation (0000201)
+    - Correct PROJECT_NAME (0000200)
+    - So much better (0000199)
+    - Lock file maintenance (7c36829)
+    - Better message (0000197)
+    - Add publish via OIDC (0000196)
+    - Set rust-version (0000195)
+    - Lock file maintenance (4eda989)
+</details>
+
 ## v1.2.5 (2026-04-17)
+
+<csr-id-b06818faffd51a4565bf4fe8f545d44a1ce5d007/>
+<csr-id-5deaed07053c14d52170a1d09952fc11c482a910/>
+<csr-id-f01d6af7359e28d9fac62c40d0079173373b87fc/>
+<csr-id-b0858c82c672acb4a56555dc9580b9bebf0f2257/>
+<csr-id-00001790dfdad3da38f1e54a5b731671de76bdd1/>
+<csr-id-8b229ea7be48042620411dc76eaecc2fe3c8190f/>
+<csr-id-72bb8b14603d5214d88b6f1cb34b97a01b244686/>
+<csr-id-0000180085ec9ea052db908c14b5610909433c86/>
+<csr-id-00001780aa6351a86ddf57aaec12fc24014290a0/>
 
 ### Chore
 
@@ -68,7 +125,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <csr-read-only-do-not-edit/>
 
- - 17 commits contributed to the release.
+ - 18 commits contributed to the release.
  - 17 commits were understood as [conventional](https://www.conventionalcommits.org).
  - 0 issues like '(#ID)' were seen in commit messages
 
@@ -79,6 +136,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <details><summary>view details</summary>
 
  * **Uncategorized**
+    - Release dnstracer v1.2.5 (47ca005)
     - Update to hickory-dns 0.26 (0000192)
     - Update hickory-dns monorepo to v0.26.0 (7e23410)
     - Update rust crate tokio to v1.52.1 (c9e3917)
