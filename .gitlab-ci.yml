@@ -242,6 +242,8 @@ cross release:
     ARCHIVE_FILE: ${PROJECT_NAME}-${CI_COMMIT_TAG}-${TARGET}
     CARGO_CACHE_POLICY: pull
     PACKAGE_REGISTRY_URL: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/${PROJECT_NAME}/${CI_COMMIT_TAG}"
+  needs:
+    - release
   rules:
     - if: $CI_COMMIT_TAG
   script:
