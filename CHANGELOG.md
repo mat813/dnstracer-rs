@@ -5,13 +5,62 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v1.2.7 (2026-05-02)
+
+### Bug Fixes
+
+ - <csr-id-6593c8cdb547725b831ed5e6770d31a0183ab907/> update hickory-dns monorepo to v0.26.1
+   | datasource | package          | from   | to     |
+   | ---------- | ---------------- | ------ | ------ |
+   | crate      | hickory-net      | 0.26.0 | 0.26.1 |
+   | crate      | hickory-proto    | 0.26.0 | 0.26.1 |
+   | crate      | hickory-resolver | 0.26.0 | 0.26.1 |
+
+### Other
+
+ - <csr-id-0000205024cf6150ba264f744d2360bc70618b9a/> follow the documentaion on how to create a release
+ - <csr-id-00002040a5a2b7b25469474dd5a3ea2a37a03e4d/> this needs the release first
+
+### Commit Statistics
+
+<csr-read-only-do-not-edit/>
+
+ - 3 commits contributed to the release.
+ - 3 commits were understood as [conventional](https://www.conventionalcommits.org).
+ - 0 issues like '(#ID)' were seen in commit messages
+
+### Commit Details
+
+<csr-read-only-do-not-edit/>
+
+<details><summary>view details</summary>
+
+ * **Uncategorized**
+    - Update hickory-dns monorepo to v0.26.1 (6593c8c)
+    - Follow the documentaion on how to create a release (0000205)
+    - This needs the release first (0000204)
+</details>
+
 ## v1.2.6 (2026-04-29)
+
+<csr-id-7c368292770a8ec1c400fff68b3332a286d5dd92/>
+<csr-id-000019501570a5d116a3503df36e5f1a3490bd70/>
+<csr-id-4eda9890d2e9a92c23abc42a862a47f258634588/>
+<csr-id-000020103a72eac413e17d2859610a0781eb3f20/>
+<csr-id-00002000c998a043e8e1a39a853a69ab81cf070b/>
+<csr-id-000019904b4506ba9baef572c6ad461ed7a79417/>
+<csr-id-00001970adb305fb653358a4bcc99cf22f401fcc/>
+<csr-id-000019608e5f3db05dcf860f9298c0092990c953/>
 
 ### Chore
 
  - <csr-id-7c368292770a8ec1c400fff68b3332a286d5dd92/> lock file maintenance
  - <csr-id-000019501570a5d116a3503df36e5f1a3490bd70/> set rust-version
  - <csr-id-4eda9890d2e9a92c23abc42a862a47f258634588/> lock file maintenance
+
+### Chore
+
+ - <csr-id-b08179348cfdb9e5e2559f9871f6903d45ba1efa/> Bump dnstracer v1.2.6
 
 ### Bug Fixes
 
@@ -29,9 +78,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <csr-read-only-do-not-edit/>
 
- - 9 commits contributed to the release.
+ - 10 commits contributed to the release.
  - 11 days passed between releases.
- - 9 commits were understood as [conventional](https://www.conventionalcommits.org).
+ - 10 commits were understood as [conventional](https://www.conventionalcommits.org).
  - 0 issues like '(#ID)' were seen in commit messages
 
 ### Commit Details
@@ -41,6 +90,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <details><summary>view details</summary>
 
  * **Uncategorized**
+    - Bump dnstracer v1.2.6 (b081793)
     - Add tracing (0000202)
     - With release creation (0000201)
     - Correct PROJECT_NAME (0000200)
