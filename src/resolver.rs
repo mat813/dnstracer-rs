@@ -486,7 +486,7 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
 
             match self.querier.query(server, name, query_type).await {
                 Ok(response) => {
-                    let mut next_servers: Option<Vec<OptName>> = None;
+                    let mut next_servers: Option<BTreeSet<OptName>> = None;
 
                     if response.authoritative {
                         // If the response is authoritative, we are probably at the end of the journey.
@@ -501,7 +501,7 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
                             && result.iter().all(|r| r.record_type() == RecordType::CNAME)
                             && !response.name_servers.is_empty()
                         {
-                            let mut accumulated: Vec<OptName> = vec![];
+                            let mut accumulated: BTreeSet<OptName> = BTreeSet::new();
                             for cname in response
                                 .answers
                                 .iter()
@@ -546,7 +546,7 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
 
                     if let Some(next) = next_servers {
                         let len = next.len();
-                        for (index, ns) in next.iter().unique().sorted().enumerate() {
+                        for (index, ns) in next.iter().enumerate() {
                             self.do_recurse(name, ns, depth + 1, {
                                 let mut new_last = last.clone();
                                 new_last.push(index == (len - 1));
@@ -597,11 +597,11 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
         name: &Name,
         depth: usize,
         last: &[bool],
-    ) -> Vec<OptName> {
+    ) -> BTreeSet<OptName> {
         #[cfg(feature = "tracing")]
         tracing::debug!(?records, ?additionals, ?server, ?name, ?depth, ?last);
 
-        let mut next_servers: Vec<OptName> = vec![];
+        let mut next_servers: BTreeSet<OptName> = BTreeSet::new();
 
         for record in records {
             // Here, we know it's a NS, so unwrap all that.
@@ -611,8 +611,8 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
 
             // Some name servers will respond with an additional section, use it
             let before_len = next_servers.len();
-            next_servers.append(
-                &mut additionals
+            next_servers.extend(
+                additionals
                     .iter()
                     .filter(|r| r.name == ns.0)
                     .filter_map(|additional| match additional.data {
@@ -629,8 +629,7 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
                         ip,
                         name: Some(additional.name.to_string()),
                         zone: Some(record.name.to_string()),
-                    })
-                    .collect(),
+                    }),
             );
 
             // If we don't have an additional section or we had stuff
@@ -640,17 +639,13 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
                 let ns_s = ns.to_string();
                 let before_resolve_len = next_servers.len();
                 if let Ok(ips) = self.name_resolver.lookup_ip(&ns_s).await {
-                    next_servers.append(
-                        &mut ips
-                            .into_iter()
-                            .filter(|ip| self.is_ip_allowed(*ip))
-                            .map(|ip| OptName {
-                                ip,
-                                name: Some(ns.to_string()),
-                                zone: Some(record.name.to_string()),
-                            })
-                            .collect(),
-                    );
+                    next_servers.extend(ips.into_iter().filter(|ip| self.is_ip_allowed(*ip)).map(
+                        |ip| OptName {
+                            ip,
+                            name: Some(ns.to_string()),
+                            zone: Some(record.name.to_string()),
+                        },
+                    ));
                 }
 
                 if next_servers.len() > before_resolve_len {
@@ -1444,7 +1439,13 @@ mod tests {
             .await;
 
         assert_eq!(next.len(), 1);
-        assert_eq!(next[0].ip, IpAddr::from([1, 2, 3, 4]));
+        assert_eq!(
+            next.iter()
+                .next()
+                .expect("next_servers should contain one entry")
+                .ip,
+            IpAddr::from([1, 2, 3, 4])
+        );
         let results = resolver
             .results
             .read()
@@ -1488,7 +1489,13 @@ mod tests {
             .await;
 
         assert_eq!(next.len(), 1);
-        assert_eq!(next[0].ip, IpAddr::from([5, 6, 7, 8]));
+        assert_eq!(
+            next.iter()
+                .next()
+                .expect("next_servers should contain one entry")
+                .ip,
+            IpAddr::from([5, 6, 7, 8])
+        );
 
         let results = resolver
             .results
