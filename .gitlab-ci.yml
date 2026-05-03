@@ -20,7 +20,7 @@ variables:
   ZIPSIGN_VERSION: 0.2.1
   # l'installation de binstall a besoin de cette variable là
   # renovate: datasource=crate depName=cargo-binstall
-  BINSTALL_VERSION: 1.18.1
+  BINSTALL_VERSION: 1.19.0
   BINSTALL_DISABLE_TELEMETRY: true
 
 default:
