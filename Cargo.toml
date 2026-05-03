@@ -10,6 +10,10 @@ keywords = ["DNS", "traceroute"]
 homepage = "https://gitlab.com/mat813/dnstracer-rs"
 repository = "https://gitlab.com/mat813/dnstracer-rs"
 
+[package.metadata.binstall]
+pkg-url = "{ repo }/-/releases/v{ version }/downloads/{ name }-v{ version }-{ target }{ archive-suffix }"
+pkg-fmt = "zip"
+
 [dependencies]
 clap = { version = "=4.6.1", features = ["derive"] }
 derive_more = { version = "=2.1.1", features = ["debug", "display", "eq", "from_str"] }
