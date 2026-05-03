@@ -5,7 +5,47 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v1.2.8 (2026-05-03)
+
+### Chore
+
+ - <csr-id-00002110cdb9d30d4d251203c2661ef6d82269c6/> add correct binstall metadata
+ - <csr-id-00002100a11ca4223fced96e785e8efb670cf722/> move dev-deps closer to deps
+ - <csr-id-e9b1fc70adde2a3cbc50920ad56c32a20e00e69f/> update dependency cargo-binstall to v1.19.0
+   | datasource | package        | from   | to     |
+   | ---------- | -------------- | ------ | ------ |
+   | crate      | cargo-binstall | 1.18.1 | 1.19.0 |
+
+### Bug Fixes
+
+ - <csr-id-000020808aaea0268d6508671bc19ece634c72b8/> dedup next servers at the source
+
+### Commit Statistics
+
+<csr-read-only-do-not-edit/>
+
+ - 4 commits contributed to the release.
+ - 1 day passed between releases.
+ - 4 commits were understood as [conventional](https://www.conventionalcommits.org).
+ - 0 issues like '(#ID)' were seen in commit messages
+
+### Commit Details
+
+<csr-read-only-do-not-edit/>
+
+<details><summary>view details</summary>
+
+ * **Uncategorized**
+    - Add correct binstall metadata (0000211)
+    - Move dev-deps closer to deps (0000210)
+    - Update dependency cargo-binstall to v1.19.0 (e9b1fc7)
+    - Dedup next servers at the source (0000208)
+</details>
+
 ## v1.2.7 (2026-05-02)
+
+<csr-id-0000205024cf6150ba264f744d2360bc70618b9a/>
+<csr-id-00002040a5a2b7b25469474dd5a3ea2a37a03e4d/>
 
 ### Bug Fixes
 
@@ -21,12 +61,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - <csr-id-0000205024cf6150ba264f744d2360bc70618b9a/> follow the documentaion on how to create a release
  - <csr-id-00002040a5a2b7b25469474dd5a3ea2a37a03e4d/> this needs the release first
 
+### Chore
+
+ - <csr-id-63bd0051074e5563dce93d083a12b2d4d282d00a/> Bump dnstracer v1.2.7
+
 ### Commit Statistics
 
 <csr-read-only-do-not-edit/>
 
- - 3 commits contributed to the release.
- - 3 commits were understood as [conventional](https://www.conventionalcommits.org).
+ - 4 commits contributed to the release over the course of 2 calendar days.
+ - 2 days passed between releases.
+ - 4 commits were understood as [conventional](https://www.conventionalcommits.org).
  - 0 issues like '(#ID)' were seen in commit messages
 
 ### Commit Details
@@ -36,6 +81,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <details><summary>view details</summary>
 
  * **Uncategorized**
+    - Bump dnstracer v1.2.7 (63bd005)
     - Update hickory-dns monorepo to v0.26.1 (6593c8c)
     - Follow the documentaion on how to create a release (0000205)
     - This needs the release first (0000204)
@@ -51,6 +97,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <csr-id-000019904b4506ba9baef572c6ad461ed7a79417/>
 <csr-id-00001970adb305fb653358a4bcc99cf22f401fcc/>
 <csr-id-000019608e5f3db05dcf860f9298c0092990c953/>
+<csr-id-b08179348cfdb9e5e2559f9871f6903d45ba1efa/>
 
 ### Chore
 
