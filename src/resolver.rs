@@ -156,15 +156,31 @@ impl NameResolver for TokioNameResolver {
         #[cfg(feature = "tracing")]
         tracing::debug!(?name);
 
-        Ok(self
+        let lookup = self
             .0
             .ns_lookup(name)
             .await
-            .or_raise(|| ResolverError::NsLookup(name.to_owned()))?
-            .authorities()
-            .iter()
-            .map(|ns| ns.name.clone())
-            .collect())
+            .or_raise(|| ResolverError::NsLookup(name.to_owned()))?;
+
+        // If the nameserver used is a caching resolver, its answer for "what
+        // are the NS for ." may not have an authorities section and only an
+        // answer one, but we can use its content.
+        if name == "." && lookup.authorities().is_empty() && !lookup.answers().is_empty() {
+            Ok(lookup
+                .answers()
+                .iter()
+                .filter_map(|ns| match ns.data {
+                    RData::NS(ref ns) => Some((**ns).clone()),
+                    _ => None,
+                })
+                .collect())
+        } else {
+            Ok(lookup
+                .authorities()
+                .iter()
+                .map(|ns| ns.name.clone())
+                .collect())
+        }
     }
 
     #[cfg_attr(
@@ -1152,7 +1168,7 @@ mod tests {
         assert!(result.is_err());
         assert_debug_snapshot!(result, @"
         Err(
-            No IP address found for hostname: ns1.example.com, at src/resolver.rs:447:13,
+            No IP address found for hostname: ns1.example.com, at src/resolver.rs:463:13,
         )
         ");
         assert_debug_snapshot!(get_output(resolver), @r#""""#);
