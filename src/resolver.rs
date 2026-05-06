@@ -856,7 +856,7 @@ mod tests {
     };
 
     use hickory_proto::rr::{Name, RData, Record, RecordType, rdata};
-    use insta::assert_debug_snapshot;
+    use insta::{assert_debug_snapshot, assert_snapshot};
     use mockall::predicate;
 
     use super::*;
@@ -1013,7 +1013,10 @@ mod tests {
 
     #[tokio::test]
     async fn init_with_dot_uses_ns_then_lookup_ip() {
-        let args = default_args(); // server = ".", ipv4 = true
+        let args = Args {
+            ipv6: true,
+            ..default_args() // server = ".", ipv4 = true
+        };
 
         let mut nr = MockNameResolver::new();
         nr.expect_ns_lookup()
@@ -1023,20 +1026,33 @@ mod tests {
                 Ok(vec![
                     Name::from_str("a.root-servers.net.")
                         .expect("a.root-servers.net. is a valid DNS name"),
+                    Name::from_str("b.root-servers.net.")
+                        .expect("b.root-servers.net. is a valid DNS name"),
                 ])
             });
         nr.expect_lookup_ip()
             .with(predicate::eq("a.root-servers.net."))
             .once()
-            .returning(|_| Ok(vec![IpAddr::from([198, 41, 0, 4])]));
+            .returning(|_| {
+                Ok(vec![
+                    IpAddr::from([198, 41, 0, 4]),
+                    IpAddr::from([0x2001, 0x503, 0xba3e, 0, 0, 0, 0x2, 0x30]),
+                ])
+            });
+        nr.expect_lookup_ip()
+            .with(predicate::eq("b.root-servers.net."))
+            .once()
+            .returning(|_| {
+                Ok(vec![
+                    IpAddr::from([170, 247, 170, 2]),
+                    IpAddr::from([0x2801, 0xb8, 0x10, 0, 0, 0, 0, 0xb]),
+                ])
+            });
 
         let resolver = mock_resolver(&args, nr, MockDnsQuerier::new());
         let servers = resolver.init().await.expect("init with dot should succeed");
 
-        assert_eq!(servers.len(), 1);
-        assert_eq!(servers[0].ip, IpAddr::from([198, 41, 0, 4]));
-        assert_eq!(servers[0].name, Some("a.root-servers.net.".to_owned()));
-        assert_eq!(servers[0].zone, Some(".".to_owned()));
+        assert_eq!(servers.len(), 4);
         assert_debug_snapshot!(servers, @r#"
         [
             OptName {
@@ -1048,9 +1064,36 @@ mod tests {
                     ".",
                 ),
             },
+            OptName {
+                ip: 2001:503:ba3e::2:30,
+                name: Some(
+                    "a.root-servers.net.",
+                ),
+                zone: Some(
+                    ".",
+                ),
+            },
+            OptName {
+                ip: 170.247.170.2,
+                name: Some(
+                    "b.root-servers.net.",
+                ),
+                zone: Some(
+                    ".",
+                ),
+            },
+            OptName {
+                ip: 2801:b8:10::b,
+                name: Some(
+                    "b.root-servers.net.",
+                ),
+                zone: Some(
+                    ".",
+                ),
+            },
         ]
         "#);
-        assert_debug_snapshot!(get_output(resolver), @r#""""#);
+        assert_snapshot!(get_output(resolver), @"");
     }
 
     #[tokio::test]
@@ -1062,22 +1105,36 @@ mod tests {
             Ok(vec![
                 Name::from_str("a.root-servers.net.")
                     .expect("a.root-servers.net. is a valid DNS name"),
+                Name::from_str("b.root-servers.net.")
+                    .expect("b.root-servers.net. is a valid DNS name"),
             ])
         });
         // Return both an IPv4 and an IPv6 address
-        nr.expect_lookup_ip().once().returning(|_| {
-            let ipv6: IpAddr = "2001:503:ba3e::2:30"
-                .parse()
-                .expect("2001:503:ba3e::2:30 is a valid IPv6 address");
-            Ok(vec![IpAddr::from([198, 41, 0, 4]), ipv6])
-        });
+        nr.expect_lookup_ip()
+            .with(predicate::eq("a.root-servers.net."))
+            .once()
+            .returning(|_| {
+                Ok(vec![
+                    IpAddr::from([198, 41, 0, 4]),
+                    IpAddr::from([0x2001, 0x503, 0xba3e, 0, 0, 0, 0x2, 0x30]),
+                ])
+            });
+        nr.expect_lookup_ip()
+            .with(predicate::eq("b.root-servers.net."))
+            .once()
+            .returning(|_| {
+                Ok(vec![
+                    IpAddr::from([170, 247, 170, 2]),
+                    IpAddr::from([0x2801, 0xb8, 0x10, 0, 0, 0, 0, 0xb]),
+                ])
+            });
 
         let resolver = mock_resolver(&args, nr, MockDnsQuerier::new());
         let servers = resolver.init().await.expect("init with dot should succeed");
 
         // Only the IPv4 address should be kept
-        assert_eq!(servers.len(), 1);
-        assert!(servers[0].ip.is_ipv4());
+        assert_eq!(servers.len(), 2);
+        assert!(servers.iter().all(|server| server.ip.is_ipv4()));
         assert_debug_snapshot!(servers, @r#"
         [
             OptName {
@@ -1089,15 +1146,25 @@ mod tests {
                     ".",
                 ),
             },
+            OptName {
+                ip: 170.247.170.2,
+                name: Some(
+                    "b.root-servers.net.",
+                ),
+                zone: Some(
+                    ".",
+                ),
+            },
         ]
         "#);
-        assert_debug_snapshot!(get_output(resolver), @r#""""#);
+        assert_snapshot!(get_output(resolver), @"");
     }
 
     #[tokio::test]
     async fn init_with_hostname_resolves_ips() {
         let args = Args {
             server: "ns1.example.com".to_owned(),
+            ipv6: true,
             ..default_args()
         };
 
@@ -1108,7 +1175,9 @@ mod tests {
             .returning(|_| {
                 Ok(vec![
                     IpAddr::from([192, 0, 2, 1]),
+                    IpAddr::from([0x2001, 0xDB8, 0, 0, 0, 0, 0, 1]),
                     IpAddr::from([192, 0, 2, 2]),
+                    IpAddr::from([0x2001, 0xDB8, 0, 0, 0, 0, 0, 2]),
                 ])
             });
 
@@ -1118,7 +1187,7 @@ mod tests {
             .await
             .expect("init with hostname should succeed");
 
-        assert_eq!(servers.len(), 2);
+        assert_eq!(servers.len(), 4);
         assert!(
             servers
                 .iter()
@@ -1135,7 +1204,21 @@ mod tests {
                 zone: None,
             },
             OptName {
+                ip: 2001:db8::1,
+                name: Some(
+                    "ns1.example.com",
+                ),
+                zone: None,
+            },
+            OptName {
                 ip: 192.0.2.2,
+                name: Some(
+                    "ns1.example.com",
+                ),
+                zone: None,
+            },
+            OptName {
+                ip: 2001:db8::2,
                 name: Some(
                     "ns1.example.com",
                 ),
@@ -1143,7 +1226,7 @@ mod tests {
             },
         ]
         "#);
-        assert_debug_snapshot!(get_output(resolver), @r#""""#);
+        assert_snapshot!(get_output(resolver), @"");
     }
 
     #[tokio::test]
@@ -1171,7 +1254,7 @@ mod tests {
             No IP address found for hostname: ns1.example.com, at src/resolver.rs:463:13,
         )
         ");
-        assert_debug_snapshot!(get_output(resolver), @r#""""#);
+        assert_snapshot!(get_output(resolver), @"");
     }
 
     #[tokio::test]
@@ -1235,7 +1318,7 @@ mod tests {
         }
         "#);
         drop(results);
-        assert_debug_snapshot!(get_output(resolver), @r#""  \\___ ns1.example.com. (192.0.2.1) found authoritative answer\n""#);
+        assert_snapshot!(get_output(resolver), @r"  \___ ns1.example.com. (192.0.2.1) found authoritative answer");
     }
 
     #[tokio::test]
@@ -1266,7 +1349,7 @@ mod tests {
             .expect("results lock should not be poisoned");
         assert!(results.is_empty());
         drop(results);
-        assert_debug_snapshot!(get_output(resolver), @r#""ns1.example.com. (192.0.2.1)\n""#);
+        assert_snapshot!(get_output(resolver), @"ns1.example.com. (192.0.2.1)");
     }
 
     #[tokio::test]
@@ -1341,7 +1424,10 @@ mod tests {
         }
         "#);
         drop(results);
-        assert_debug_snapshot!(get_output(resolver), @r#"" |\\___ ns1.example.com. (192.0.2.1)\n        |\\___ ns2.example.com. [example.com.] (192.0.2.2) found authoritative answer\n""#);
+        assert_snapshot!(get_output(resolver), @r"
+        |\___ ns1.example.com. (192.0.2.1)
+               |\___ ns2.example.com. [example.com.] (192.0.2.2) found authoritative answer
+        ");
     }
 
     #[tokio::test]
@@ -1377,7 +1463,7 @@ mod tests {
         assert!(results.is_empty());
         drop(results);
         // The mock verifies query was never called
-        assert_debug_snapshot!(get_output(resolver), @r#"" |\\___ ns1.example.com. (192.0.2.1) (cached)\n""#);
+        assert_snapshot!(get_output(resolver), @r" |\___ ns1.example.com. (192.0.2.1) (cached)");
     }
 
     #[tokio::test]
@@ -1427,7 +1513,7 @@ mod tests {
             .expect("results lock should not be poisoned");
         assert!(results.is_empty());
         drop(results);
-        assert_debug_snapshot!(get_output(resolver), @r#"" |\\___ ns1.example.com. (192.0.2.1) Client query failed for A example.com. -> unknown error\n""#);
+        assert_snapshot!(get_output(resolver), @r" |\___ ns1.example.com. (192.0.2.1) Client query failed for A example.com. -> unknown error");
     }
 
     #[tokio::test]
@@ -1468,7 +1554,7 @@ mod tests {
             .expect("results lock should not be poisoned");
         assert!(results.is_empty());
         drop(results);
-        assert_debug_snapshot!(get_output(resolver), @r#""""#);
+        assert_snapshot!(get_output(resolver), @"");
     }
 
     #[tokio::test]
@@ -1519,7 +1605,7 @@ mod tests {
             .expect("results lock should not be poisoned");
         assert!(results.is_empty());
         drop(results);
-        assert_debug_snapshot!(get_output(resolver), @r#""""#);
+        assert_snapshot!(get_output(resolver), @"");
     }
 
     #[test]
@@ -1541,7 +1627,7 @@ mod tests {
             .show_overview()
             .expect("show_overview on empty results should succeed");
 
-        assert_debug_snapshot!(get_output(resolver), @r#""""#);
+        assert_snapshot!(get_output(resolver), @"");
     }
 
     #[test]
@@ -1602,7 +1688,7 @@ mod tests {
         }
         "#);
         drop(results);
-        assert_debug_snapshot!(get_output(resolver), @r#""ns1.example.com. (192.0.2.1) \texample.com. 300 IN A 93.184.216.34\n""#);
+        assert_snapshot!(get_output(resolver), @"ns1.example.com. (192.0.2.1) 	example.com. 300 IN A 93.184.216.34");
     }
 
     #[test]
@@ -1647,6 +1733,6 @@ mod tests {
         }
         "#);
         drop(results);
-        assert_debug_snapshot!(get_output(resolver), @r#""ns1.example.com. (192.0.2.1)\tNon-Existent Domain\n""#);
+        assert_snapshot!(get_output(resolver), @"ns1.example.com. (192.0.2.1)	Non-Existent Domain");
     }
 }
