@@ -5,27 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## v1.2.8 (2026-05-03)
+## v1.2.9 (2026-05-06)
 
 ### Chore
 
- - <csr-id-00002110cdb9d30d4d251203c2661ef6d82269c6/> add correct binstall metadata
- - <csr-id-00002100a11ca4223fced96e785e8efb670cf722/> move dev-deps closer to deps
- - <csr-id-e9b1fc70adde2a3cbc50920ad56c32a20e00e69f/> update dependency cargo-binstall to v1.19.0
-   | datasource | package        | from   | to     |
-   | ---------- | -------------- | ------ | ------ |
-   | crate      | cargo-binstall | 1.18.1 | 1.19.0 |
+ - <csr-id-00002160f46d2f1e4d2a6b3ca0d53c904c1bbad2/> add an alias for release
+ - <csr-id-78f5c6adbdc0a5ed347c5c335d9042366d5abe01/> lock file maintenance
 
 ### Bug Fixes
 
- - <csr-id-000020808aaea0268d6508671bc19ece634c72b8/> dedup next servers at the source
+ - <csr-id-00002150739c5b6237648ede35f3b09547d926ab/> fix `--server .` usage
+   Depending on the resolver used, it may not have an authority section for
+   the root zone.
+ - <csr-id-26ad2ae79bc55e577532cb9fd302c53c84b3d46c/> update rust crate tokio to v1.52.2
+   | datasource | package | from   | to     |
+   | ---------- | ------- | ------ | ------ |
+   | crate      | tokio   | 1.52.1 | 1.52.2 |
 
 ### Commit Statistics
 
 <csr-read-only-do-not-edit/>
 
  - 4 commits contributed to the release.
- - 1 day passed between releases.
+ - 3 days passed between releases.
  - 4 commits were understood as [conventional](https://www.conventionalcommits.org).
  - 0 issues like '(#ID)' were seen in commit messages
 
@@ -36,6 +38,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <details><summary>view details</summary>
 
  * **Uncategorized**
+    - Add an alias for release (0000216)
+    - Fix `--server .` usage (0000215)
+    - Update rust crate tokio to v1.52.2 (26ad2ae)
+    - Lock file maintenance (78f5c6a)
+</details>
+
+## v1.2.8 (2026-05-03)
+
+<csr-id-00002110cdb9d30d4d251203c2661ef6d82269c6/>
+<csr-id-00002100a11ca4223fced96e785e8efb670cf722/>
+<csr-id-e9b1fc70adde2a3cbc50920ad56c32a20e00e69f/>
+
+### Chore
+
+ - <csr-id-00002110cdb9d30d4d251203c2661ef6d82269c6/> add correct binstall metadata
+ - <csr-id-00002100a11ca4223fced96e785e8efb670cf722/> move dev-deps closer to deps
+ - <csr-id-e9b1fc70adde2a3cbc50920ad56c32a20e00e69f/> update dependency cargo-binstall to v1.19.0
+   | datasource | package        | from   | to     |
+   | ---------- | -------------- | ------ | ------ |
+   | crate      | cargo-binstall | 1.18.1 | 1.19.0 |
+
+### Chore
+
+ - <csr-id-418abaa768e48031d8b676afd2c40aa23d9a2bab/> Bump dnstracer v1.2.8
+
+### Bug Fixes
+
+ - <csr-id-000020808aaea0268d6508671bc19ece634c72b8/> dedup next servers at the source
+
+### Commit Statistics
+
+<csr-read-only-do-not-edit/>
+
+ - 5 commits contributed to the release.
+ - 1 day passed between releases.
+ - 5 commits were understood as [conventional](https://www.conventionalcommits.org).
+ - 0 issues like '(#ID)' were seen in commit messages
+
+### Commit Details
+
+<csr-read-only-do-not-edit/>
+
+<details><summary>view details</summary>
+
+ * **Uncategorized**
+    - Bump dnstracer v1.2.8 (418abaa)
     - Add correct binstall metadata (0000211)
     - Move dev-deps closer to deps (0000210)
     - Update dependency cargo-binstall to v1.19.0 (e9b1fc7)
@@ -46,6 +94,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <csr-id-0000205024cf6150ba264f744d2360bc70618b9a/>
 <csr-id-00002040a5a2b7b25469474dd5a3ea2a37a03e4d/>
+<csr-id-63bd0051074e5563dce93d083a12b2d4d282d00a/>
 
 ### Bug Fixes
 
