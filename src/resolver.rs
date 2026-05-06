@@ -30,28 +30,58 @@ use crate::{args::Args, opt_name::OptName};
 
 /// A container for all resolver errors
 #[derive(Debug, Display)]
-#[allow(clippy::missing_docs_in_private_items, reason = "self explanatory")]
 pub enum ResolverError {
-    #[display("NS lookup failed for {_0}")]
-    NsLookup(String),
-    #[display("IP lookup failed for {_0}")]
-    IpLookup(String),
-    #[display("Client query failed for {_1} {_0}")]
-    ClientQuery(Name, RecordType),
-    #[display("Client creation failed")]
-    ClientNew(OptName),
+    /// NS lookup failed
+    #[display("NS lookup failed for {name}")]
+    NsLookup {
+        /// for this name
+        name: String,
+    },
+    /// IP reverse lookup failure
+    #[display("IP lookup failed for {name}")]
+    IpLookup {
+        /// The name with no ip
+        name: String,
+    },
+    /// Client query failure
+    #[display("Client query failed for {query_type} {name}")]
+    ClientQuery {
+        /// The name
+        name: Name,
+        /// The type
+        query_type: RecordType,
+    },
+    /// client creation failure
+    #[display("Client creation failed for {name}")]
+    ClientNew {
+        /// The name
+        name: OptName,
+    },
+    /// building tokio resolver
     #[display("Failed to build tokio resolver")]
     BuildTokioResolver,
-    #[display("No IP address found for hostname: {_0}")]
-    NoIpForHostname(String),
+    /// No ip for hostname
+    #[display("No IP address found for hostname: {name}")]
+    NoIpForHostname {
+        /// The name
+        name: String,
+    },
+    /// `do_recurse` call
     #[display("do recurse failed")]
     DoRecurse,
-    #[display("Maximum recursion depth ({_0}) exceeded")]
-    MaxDepthExceeded(usize),
+    /// Maximum depth
+    #[display("Maximum recursion depth ({depth}) exceeded")]
+    MaxDepthExceeded {
+        /// The depth
+        depth: usize,
+    },
+    /// Failed to acquire read lock
     #[display("Failed to acquire read lock")]
     ReadLock,
+    /// Failed to acquire write lock
     #[display("Failed to acquire write lock")]
     WriteLock,
+    /// Write error
     #[display("Write error")]
     Write,
 }
@@ -160,7 +190,9 @@ impl NameResolver for TokioNameResolver {
             .0
             .ns_lookup(name)
             .await
-            .or_raise(|| ResolverError::NsLookup(name.to_owned()))?;
+            .or_raise(|| ResolverError::NsLookup {
+                name: name.to_owned(),
+            })?;
 
         // If the nameserver used is a caching resolver, its answer for "what
         // are the NS for ." may not have an authorities section and only an
@@ -195,7 +227,9 @@ impl NameResolver for TokioNameResolver {
             .0
             .lookup_ip(name)
             .await
-            .or_raise(|| ResolverError::IpLookup(name.to_owned()))?
+            .or_raise(|| ResolverError::IpLookup {
+                name: name.to_owned(),
+            })?
             .iter()
             .collect())
     }
@@ -260,7 +294,10 @@ impl DefaultDnsQuerier {
         client
             .query(name.clone(), DNSClass::IN, query_type)
             .await
-            .or_raise(|| ResolverError::ClientQuery(name.clone(), query_type))
+            .or_raise(|| ResolverError::ClientQuery {
+                name: name.clone(),
+                query_type,
+            })
     }
 
     #[cfg_attr(
@@ -290,9 +327,9 @@ impl DefaultDnsQuerier {
         );
 
         let (mut client, bg) = Client::<TokioRuntimeProvider>::new(
-            future
-                .await
-                .or_raise(|| ResolverError::ClientNew(server.clone()))?,
+            future.await.or_raise(|| ResolverError::ClientNew {
+                name: server.clone(),
+            })?,
             sender,
         );
 
@@ -307,7 +344,10 @@ impl DefaultDnsQuerier {
         client
             .query(name.clone(), DNSClass::IN, query_type)
             .await
-            .or_raise(|| ResolverError::ClientQuery(name.clone(), query_type))
+            .or_raise(|| ResolverError::ClientQuery {
+                name: name.clone(),
+                query_type,
+            })
     }
 }
 
@@ -429,7 +469,7 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
                         .name_resolver
                         .lookup_ip(&ns_str)
                         .await
-                        .or_raise(|| ResolverError::IpLookup(ns_str))?
+                        .or_raise(|| ResolverError::IpLookup { name: ns_str })?
                         .into_iter()
                         .filter(|ip| self.is_ip_allowed(*ip))
                         .map(|ip| OptName {
@@ -447,7 +487,9 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
                     .name_resolver
                     .lookup_ip(&self.arguments.server)
                     .await
-                    .or_raise(|| ResolverError::IpLookup(self.arguments.server.clone()))?
+                    .or_raise(|| ResolverError::IpLookup {
+                        name: self.arguments.server.clone(),
+                    })?
                     .into_iter()
                     .filter(|ip| self.is_ip_allowed(*ip))
                     .map(|ip| OptName {
@@ -460,9 +502,9 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
         }
 
         if results.is_empty() {
-            bail!(ResolverError::NoIpForHostname(
-                self.arguments.server.clone()
-            ));
+            bail!(ResolverError::NoIpForHostname {
+                name: self.arguments.server.clone()
+            });
         }
 
         Ok(results)
@@ -485,7 +527,9 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
             tracing::debug!(?name, ?server, ?depth, ?last);
 
             if depth > MAX_RECURSION_DEPTH {
-                bail!(ResolverError::MaxDepthExceeded(MAX_RECURSION_DEPTH));
+                bail!(ResolverError::MaxDepthExceeded {
+                    depth: MAX_RECURSION_DEPTH
+                });
             }
 
             if self.cache_get(&(server.ip, name.clone())) {
@@ -1251,7 +1295,7 @@ mod tests {
         assert!(result.is_err());
         assert_debug_snapshot!(result, @"
         Err(
-            No IP address found for hostname: ns1.example.com, at src/resolver.rs:463:13,
+            No IP address found for hostname: ns1.example.com, at src/resolver.rs:505:13,
         )
         ");
         assert_snapshot!(get_output(resolver), @"");
@@ -1482,7 +1526,13 @@ mod tests {
         let mut q = MockDnsQuerier::new();
         q.expect_query().once().returning({
             let name = name.clone();
-            move |_, _, _| Err(ResolverError::ClientQuery(name.clone(), RecordType::A).into())
+            move |_, _, _| {
+                Err(ResolverError::ClientQuery {
+                    name: name.clone(),
+                    query_type: RecordType::A,
+                }
+                .into())
+            }
         });
 
         let resolver = mock_resolver(&args, MockNameResolver::new(), q);

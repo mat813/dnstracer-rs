@@ -88,11 +88,17 @@ pub struct Args {
 #[derive(Debug, Display)]
 pub enum ArgsError {
     /// IPv6-only mode requested but source address is IPv4
-    #[display("Cannot use IPv6 only queries with an ipv4 source address ({_0})")]
-    Ipv6WithIpv4Source(Ipv4Addr),
+    #[display("Cannot use IPv6 only queries with an ipv4 source address ({ipv4})")]
+    Ipv6WithIpv4Source {
+        /// The offending ipv4
+        ipv4: Ipv4Addr,
+    },
     /// IPv4-only mode requested but source address is IPv6
-    #[display("Cannot use IPv4 only queries with an ipv6 source address ({_0})")]
-    Ipv4WithIpv6Source(Ipv6Addr),
+    #[display("Cannot use IPv4 only queries with an ipv6 source address ({ipv6})")]
+    Ipv4WithIpv6Source {
+        /// The offending ipv6
+        ipv6: Ipv6Addr,
+    },
 }
 
 impl std::error::Error for ArgsError {}
@@ -120,14 +126,14 @@ impl Args {
         match self.source_address {
             Some(IpAddr::V4(ip)) => {
                 if self.ipv6 {
-                    bail!(ArgsError::Ipv6WithIpv4Source(ip));
+                    bail!(ArgsError::Ipv6WithIpv4Source { ipv4: ip });
                 }
                 // Also, force IPv4 queries everywhere, otherwise we'd get protocol errors
                 self.ipv4 = true;
             },
             Some(IpAddr::V6(ip)) => {
                 if self.ipv4 {
-                    bail!(ArgsError::Ipv4WithIpv6Source(ip));
+                    bail!(ArgsError::Ipv4WithIpv6Source { ipv6: ip });
                 }
                 // Also, force IPv6 queries everywhere, otherwise we'd get protocol errors
                 self.ipv6 = true;

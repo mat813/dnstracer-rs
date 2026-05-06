@@ -18,16 +18,23 @@ mod resolver;
 
 /// The main body error
 #[derive(Debug, Display)]
-#[allow(clippy::missing_docs_in_private_items, reason = "self explanatory")]
 enum MainError {
+    /// argiments validation error
     #[display("Arguments validation error")]
     ArgumentsValidation,
+    /// Resolver creation error
     #[display("Resolver creation")]
     ResolverCreation,
+    /// Error getting first server(s)
     #[display("Getting first servers")]
     GettingFirstServers,
-    #[display("Converting {_0} to a DNS Name")]
-    DnsNameConversion(String),
+    /// Converting to a DNS name
+    #[display("Converting {name} to a DNS Name")]
+    DnsNameConversion {
+        /// The invalid name
+        name: String,
+    },
+    /// Creating the overview
     #[display("Creating overview")]
     CreatingOverview,
 }
@@ -81,8 +88,9 @@ async fn main() -> Result<(), MainError> {
         .await
         .or_raise(|| MainError::GettingFirstServers)?;
 
-    let name = Name::from_str(&arguments.domain)
-        .or_raise(|| MainError::DnsNameConversion(arguments.domain.clone()))?;
+    let name = Name::from_str(&arguments.domain).or_raise(|| MainError::DnsNameConversion {
+        name: arguments.domain.clone(),
+    })?;
 
     for (index, first_server) in first_servers.iter().enumerate() {
         if index == 0 {
