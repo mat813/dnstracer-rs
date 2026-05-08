@@ -375,9 +375,9 @@ dependencies = [
 
 [[package]]
 name = "exn"
-version = "0.3.0"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5ca6badeb8a07b76663c7d7cb0903c1cc40c38d6fc06d3a2206780c63e8b9496"
+checksum = "84c8eaf8836c22a841ee5362e227dd09e5908b52fa2a9bc786cf153c0f344b99"
 
 [[package]]
 name = "fastrand"
