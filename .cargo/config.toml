@@ -1,2 +1,2 @@
 [alias]
-  release = "smart-release --update-crates-index --no-publish --commit-prefix \"chore:\""
+  release = "smart-release --update-crates-index --no-publish --commit-prefix chore:"
