@@ -35,9 +35,16 @@ rstest = "=0.26.1"
 default = ["tracing"]
 tracing = ["dep:tracing", "dep:tracing-subscriber"]
 
+[lints.rust]
+absolute_paths_not_starting_with_crate = "warn"
+missing_copy_implementations = "warn"
+missing_debug_implementations = "warn"
+missing_docs = "warn"
+redundant_imports = "warn"
+trivial_numeric_casts = "warn"
+unit_bindings = "warn"
+
 [lints.clippy]
-# https://github.com/rust-lang/rust-clippy/issues/11916
-# self_named_module_files = "warn"
 allow_attributes_without_reason = "warn"
 as_ptr_cast_mut = "warn"
 as_underscore = "warn"
@@ -82,6 +89,7 @@ renamed_function_params = "warn"
 rest_pat_in_fully_bound_structs = "warn"
 return_and_then = "warn"
 same_name_method = "warn"
+self_named_module_files = "warn"
 semicolon_if_nothing_returned = "warn"
 str_to_string = "warn"
 string_slice = "warn"

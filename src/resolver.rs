@@ -1,7 +1,6 @@
 use std::{
     collections::{BTreeSet, HashMap, HashSet},
     fmt,
-    future::Future,
     io::{self, Write},
     net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr},
     pin::Pin,
@@ -893,18 +892,13 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
 mod tests {
     #![allow(clippy::expect_used, clippy::indexing_slicing, reason = "test")]
 
-    use std::{
-        net::{IpAddr, Ipv4Addr},
-        str::FromStr as _,
-        time::Duration,
-    };
+    use std::{str::FromStr as _, time::Duration};
 
-    use hickory_proto::rr::{Name, RData, Record, RecordType, rdata};
+    use hickory_proto::rr::rdata;
     use insta::{assert_debug_snapshot, assert_snapshot};
     use mockall::predicate;
 
     use super::*;
-    use crate::args::Args;
 
     #[cfg_attr(feature = "tracing", tracing::instrument(level = "trace", skip()))]
     fn default_args() -> Args {
@@ -1295,7 +1289,7 @@ mod tests {
         assert!(result.is_err());
         assert_debug_snapshot!(result, @"
         Err(
-            No IP address found for hostname: ns1.example.com, at src/resolver.rs:505:13,
+            No IP address found for hostname: ns1.example.com, at src/resolver.rs:504:13,
         )
         ");
         assert_snapshot!(get_output(resolver), @"");
