@@ -13,7 +13,7 @@ variables:
   # renovate: datasource=crate depName=cargo-nextest
   CARGO_NEXTEST_VERSION: 0.9.137
   # renovate: datasource=crate depName=cargo-hack
-  CARGO_HACK_VERSION: 0.6.44
+  CARGO_HACK_VERSION: 0.6.45
   # renovate: datasource=crate depName=cargo-sweep
   CARGO_SWEEP_VERSION: 0.8.0
   # renovate: datasource=crate depName=zipsign
