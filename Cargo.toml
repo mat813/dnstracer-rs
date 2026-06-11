@@ -27,7 +27,7 @@ tracing = { version = "=0.1.44", features = ["log"], optional = true }
 tracing-subscriber = { version = "=0.3.23", features = ["chrono", "env-filter", "serde"], optional = true }
 
 [dev-dependencies]
-insta = "=1.47.2"
+insta = "=1.48.0"
 mockall = "=0.14.0"
 rstest = "=0.26.1"
 
