@@ -28,7 +28,7 @@ tracing-subscriber = { version = "=0.3.23", features = ["chrono", "env-filter", 
 
 [dev-dependencies]
 insta = "=1.48.0"
-mockall = "=0.14.0"
+mockall = "=0.15.0"
 rstest = "=0.26.1"
 
 [features]
