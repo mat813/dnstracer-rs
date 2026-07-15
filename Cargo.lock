@@ -316,7 +316,7 @@ dependencies = [
 
 [[package]]
 name = "dnstracer"
-version = "1.2.9"
+version = "1.2.10"
 dependencies = [
  "clap",
  "derive_more",
