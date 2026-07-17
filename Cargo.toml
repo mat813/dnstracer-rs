@@ -22,7 +22,7 @@ hickory-net = "=0.26.1"
 hickory-proto = "=0.26.1"
 hickory-resolver = "=0.26.1"
 itertools = "=0.15.0"
-tokio = { version = "=1.52.4", features = ["net", "rt", "rt-multi-thread"] }
+tokio = { version = "=1.53.0", features = ["net", "rt", "rt-multi-thread"] }
 tracing = { version = "=0.1.44", features = ["log"], optional = true }
 tracing-subscriber = { version = "=0.3.23", features = ["chrono", "env-filter", "serde"], optional = true }
 
