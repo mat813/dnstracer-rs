@@ -15,7 +15,7 @@ pkg-url = "{ repo }/-/releases/v{ version }/downloads/{ name }-v{ version }-{ ta
 pkg-fmt = "zip"
 
 [dependencies]
-clap = { version = "=4.6.2", features = ["derive"] }
+clap = { version = "=4.6.3", features = ["derive"] }
 derive_more = { version = "=2.1.1", features = ["debug", "display", "eq", "from_str"] }
 exn = "=0.3.1"
 hickory-net = "=0.26.1"
