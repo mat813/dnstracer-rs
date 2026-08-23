@@ -106,7 +106,11 @@ struct FullResult {
 }
 
 /// Trait for resolving DNS names to IPs — used for bootstrapping and NS name resolution
-#[cfg_attr(test, mockall::automock)]
+#[cfg_attr(
+    test,
+    allow(clippy::unused_async_trait_impl, reason = "mockall"),
+    mockall::automock
+)]
 pub trait NameResolver: Send + Sync {
     /// Look up the NS records for a zone
     async fn ns_lookup(&self, name: &str) -> Result<Vec<Name>, ResolverError>;
@@ -162,7 +166,11 @@ impl From<DnsResponse> for QueryResult {
 }
 
 /// Trait for making direct DNS queries to a nameserver
-#[cfg_attr(test, mockall::automock)]
+#[cfg_attr(
+    test,
+    allow(clippy::unused_async_trait_impl, reason = "mockall"),
+    mockall::automock
+)]
 pub trait DnsQuerier: Send + Sync {
     /// Send a DNS query to the given server
     async fn query(
