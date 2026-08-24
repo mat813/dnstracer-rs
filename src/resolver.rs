@@ -1297,7 +1297,7 @@ mod tests {
         assert!(result.is_err());
         assert_debug_snapshot!(result, @"
         Err(
-            No IP address found for hostname: ns1.example.com, at src/resolver.rs:504:13,
+            No IP address found for hostname: ns1.example.com, at src/resolver.rs:512:13,
         )
         ");
         assert_snapshot!(get_output(resolver), @"");
