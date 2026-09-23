@@ -1665,9 +1665,9 @@ mod tests {
         let qr = QueryResult::default();
         assert!(!qr.authoritative);
         assert_eq!(qr.response_code, ResponseCode::NoError);
-        assert!(qr.answers.is_empty());
-        assert!(qr.name_servers.is_empty());
-        assert!(qr.additionals.is_empty());
+        assert_eq!(qr.answers, []);
+        assert_eq!(qr.name_servers, []);
+        assert_eq!(qr.additionals, []);
     }
 
     #[test]
