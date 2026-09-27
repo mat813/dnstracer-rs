@@ -26,7 +26,7 @@ use hickory_proto::{rr::RecordType, serialize::binary::DecodeError};
 
 /// Our command line arguments
 #[expect(clippy::struct_excessive_bools, reason = "Those are flags, not states")]
-#[derive(Parser, Debug, Clone, PartialEq, Eq)]
+#[derive(Clone, Debug, Eq, Parser, PartialEq)]
 #[command(version, about)]
 pub struct Args {
     /// The domain to query

@@ -7,7 +7,7 @@ use std::{
 use derive_more::PartialEq;
 
 /// `OptName` is a struct that represents an nameserver and the zone it is supposed to be authoritative for.
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct OptName {
     /// The name server IP address
     pub ip: IpAddr,

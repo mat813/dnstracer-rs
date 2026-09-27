@@ -14,6 +14,8 @@ variables:
   CARGO_NEXTEST_VERSION: 0.9.146
   # renovate: datasource=crate depName=cargo-hack
   CARGO_HACK_VERSION: 0.6.45
+  # renovate: datasource=crate depName=cargo-sort-derives
+  CARGO_SORT_DERIVES_VERSION: 0.13.0
   # renovate: datasource=crate depName=cargo-sort
   CARGO_SORT_VERSION: 2.1.4
   # renovate: datasource=crate depName=cargo-sweep
@@ -91,6 +93,7 @@ cargo fetch:
     - cargo binstall --locked cargo-nextest@${CARGO_NEXTEST_VERSION}
     - cargo binstall --locked cargo-hack@${CARGO_HACK_VERSION}
     - cargo binstall --locked cargo-sweep@${CARGO_SWEEP_VERSION}
+    - cargo binstall --locked cargo-sort-derives@${CARGO_SORT_DERIVES_VERSION}
     - cargo binstall --locked cargo-sort@${CARGO_SORT_VERSION}
     - cargo fetch
     - "cargo cache clean-unref || :"
@@ -146,6 +149,14 @@ cargo sort:
     - .cache
   script:
     - cargo sort --check
+  rules:
+    - if: $CI_COMMIT_BRANCH
+
+cargo sort-derives:
+  extends:
+    - .cache
+  script:
+    - cargo sort-derives --check
   rules:
     - if: $CI_COMMIT_BRANCH
 
