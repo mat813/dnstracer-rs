@@ -14,6 +14,10 @@ repository = "https://gitlab.com/mat813/dnstracer-rs"
 pkg-url = "{ repo }/-/releases/v{ version }/downloads/{ name }-v{ version }-{ target }{ archive-suffix }"
 pkg-fmt = "zip"
 
+[features]
+default = ["tracing"]
+tracing = ["dep:tracing", "dep:tracing-subscriber"]
+
 [dependencies]
 clap = { version = "=4.6.7", features = ["derive"] }
 derive_more = { version = "=2.1.1", features = ["debug", "display", "eq", "from_str"] }
@@ -30,10 +34,6 @@ tracing-subscriber = { version = "=0.3.23", features = ["chrono", "env-filter", 
 insta = "=1.48.0"
 mockall = "=0.15.0"
 rstest = "=0.27.0"
-
-[features]
-default = ["tracing"]
-tracing = ["dep:tracing", "dep:tracing-subscriber"]
 
 [lints.rust]
 absolute_paths_not_starting_with_crate = "warn"
