@@ -30,7 +30,7 @@ variables:
 default:
   interruptible: true
   # yamllint disable-line rule:line-length
-  image: docker.io/library/rust:1.98.1
+  image: docker.io/library/rust:1.99.0
 
 # TODO: gérer le cache pour les composants dans rustup
 
