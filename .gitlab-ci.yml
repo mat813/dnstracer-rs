@@ -15,7 +15,7 @@ variables:
   # renovate: datasource=crate depName=cargo-hack
   CARGO_HACK_VERSION: 0.6.45
   # renovate: datasource=crate depName=cargo-sort-derives
-  CARGO_SORT_DERIVES_VERSION: 0.13.0
+  CARGO_SORT_DERIVES_VERSION: 0.14.0
   # renovate: datasource=crate depName=cargo-sort
   CARGO_SORT_VERSION: 2.1.4
   # renovate: datasource=crate depName=cargo-sweep
