@@ -21,7 +21,7 @@ variables:
   # renovate: datasource=crate depName=cargo-sweep
   CARGO_SWEEP_VERSION: 0.8.0
   # renovate: datasource=crate depName=zipsign
-  ZIPSIGN_VERSION: 0.2.1
+  ZIPSIGN_VERSION: 0.2.2
   # l'installation de binstall a besoin de cette variable là
   # renovate: datasource=crate depName=cargo-binstall
   BINSTALL_VERSION: 1.25.3
