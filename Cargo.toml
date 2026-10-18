@@ -33,7 +33,7 @@ tracing-subscriber = { version = "=0.3.23", features = ["chrono", "env-filter", 
 [dev-dependencies]
 insta = "=1.49.0"
 mockall = "=0.15.0"
-rstest = "=0.27.0"
+rstest = "=0.28.0"
 
 [lints.rust]
 absolute_paths_not_starting_with_crate = "warn"
