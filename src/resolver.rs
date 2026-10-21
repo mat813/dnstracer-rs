@@ -446,6 +446,37 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
 
     #[cfg_attr(
         feature = "tracing",
+        tracing::instrument(level = "trace", skip(self, host, zone), ret, err(level = "debug"))
+    )]
+    /// Resolve a hostname to the allowed name servers it points to
+    #[expect(clippy::future_not_send, reason = "single-threaded, RefCell state")]
+    async fn lookup_servers(
+        &self,
+        host: &str,
+        zone: Option<String>,
+    ) -> Result<Vec<OptName>, ResolverError> {
+        #[cfg(feature = "tracing")]
+        tracing::debug!(?host, ?zone);
+
+        Ok(self
+            .name_resolver
+            .lookup_ip(host)
+            .await
+            .or_raise(|| ResolverError::IpLookup {
+                name: host.to_owned(),
+            })?
+            .into_iter()
+            .filter(|ip| self.is_ip_allowed(*ip))
+            .map(|ip| OptName {
+                ip,
+                name: Some(host.to_owned()),
+                zone: zone.clone(),
+            })
+            .collect())
+    }
+
+    #[cfg_attr(
+        feature = "tracing",
         tracing::instrument(level = "trace", skip(self), ret, err(level = "debug"))
     )]
     /// Figure out the server we got as an argument
@@ -465,42 +496,14 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
             let root_ns = self.name_resolver.ns_lookup(".").await?;
 
             for ns in root_ns {
-                let ns_str = ns.to_string();
-                results.append(
-                    &mut self
-                        .name_resolver
-                        .lookup_ip(&ns_str)
-                        .await
-                        .or_raise(|| ResolverError::IpLookup { name: ns_str })?
-                        .into_iter()
-                        .filter(|ip| self.is_ip_allowed(*ip))
-                        .map(|ip| OptName {
-                            ip,
-                            name: Some(ns.to_string()),
-                            zone: Some(".".to_owned()),
-                        })
-                        .collect(),
+                results.extend(
+                    self.lookup_servers(&ns.to_string(), Some(".".to_owned()))
+                        .await?,
                 );
             }
         } else {
             // It's not a dot, let's try and resolve it
-            results.append(
-                &mut self
-                    .name_resolver
-                    .lookup_ip(&self.arguments.server)
-                    .await
-                    .or_raise(|| ResolverError::IpLookup {
-                        name: self.arguments.server.clone(),
-                    })?
-                    .into_iter()
-                    .filter(|ip| self.is_ip_allowed(*ip))
-                    .map(|ip| OptName {
-                        ip,
-                        name: Some(self.arguments.server.clone()),
-                        zone: None,
-                    })
-                    .collect(),
-            );
+            results.extend(self.lookup_servers(&self.arguments.server, None).await?);
         }
 
         if results.is_empty() {
@@ -701,14 +704,11 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
             if next_servers.len() == before_len {
                 let ns_s = ns.to_string();
                 let before_resolve_len = next_servers.len();
-                if let Ok(ips) = self.name_resolver.lookup_ip(&ns_s).await {
-                    next_servers.extend(ips.into_iter().filter(|ip| self.is_ip_allowed(*ip)).map(
-                        |ip| OptName {
-                            ip,
-                            name: Some(ns.to_string()),
-                            zone: Some(record.name.to_string()),
-                        },
-                    ));
+                if let Ok(servers) = self
+                    .lookup_servers(&ns_s, Some(record.name.to_string()))
+                    .await
+                {
+                    next_servers.extend(servers);
                 }
 
                 if next_servers.len() > before_resolve_len {
@@ -1261,7 +1261,7 @@ mod tests {
         assert!(result.is_err());
         assert_debug_snapshot!(result, @"
         Err(
-            No IP address found for hostname: ns1.example.com, at src/resolver.rs:507:13,
+            No IP address found for hostname: ns1.example.com, at src/resolver.rs:510:13,
         )
         ");
         assert_snapshot!(get_output(resolver), @"");
