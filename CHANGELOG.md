@@ -5,7 +5,350 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v1.2.11 (2026-10-21)
+
+### Chore
+
+ - <csr-id-0000330085418e2be13dc27d25abc16db2b8f290/> drop unused derive_more from_str feature
+ - <csr-id-00003270cbb1ad9ca0196ca5a13cd771688f08d6/> drop itertools
+   sort_by_cached_key on a Vec replaces the one sorted_by_cached_key call.
+ - <csr-id-65fbf7a831ddc46942ca540f3d40577b3c67f3f5/> update dependency cargo-nextest to v0.9.149
+   | datasource | package       | from    | to      |
+   | ---------- | ------------- | ------- | ------- |
+   | crate      | cargo-nextest | 0.9.148 | 0.9.149 |
+ - <csr-id-a4e7866cde0f0ac07d90202458e2389fd97b87ed/> update rust crate rstest to v0.28.0
+   | datasource | package | from   | to     |
+   | ---------- | ------- | ------ | ------ |
+   | crate      | rstest  | 0.27.0 | 0.28.0 |
+ - <csr-id-2667b181173150d8b5000688dcb75a1e7796a701/> lock file maintenance
+ - <csr-id-6dfb2257180bf03263ab80b7ee26040f237da969/> update dependency cargo-binstall to v1.26.0
+   | datasource | package        | from   | to     |
+   | ---------- | -------------- | ------ | ------ |
+   | crate      | cargo-binstall | 1.25.3 | 1.26.0 |
+ - <csr-id-adce51ee49e6fd22d66cbbf0dba2d699803afcca/> update dependency zipsign to v0.2.2
+   | datasource | package | from  | to    |
+   | ---------- | ------- | ----- | ----- |
+   | crate      | zipsign | 0.2.1 | 0.2.2 |
+ - <csr-id-b03fdba454f0f2686301380033d6568845201d99/> update dependency rust-lang/rust to v1.99.1
+   | datasource      | package        | from   | to     |
+   | --------------- | -------------- | ------ | ------ |
+   | github-releases | rust-lang/rust | 1.99.0 | 1.99.1 |
+ - <csr-id-87da601c6cffb663e430d869f14692a0bfd483c9/> update docker.io/library/rust docker tag to v1.99.1
+   | datasource | package                | from   | to     |
+   | ---------- | ---------------------- | ------ | ------ |
+   | docker     | docker.io/library/rust | 1.99.0 | 1.99.1 |
+ - <csr-id-51a6fea2a49b3b92f3e796c461048a7c859fb4eb/> update dependency cargo-sort-derives to v0.14.1
+   | datasource | package            | from   | to     |
+   | ---------- | ------------------ | ------ | ------ |
+   | crate      | cargo-sort-derives | 0.14.0 | 0.14.1 |
+ - <csr-id-58e7a626ddf5f6690ff1ba489d8c82dccf2e5168/> lock file maintenance
+ - <csr-id-d9496ed9d73016451f9be757a6dafd9dcdc1efc8/> update dependency cargo-sort-derives to v0.14.0
+   | datasource | package            | from   | to     |
+   | ---------- | ------------------ | ------ | ------ |
+   | crate      | cargo-sort-derives | 0.13.0 | 0.14.0 |
+ - <csr-id-fd2e521de6654b32e68b4593e439b0c1567e12d1/> update dependency cargo-binstall to v1.25.3
+   | datasource | package        | from   | to     |
+   | ---------- | -------------- | ------ | ------ |
+   | crate      | cargo-binstall | 1.25.2 | 1.25.3 |
+ - <csr-id-1f6950f949985e8e37c2d42e6bb5d027148e533e/> update dependency cargo-nextest to v0.9.148
+   | datasource | package       | from    | to      |
+   | ---------- | ------------- | ------- | ------- |
+   | crate      | cargo-nextest | 0.9.146 | 0.9.148 |
+ - <csr-id-17d5f7f7a4402a54b94b689a30adedf37f2148d8/> update dependency cargo-binstall to v1.25.2
+   | datasource | package        | from   | to     |
+   | ---------- | -------------- | ------ | ------ |
+   | crate      | cargo-binstall | 1.25.1 | 1.25.2 |
+ - <csr-id-43b25fce7698940978b6058b61fc05907dcfc530/> lock file maintenance
+ - <csr-id-34a4f5cca445f052ba115ff092087adb6126c8d0/> update dependency cargo-binstall to v1.25.1
+   | datasource | package        | from   | to     |
+   | ---------- | -------------- | ------ | ------ |
+   | crate      | cargo-binstall | 1.25.0 | 1.25.1 |
+ - <csr-id-92304494256ed9b2eb3f398aad3242a0f895c5c7/> update rust crate insta to v1.49.0
+   | datasource | package | from   | to     |
+   | ---------- | ------- | ------ | ------ |
+   | crate      | insta   | 1.48.0 | 1.49.0 |
+ - <csr-id-a07e4fb348d571cd9d5dd525c747e202cf74b63e/> update dependency cargo-binstall to v1.25.0
+   | datasource | package        | from   | to     |
+   | ---------- | -------------- | ------ | ------ |
+   | crate      | cargo-binstall | 1.24.0 | 1.25.0 |
+ - <csr-id-0d83c31b4cbad2d2e268ccbc3a91dbb7c9e3fef7/> update dependency rust-lang/rust to v1.99.0
+   | datasource      | package        | from   | to     |
+   | --------------- | -------------- | ------ | ------ |
+   | github-releases | rust-lang/rust | 1.98.1 | 1.99.0 |
+ - <csr-id-4bd2511135a482c6ca7f46fd32c6c243244fe26c/> update docker.io/library/rust docker tag to v1.99.0
+   | datasource | package                | from   | to     |
+   | ---------- | ---------------------- | ------ | ------ |
+   | docker     | docker.io/library/rust | 1.98.1 | 1.99.0 |
+ - <csr-id-5c10067f9825bcc88696c6104ee8e1a9019f1f32/> lock file maintenance
+ - <csr-id-cb3cee4f35238b1982299840433d25940ba1355b/> update dependency cargo-binstall to v1.24.0
+   | datasource | package        | from   | to     |
+   | ---------- | -------------- | ------ | ------ |
+   | crate      | cargo-binstall | 1.23.0 | 1.24.0 |
+ - <csr-id-a6bc2bd29afd8188dbc6e719a8461084df9affc3/> update dependency cargo-nextest to v0.9.146
+   | datasource | package       | from    | to      |
+   | ---------- | ------------- | ------- | ------- |
+   | crate      | cargo-nextest | 0.9.145 | 0.9.146 |
+ - <csr-id-82905b90d959faa2f9201f2f507d21f98ca4ac7e/> lock file maintenance
+ - <csr-id-fa8ab8afb2d0f327d86b6fe0fccb8489ded20f46/> update dependency cargo-nextest to v0.9.145
+   | datasource | package       | from    | to      |
+   | ---------- | ------------- | ------- | ------- |
+   | crate      | cargo-nextest | 0.9.144 | 0.9.145 |
+ - <csr-id-fb24712cca6afab24bc55f210037e2655ee2828f/> lock file maintenance
+ - <csr-id-06f04ca92f5bc678f5f98b108d5f28a640d51ff4/> lock file maintenance
+ - <csr-id-0455f5c0d31af73a3201517077fd1721545373d9/> update dependency cargo-nextest to v0.9.144
+   | datasource | package       | from    | to      |
+   | ---------- | ------------- | ------- | ------- |
+   | crate      | cargo-nextest | 0.9.143 | 0.9.144 |
+ - <csr-id-309ad08bb104c1dbda5e233cd0d379d03be3f07e/> update rust crate rstest to v0.27.0
+   | datasource | package | from   | to     |
+   | ---------- | ------- | ------ | ------ |
+   | crate      | rstest  | 0.26.1 | 0.27.0 |
+ - <csr-id-ce18d1575d893cca82c340c6b81a5fed888676c1/> update docker.io/library/rust docker tag to v1.98.1
+   | datasource | package                | from   | to     |
+   | ---------- | ---------------------- | ------ | ------ |
+   | docker     | docker.io/library/rust | 1.98.0 | 1.98.1 |
+ - <csr-id-560795f004d3a50bcbcc7f5dba16f81d12a184fd/> lock file maintenance
+ - <csr-id-2750e4b161f84d2473e977e4ce36dc097a19e7cd/> update dependency cargo-binstall to v1.23.0
+   | datasource | package        | from   | to     |
+   | ---------- | -------------- | ------ | ------ |
+   | crate      | cargo-binstall | 1.22.0 | 1.23.0 |
+ - <csr-id-dabaaebf89578606d53ca0dc7c02c2f1d6f8ff33/> update dependency rust-lang/rust to v1.98.1
+   | datasource      | package        | from   | to     |
+   | --------------- | -------------- | ------ | ------ |
+   | github-releases | rust-lang/rust | 1.98.0 | 1.98.1 |
+ - <csr-id-eeda9f85d5d2824b85c4d5d8a5039d892b7cde1d/> lock file maintenance
+ - <csr-id-7c42c865fe8d3f18c6fde36447b4769fc1d1b512/> lock file maintenance
+ - <csr-id-33fae1273ce4be224ce32646404f960543c3df0e/> update docker.io/library/rust docker tag to v1.98.0
+   | datasource | package                | from   | to     |
+   | ---------- | ---------------------- | ------ | ------ |
+   | docker     | docker.io/library/rust | 1.97.1 | 1.98.0 |
+ - <csr-id-426e9c79c26e824cabf46bf0ed3fe562f66daaf9/> clippy
+ - <csr-id-7ed2d665fea94cd70e81734c5341ada3de13bb77/> update dependency cargo-binstall to v1.22.0
+   | datasource | package        | from   | to     |
+   | ---------- | -------------- | ------ | ------ |
+   | crate      | cargo-binstall | 1.21.1 | 1.22.0 |
+ - <csr-id-c6a712579279fe25410e80edacd47f8118ba205f/> update dependency rust-lang/rust to v1.98.0
+   | datasource      | package        | from   | to     |
+   | --------------- | -------------- | ------ | ------ |
+   | github-releases | rust-lang/rust | 1.97.1 | 1.98.0 |
+ - <csr-id-7d6ad42f35bf221ef8e28127d0219573cdc0da7a/> lock file maintenance
+ - <csr-id-7f1db4943d8b22b286f8a2c4dc31c82cd0ccc1da/> lock file maintenance
+ - <csr-id-6be4389d2e07fc5432cb71828282d7091c5eab4b/> lock file maintenance
+ - <csr-id-22c0bae3a68cebeb88c4ba98a16437b06a7cd913/> update dependency cargo-nextest to v0.9.143
+   | datasource | package       | from    | to      |
+   | ---------- | ------------- | ------- | ------- |
+   | crate      | cargo-nextest | 0.9.140 | 0.9.143 |
+ - <csr-id-3e22e521ef7e9569509351454c3853eed16e54f5/> lock file maintenance
+ - <csr-id-354de256a1597e84a31ea18d944a78af0a02208b/> lock file maintenance
+ - <csr-id-743ef64017df07e75a4ac712c64f81adfdd308bd/> update dependency cargo-binstall to v1.21.1
+   | datasource | package        | from   | to     |
+   | ---------- | -------------- | ------ | ------ |
+   | crate      | cargo-binstall | 1.21.0 | 1.21.1 |
+ - <csr-id-987409fb9247f11eea5a5168e304b453efc6a411/> lock file maintenance
+ - <csr-id-8ff6e5645ab6e7653378491d9c48a4d0bbe32f2f/> lock file maintenance
+ - <csr-id-881a90063c6ece64fffe021346de099fe8b8c485/> update docker.io/library/rust docker tag to v1.97.1
+   | datasource | package                | from   | to     |
+   | ---------- | ---------------------- | ------ | ------ |
+   | docker     | docker.io/library/rust | 1.97.0 | 1.97.1 |
+ - <csr-id-b9e3015431de5b83ae81084513a4c49ee1ed5619/> update dependency rust-lang/rust to v1.97.1
+   | datasource      | package        | from   | to     |
+   | --------------- | -------------- | ------ | ------ |
+   | github-releases | rust-lang/rust | 1.97.0 | 1.97.1 |
+
+### Bug Fixes
+
+ - <csr-id-a6b6c0d314b2dc8007a5b488029c2e2e61e2ddd1/> update rust crate tokio to v1.54.0
+   | datasource | package | from   | to     |
+   | ---------- | ------- | ------ | ------ |
+   | crate      | tokio   | 1.53.3 | 1.54.0 |
+ - <csr-id-2d08b71cdb3cbbf2feab17c93fe271667fbc8bd1/> update rust crate tokio to v1.53.3
+   | datasource | package | from   | to     |
+   | ---------- | ------- | ------ | ------ |
+   | crate      | tokio   | 1.53.2 | 1.53.3 |
+ - <csr-id-e8131d343fd51feaac881501ef52d57b90e39d6e/> update rust crate tokio to v1.53.2
+   | datasource | package | from   | to     |
+   | ---------- | ------- | ------ | ------ |
+   | crate      | tokio   | 1.53.1 | 1.53.2 |
+ - <csr-id-8ac1de0975a4752a7dc1f1a84c53b9bc4cf39ffa/> update rust crate clap to v4.6.7
+   | datasource | package | from  | to    |
+   | ---------- | ------- | ----- | ----- |
+   | crate      | clap    | 4.6.6 | 4.6.7 |
+ - <csr-id-0070a7cd017d6e1e52d87f9797818595948b79f1/> update hickory-dns monorepo to v0.26.3
+   | datasource | package          | from   | to     |
+   | ---------- | ---------------- | ------ | ------ |
+   | crate      | hickory-net      | 0.26.2 | 0.26.3 |
+   | crate      | hickory-proto    | 0.26.2 | 0.26.3 |
+   | crate      | hickory-resolver | 0.26.2 | 0.26.3 |
+ - <csr-id-aca5ddfd61f02dab5420786e19b5af89bb761292/> update hickory-dns monorepo to v0.26.2
+   | datasource | package          | from   | to     |
+   | ---------- | ---------------- | ------ | ------ |
+   | crate      | hickory-net      | 0.26.1 | 0.26.2 |
+   | crate      | hickory-proto    | 0.26.1 | 0.26.2 |
+   | crate      | hickory-resolver | 0.26.1 | 0.26.2 |
+ - <csr-id-3d2224f651cf47aaa9a92b97063504ad3dea23f5/> update rust crate clap to v4.6.6
+   | datasource | package | from  | to    |
+   | ---------- | ------- | ----- | ----- |
+   | crate      | clap    | 4.6.5 | 4.6.6 |
+ - <csr-id-bd14e4bf757d3a798e0b6ae20330ca98cf86d220/> update rust crate clap to v4.6.5
+   | datasource | package | from  | to    |
+   | ---------- | ------- | ----- | ----- |
+   | crate      | clap    | 4.6.4 | 4.6.5 |
+ - <csr-id-82fc0e51f3c4b73d2a0af172378584daa71a74fc/> update rust crate clap to v4.6.4
+   | datasource | package | from  | to    |
+   | ---------- | ------- | ----- | ----- |
+   | crate      | clap    | 4.6.3 | 4.6.4 |
+ - <csr-id-0adbafb3d1d06b6d8fff7f9090f4dc8e6f74ae02/> update rust crate tokio to v1.53.1
+   | datasource | package | from   | to     |
+   | ---------- | ------- | ------ | ------ |
+   | crate      | tokio   | 1.53.0 | 1.53.1 |
+ - <csr-id-d220b9fd30a8d7086f141fe77a787a9c3fd48299/> update rust crate clap to v4.6.3
+   | datasource | package | from  | to    |
+   | ---------- | ------- | ----- | ----- |
+   | crate      | clap    | 4.6.2 | 4.6.3 |
+ - <csr-id-87b50edd0c8639455b8b4486a9343e0e748e6e48/> update rust crate tokio to v1.53.0
+   | datasource | package | from   | to     |
+   | ---------- | ------- | ------ | ------ |
+   | crate      | tokio   | 1.52.4 | 1.53.0 |
+ - <csr-id-d49878f8f5de0764a65db68481d4805d7d6a4313/> update rust crate tokio to v1.52.4
+   | datasource | package | from   | to     |
+   | ---------- | ------- | ------ | ------ |
+   | crate      | tokio   | 1.52.3 | 1.52.4 |
+ - <csr-id-0518a5d88c758a534c1351ff42dc6de864834fb9/> update rust crate clap to v4.6.2
+   | datasource | package | from  | to    |
+   | ---------- | ------- | ----- | ----- |
+   | crate      | clap    | 4.6.1 | 4.6.2 |
+
+### Other
+
+ - <csr-id-000029803f945b06db2d04949278c2203b249836/> add cargo-sort-derives
+ - <csr-id-000029705e248b65d4151f72bd497eeae931c446/> add cargo-sort
+
+### Refactor
+
+ - <csr-id-000033206c0548d705a330b2c6f695c0d0bff340/> build IpAddr from A/AAAA directly
+ - <csr-id-00003310f9a24285fdf8d55303e160e0584ec602/> reuse before_len when counting resolved servers
+ - <csr-id-000032906ba7b243e397d34171c4f3cd49814a50/> make do_recurse an async fn, box only the recursive call
+ - <csr-id-00003280bca96bdf7e73dd3e85c4e8d6c557f1e6/> simplify cache_get
+ - <csr-id-00003260d4ffc7b49b25a56559774a79cfec30de/> drop owned From<OptName> for SocketAddr
+   Only tests used it.
+ - <csr-id-000032505fe43e4a149c7a828ef6b5c73ff08a9c/> derive Default for QueryResult
+ - <csr-id-00003240181125679c70cfd89046c97d6b2f5726/> share EDNS and query tail between udp_query and tcp_query
+ - <csr-id-00003230a26089d70736b0caf44f0c8ee8dada89/> factor out lookup_servers in resolver
+   Three copies of lookup_ip -> filter allowed -> OptName collapse into one
+   helper.
+ - <csr-id-00003220fe811548f34aef232928ac44683c47cc/> use RefCell instead of RwLock/Mutex in resolver
+   Nothing is shared across threads, so drop the lock-poisoning error
+   variants and the map_err plumbing. add_result becomes infallible.
+
+### Style
+
+ - <csr-id-0000295019e14ba52387a191eeed7b8d9f6fbfb8/> clippy
+
+### Test
+
+ - <csr-id-0000278053409663888e0ec87598cd844a31e380/> fix snapshots
+
+### Commit Statistics
+
+<csr-read-only-do-not-edit/>
+
+ - 78 commits contributed to the release.
+ - 98 days passed between releases.
+ - 78 commits were understood as [conventional](https://www.conventionalcommits.org).
+ - 0 issues like '(#ID)' were seen in commit messages
+
+### Commit Details
+
+<csr-read-only-do-not-edit/>
+
+<details><summary>view details</summary>
+
+ * **Uncategorized**
+    - Build IpAddr from A/AAAA directly (0000332)
+    - Reuse before_len when counting resolved servers (0000331)
+    - Drop unused derive_more from_str feature (0000330)
+    - Make do_recurse an async fn, box only the recursive call (0000329)
+    - Simplify cache_get (0000328)
+    - Drop itertools (0000327)
+    - Drop owned From<OptName> for SocketAddr (0000326)
+    - Derive Default for QueryResult (0000325)
+    - Share EDNS and query tail between udp_query and tcp_query (0000324)
+    - Factor out lookup_servers in resolver (0000323)
+    - Use RefCell instead of RwLock/Mutex in resolver (0000322)
+    - Update rust crate tokio to v1.54.0 (a6b6c0d)
+    - Update dependency cargo-nextest to v0.9.149 (65fbf7a)
+    - Update rust crate rstest to v0.28.0 (a4e7866)
+    - Lock file maintenance (2667b18)
+    - Update dependency cargo-binstall to v1.26.0 (6dfb225)
+    - Update dependency zipsign to v0.2.2 (adce51e)
+    - Update dependency rust-lang/rust to v1.99.1 (b03fdba)
+    - Update docker.io/library/rust docker tag to v1.99.1 (87da601)
+    - Update rust crate tokio to v1.53.3 (2d08b71)
+    - Update dependency cargo-sort-derives to v0.14.1 (51a6fea)
+    - Lock file maintenance (58e7a62)
+    - Update dependency cargo-sort-derives to v0.14.0 (d9496ed)
+    - Update dependency cargo-binstall to v1.25.3 (fd2e521)
+    - Update dependency cargo-nextest to v0.9.148 (1f6950f)
+    - Update dependency cargo-binstall to v1.25.2 (17d5f7f)
+    - Lock file maintenance (43b25fc)
+    - Update dependency cargo-binstall to v1.25.1 (34a4f5c)
+    - Update rust crate tokio to v1.53.2 (e8131d3)
+    - Update rust crate insta to v1.49.0 (9230449)
+    - Update dependency cargo-binstall to v1.25.0 (a07e4fb)
+    - Update dependency rust-lang/rust to v1.99.0 (0d83c31)
+    - Update docker.io/library/rust docker tag to v1.99.0 (4bd2511)
+    - Lock file maintenance (5c10067)
+    - Add cargo-sort-derives (0000298)
+    - Add cargo-sort (0000297)
+    - Update dependency cargo-binstall to v1.24.0 (cb3cee4)
+    - Clippy (0000295)
+    - Update dependency cargo-nextest to v0.9.146 (a6bc2bd)
+    - Lock file maintenance (82905b9)
+    - Update dependency cargo-nextest to v0.9.145 (fa8ab8a)
+    - Update rust crate clap to v4.6.7 (8ac1de0)
+    - Lock file maintenance (fb24712)
+    - Lock file maintenance (06f04ca)
+    - Update dependency cargo-nextest to v0.9.144 (0455f5c)
+    - Update hickory-dns monorepo to v0.26.3 (0070a7c)
+    - Update rust crate rstest to v0.27.0 (309ad08)
+    - Update docker.io/library/rust docker tag to v1.98.1 (ce18d15)
+    - Lock file maintenance (560795f)
+    - Update dependency cargo-binstall to v1.23.0 (2750e4b)
+    - Update hickory-dns monorepo to v0.26.2 (aca5ddf)
+    - Update dependency rust-lang/rust to v1.98.1 (dabaaeb)
+    - Lock file maintenance (eeda9f8)
+    - Lock file maintenance (7c42c86)
+    - Fix snapshots (0000278)
+    - Update docker.io/library/rust docker tag to v1.98.0 (33fae12)
+    - Clippy (426e9c7)
+    - Update dependency cargo-binstall to v1.22.0 (7ed2d66)
+    - Update dependency rust-lang/rust to v1.98.0 (c6a7125)
+    - Lock file maintenance (7d6ad42)
+    - Lock file maintenance (7f1db49)
+    - Lock file maintenance (6be4389)
+    - Update rust crate clap to v4.6.6 (3d2224f)
+    - Update dependency cargo-nextest to v0.9.143 (22c0bae)
+    - Lock file maintenance (3e22e52)
+    - Update rust crate clap to v4.6.5 (bd14e4b)
+    - Lock file maintenance (354de25)
+    - Update dependency cargo-binstall to v1.21.1 (743ef64)
+    - Update rust crate clap to v4.6.4 (82fc0e5)
+    - Update rust crate tokio to v1.53.1 (0adbafb)
+    - Update rust crate clap to v4.6.3 (d220b9f)
+    - Lock file maintenance (987409f)
+    - Lock file maintenance (8ff6e56)
+    - Update rust crate tokio to v1.53.0 (87b50ed)
+    - Update rust crate tokio to v1.52.4 (d49878f)
+    - Update docker.io/library/rust docker tag to v1.97.1 (881a900)
+    - Update dependency rust-lang/rust to v1.97.1 (b9e3015)
+    - Update rust crate clap to v4.6.2 (0518a5d)
+</details>
+
 ## v1.2.10 (2026-07-15)
+
+### Other
+
+ - <csr-id-0000254077aa9b0c0d77935254c0e608d12ba09d/> add user-agent for crates.io api call
 
 ### Chore
 
@@ -92,6 +435,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
    | datasource | package        | from   | to     |
    | ---------- | -------------- | ------ | ------ |
    | crate      | cargo-binstall | 1.19.0 | 1.19.1 |
+ - <csr-id-260bd56bcd8f7ada165292f8fc6ab63233157942/> Bump dnstracer v1.2.10
 
 ### Documentation
 
@@ -124,8 +468,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <csr-read-only-do-not-edit/>
 
- - 35 commits contributed to the release.
- - 35 commits were understood as [conventional](https://www.conventionalcommits.org).
+ - 37 commits contributed to the release over the course of 69 calendar days.
+ - 70 days passed between releases.
+ - 37 commits were understood as [conventional](https://www.conventionalcommits.org).
  - 0 issues like '(#ID)' were seen in commit messages
 
 ### Commit Details
@@ -135,6 +480,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <details><summary>view details</summary>
 
  * **Uncategorized**
+    - Add user-agent for crates.io api call (0000254)
+    - Bump dnstracer v1.2.10 (260bd56)
     - Update dependency cargo-binstall to v1.21.0 (a5eded9)
     - Lock file maintenance (02ebdf1)
     - Update docker.io/library/rust docker tag to v1.97.0 (4a21532)
@@ -176,11 +523,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <csr-id-00002160f46d2f1e4d2a6b3ca0d53c904c1bbad2/>
 <csr-id-78f5c6adbdc0a5ed347c5c335d9042366d5abe01/>
-
-### Chore
-
- - <csr-id-00002160f46d2f1e4d2a6b3ca0d53c904c1bbad2/> add an alias for release
- - <csr-id-78f5c6adbdc0a5ed347c5c335d9042366d5abe01/> lock file maintenance
 
 ### Other
 
@@ -226,19 +568,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <csr-id-e9b1fc70adde2a3cbc50920ad56c32a20e00e69f/>
 <csr-id-418abaa768e48031d8b676afd2c40aa23d9a2bab/>
 
-### Chore
-
- - <csr-id-00002110cdb9d30d4d251203c2661ef6d82269c6/> add correct binstall metadata
- - <csr-id-00002100a11ca4223fced96e785e8efb670cf722/> move dev-deps closer to deps
- - <csr-id-e9b1fc70adde2a3cbc50920ad56c32a20e00e69f/> update dependency cargo-binstall to v1.19.0
-   | datasource | package        | from   | to     |
-   | ---------- | -------------- | ------ | ------ |
-   | crate      | cargo-binstall | 1.18.1 | 1.19.0 |
-
-### Chore
-
- - <csr-id-418abaa768e48031d8b676afd2c40aa23d9a2bab/> Bump dnstracer v1.2.8
-
 ### Bug Fixes
 
  - <csr-id-000020808aaea0268d6508671bc19ece634c72b8/> dedup next servers at the source
@@ -281,21 +610,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
    | crate      | hickory-proto    | 0.26.0 | 0.26.1 |
    | crate      | hickory-resolver | 0.26.0 | 0.26.1 |
 
-### Other
-
- - <csr-id-0000205024cf6150ba264f744d2360bc70618b9a/> follow the documentaion on how to create a release
- - <csr-id-00002040a5a2b7b25469474dd5a3ea2a37a03e4d/> this needs the release first
-
-### Chore
-
- - <csr-id-63bd0051074e5563dce93d083a12b2d4d282d00a/> Bump dnstracer v1.2.7
-
 ### Commit Statistics
 
 <csr-read-only-do-not-edit/>
 
  - 4 commits contributed to the release over the course of 2 calendar days.
- - 2 days passed between releases.
+ - 3 days passed between releases.
  - 4 commits were understood as [conventional](https://www.conventionalcommits.org).
  - 0 issues like '(#ID)' were seen in commit messages
 
@@ -324,34 +644,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <csr-id-000019608e5f3db05dcf860f9298c0092990c953/>
 <csr-id-b08179348cfdb9e5e2559f9871f6903d45ba1efa/>
 
-### Chore
-
- - <csr-id-7c368292770a8ec1c400fff68b3332a286d5dd92/> lock file maintenance
- - <csr-id-000019501570a5d116a3503df36e5f1a3490bd70/> set rust-version
- - <csr-id-4eda9890d2e9a92c23abc42a862a47f258634588/> lock file maintenance
-
-### Chore
-
- - <csr-id-b08179348cfdb9e5e2559f9871f6903d45ba1efa/> Bump dnstracer v1.2.6
-
 ### Bug Fixes
 
  - <csr-id-00002020e2ebbba425111bad2eebfcbf6fc1c801/> add tracing
-
-### Other
-
- - <csr-id-000020103a72eac413e17d2859610a0781eb3f20/> with release creation
- - <csr-id-00002000c998a043e8e1a39a853a69ab81cf070b/> correct PROJECT_NAME
- - <csr-id-000019904b4506ba9baef572c6ad461ed7a79417/> so much better
- - <csr-id-00001970adb305fb653358a4bcc99cf22f401fcc/> better message
- - <csr-id-000019608e5f3db05dcf860f9298c0092990c953/> add publish via OIDC
 
 ### Commit Statistics
 
 <csr-read-only-do-not-edit/>
 
  - 10 commits contributed to the release.
- - 11 days passed between releases.
+ - 12 days passed between releases.
  - 10 commits were understood as [conventional](https://www.conventionalcommits.org).
  - 0 issues like '(#ID)' were seen in commit messages
 
@@ -386,25 +688,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <csr-id-0000180085ec9ea052db908c14b5610909433c86/>
 <csr-id-00001780aa6351a86ddf57aaec12fc24014290a0/>
 
-### Chore
-
- - <csr-id-b06818faffd51a4565bf4fe8f545d44a1ce5d007/> lock file maintenance
- - <csr-id-5deaed07053c14d52170a1d09952fc11c482a910/> lock file maintenance
- - <csr-id-f01d6af7359e28d9fac62c40d0079173373b87fc/> update rust crate insta to v1.47.2
-   | datasource | package | from   | to     |
-   | ---------- | ------- | ------ | ------ |
-   | crate      | insta   | 1.47.1 | 1.47.2 |
- - <csr-id-b0858c82c672acb4a56555dc9580b9bebf0f2257/> lock file maintenance
- - <csr-id-00001790dfdad3da38f1e54a5b731671de76bdd1/> typos
- - <csr-id-8b229ea7be48042620411dc76eaecc2fe3c8190f/> update rust crate insta to v1.47.1
-   | datasource | package | from   | to     |
-   | ---------- | ------- | ------ | ------ |
-   | crate      | insta   | 1.47.0 | 1.47.1 |
- - <csr-id-72bb8b14603d5214d88b6f1cb34b97a01b244686/> update rust crate insta to v1.47.0
-   | datasource | package | from   | to     |
-   | ---------- | ------- | ------ | ------ |
-   | crate      | insta   | 1.46.3 | 1.47.0 |
-
 ### Bug Fixes
 
  - <csr-id-00001920619de84cb17b5c340e9d749de6849dd8/> update to hickory-dns 0.26
@@ -435,19 +718,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
    | ---------- | ------- | ------ | ------ |
    | crate      | tokio   | 1.50.0 | 1.51.0 |
 
-### Other
-
- - <csr-id-0000180085ec9ea052db908c14b5610909433c86/> fmt → nightly
-
-### Style
-
- - <csr-id-00001780aa6351a86ddf57aaec12fc24014290a0/> lints
-
 ### Commit Statistics
 
 <csr-read-only-do-not-edit/>
 
  - 18 commits contributed to the release.
+ - 23 days passed between releases.
  - 17 commits were understood as [conventional](https://www.conventionalcommits.org).
  - 0 issues like '(#ID)' were seen in commit messages
 
@@ -489,13 +765,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <csr-id-00001650c0146fcd425e97e565f65cc2c42f71f6/>
 <csr-id-00001630e634bfb404ff7bf75471e20b0059988c/>
 
-### Chore
-
- - <csr-id-000016901c945d4ea5b9d3382023e279e0af29e9/> typo
- - <csr-id-5420e34e2468b5a4f0b557819cfe5bfcf01b4b4d/> lock file maintenance
- - <csr-id-dee20ba891fb8c409dbd46e262656e162f92db3f/> lock file maintenance
- - <csr-id-000016400e06131be745c20ff36a380c4890d46a/> remove unneeded genericity
-
 ### Bug Fixes
 
  - <csr-id-00001730912e5a8e67f2fb9dbf860cdec7010172/> don't buffer too much to show the overview
@@ -503,13 +772,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - <csr-id-000017102ca6a7effc581ecff8f0e28cc4029201/> add a recursion limit
  - <csr-id-000017007219a2e6e9310b5c3b65311cfb6b5789/> replace macro is_ip_allowed with a const fn
  - <csr-id-00001620a12891de1b6cf1ba0bbe200f99bc72af/> depth is not really useful here
-
-### Test
-
- - <csr-id-00001740c176a91af33ef9ebef01f9743a8449c8/> use rstest's Context
- - <csr-id-0000166044d71cb9228fb4bbe252a0b88a1da663/> a bit more
- - <csr-id-00001650c0146fcd425e97e565f65cc2c42f71f6/> test output
- - <csr-id-00001630e634bfb404ff7bf75471e20b0059988c/> a few more tests
 
 ### Commit Statistics
 
@@ -548,13 +810,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <csr-id-b6519e912b7f0fee38e365dc5cd11886d83f9b41/>
 <csr-id-0000160043e08beb64c622e3d21bb3ad913510d2/>
 
-### Chore
-
- - <csr-id-b6519e912b7f0fee38e365dc5cd11886d83f9b41/> update rust crate mockall to v0.14.0
-   | datasource | package | from   | to     |
-   | ---------- | ------- | ------ | ------ |
-   | crate      | mockall | 0.13.1 | 0.14.0 |
-
 ### Bug Fixes
 
  - <csr-id-00001590668e052f8f1a3c5cc8c31140cf096525/> refactor errors and make resolution errors better
@@ -567,16 +822,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
    | ---------- | ------- | ------ | ------ |
    | crate      | clap    | 4.5.60 | 4.5.61 |
 
-### Test
-
- - <csr-id-0000160043e08beb64c622e3d21bb3ad913510d2/> use expect instead of unwrap
-
 ### Commit Statistics
 
 <csr-read-only-do-not-edit/>
 
  - 6 commits contributed to the release.
- - 3 days passed between releases.
+ - 4 days passed between releases.
  - 5 commits were understood as [conventional](https://www.conventionalcommits.org).
  - 0 issues like '(#ID)' were seen in commit messages
 
@@ -605,14 +856,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <csr-id-00001480ad98c240c5fd8e999d1b2bb7d4bb346d/>
 <csr-id-000014702f16cdc21e5a781aa6b48c57405ed52d/>
 
-### Chore
-
- - <csr-id-432dd98b4b5a161a69c5389dc2554f3ccbda3eb3/> lock file maintenance
- - <csr-id-191d4afef8cbba321a7d9cac0c292572100f1d92/> lock file maintenance
- - <csr-id-4744efdc80728adc20e7334c8390764706e84a4a/> lock file maintenance
- - <csr-id-eabc660f9f004d50103b5c3bca84fa40e2f062f1/> lock file maintenance
- - <csr-id-fa554f7da174bd66aa17d525214468bd219543da/> lock file maintenance
-
 ### Bug Fixes
 
  - <csr-id-00001540a912adf8de03a4c370e7ac4899a82495/> add tests
@@ -633,11 +876,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
    | datasource | package | from   | to     |
    | ---------- | ------- | ------ | ------ |
    | crate      | clap    | 4.5.57 | 4.5.58 |
-
-### Style
-
- - <csr-id-00001480ad98c240c5fd8e999d1b2bb7d4bb346d/> lint
- - <csr-id-000014702f16cdc21e5a781aa6b48c57405ed52d/> fmt
 
 ### Commit Statistics
 
@@ -683,27 +921,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <csr-id-0d76b11be1be6a5c109466856f59d5f7745a4295/>
 <csr-id-5deb3928a5d2a15c372ed2971232dfc19485b21f/>
 
-### Chore
-
- - <csr-id-683a4dcc167754d3eb2d4da2e6b7c8a9f0ac989d/> lock file maintenance
- - <csr-id-7b059778a0f205b02c0ef3021e6fc4eecb3611fb/> update rust crate insta to v1.46.3
-   | datasource | package | from   | to     |
-   | ---------- | ------- | ------ | ------ |
-   | crate      | insta   | 1.46.2 | 1.46.3 |
- - <csr-id-3b67d5ab1c6aa0ba6b5f84a8fd2e90f23f1afdbf/> lock file maintenance
- - <csr-id-7d669f1e1816bd39b18b6f2bdbba4536a543b7d7/> update rust crate insta to v1.46.2
-   | datasource | package | from   | to     |
-   | ---------- | ------- | ------ | ------ |
-   | crate      | insta   | 1.46.1 | 1.46.2 |
- - <csr-id-16260b4307ec1e886e179211580ef63a63d0b5fe/> lock file maintenance
- - <csr-id-26936d4b5da3ee13687440de97c8ddb9b4e6d2b5/> lock file maintenance
- - <csr-id-67c4f1e2f0fa92bab2db9d0a62908787cb358e03/> lock file maintenance
- - <csr-id-0d76b11be1be6a5c109466856f59d5f7745a4295/> update rust crate insta to v1.46.1
-   | datasource | package | from   | to     |
-   | ---------- | ------- | ------ | ------ |
-   | crate      | insta   | 1.46.0 | 1.46.1 |
- - <csr-id-5deb3928a5d2a15c372ed2971232dfc19485b21f/> lock file maintenance
-
 ### Bug Fixes
 
  - <csr-id-b77d73fd406fd5d0325176cf32e014f337c059ec/> update rust crate clap to v4.5.57
@@ -733,7 +950,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <csr-read-only-do-not-edit/>
 
  - 15 commits contributed to the release.
- - 34 days passed between releases.
+ - 35 days passed between releases.
  - 14 commits were understood as [conventional](https://www.conventionalcommits.org).
  - 0 issues like '(#ID)' were seen in commit messages
 
@@ -766,14 +983,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <csr-id-8f701e881fbe966034bd089ed7122d73a3852de8/>
 <csr-id-12554ca0d8e142b9075f581b9d3c6d2b79888abd/>
 
-### Chore
-
- - <csr-id-8f701e881fbe966034bd089ed7122d73a3852de8/> lock file maintenance
- - <csr-id-12554ca0d8e142b9075f581b9d3c6d2b79888abd/> update rust crate insta to v1.46.0
-   | datasource | package | from   | to     |
-   | ---------- | ------- | ------ | ------ |
-   | crate      | insta   | 1.45.1 | 1.46.0 |
-
 ### New Features
 
  - <csr-id-000012403ab2dd2955f92e803861c9c1803b7cea/> move from eyre to exn, better errors and smaller runtime
@@ -787,7 +996,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <csr-read-only-do-not-edit/>
 
  - 5 commits contributed to the release.
- - 3 days passed between releases.
+ - 4 days passed between releases.
  - 4 commits were understood as [conventional](https://www.conventionalcommits.org).
  - 0 issues like '(#ID)' were seen in commit messages
 
@@ -818,32 +1027,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <csr-id-820e6b8252b1e062f31734a4081bf9c23c989326/>
 <csr-id-212e334c50b66cab82dbd3d5abfe48bd3bc2e7ce/>
 <csr-id-39987f5032f899fb117210ef234d41f9873bcc54/>
-
-### Chore
-
- - <csr-id-5538467a65f118bd3e1555f53bb62065e98c37ee/> update rust crate insta to v1.45.1
-   | datasource | package | from   | to     |
-   | ---------- | ------- | ------ | ------ |
-   | crate      | insta   | 1.44.3 | 1.45.1 |
- - <csr-id-acb223281aa88968e18d193b5573e3b674a5d7a8/> lock file maintenance
- - <csr-id-4b68f3b48d7951738852ebf52d410b9c9da65ec2/> lock file maintenance
- - <csr-id-93bb5f21f645c99add608023e0f3e0cfeb0e490a/> lock file maintenance
- - <csr-id-1cf11e0067568701f8680332eed4015f868d10ff/> lock file maintenance
- - <csr-id-9382ad1c6bae1beedc3dc8e0b52b58da3c6bf760/> lock file maintenance
- - <csr-id-e90e7d256941addda900b77bca10a78dfb405c04/> update rust crate insta to v1.44.3
-   | datasource | package | from   | to     |
-   | ---------- | ------- | ------ | ------ |
-   | crate      | insta   | 1.44.2 | 1.44.3 |
- - <csr-id-f630ceb5fba6bcf99ee98596d75ba8584dae808e/> update rust crate insta to v1.44.2
-   | datasource | package | from   | to     |
-   | ---------- | ------- | ------ | ------ |
-   | crate      | insta   | 1.44.1 | 1.44.2 |
- - <csr-id-820e6b8252b1e062f31734a4081bf9c23c989326/> lock file maintenance
- - <csr-id-212e334c50b66cab82dbd3d5abfe48bd3bc2e7ce/> update rust crate insta to v1.44.1
-   | datasource | package | from   | to     |
-   | ---------- | ------- | ------ | ------ |
-   | crate      | insta   | 1.43.2 | 1.44.1 |
- - <csr-id-39987f5032f899fb117210ef234d41f9873bcc54/> lock file maintenance
 
 ### Bug Fixes
 
@@ -913,24 +1096,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <csr-id-8c0c37f78e399a7c42b49e96c295983954ef1934/>
 <csr-id-fe4c00656df7cba865b041d89fd82c366fa20b01/>
 
-### Chore
-
- - <csr-id-0000102016da7394fbe44144af54219dc0676f51/> update lints
- - <csr-id-66f57c3457e4be3ce5d9bac90d3c8a87558b828d/> lock file maintenance
- - <csr-id-083849736e18eb05193a50fdb2d7841cd72a0465/> lock file maintenance
- - <csr-id-0a00c10754bb6ee858715daeb7164c80f33ef348/> lock file maintenance
- - <csr-id-89d5d79c6084439c4f7b0ffc48686eb8fc88634b/> lock file maintenance
- - <csr-id-34add2dec82db0babb8932311445248c904e308c/> lock file maintenance
- - <csr-id-71d60d9aed85a6358e3ebeb810e15c80c172a141/> lock file maintenance
- - <csr-id-7af1fa3a881227b68d2b003bf72a86e3e2ce5f46/> lock file maintenance
- - <csr-id-c8a1409651878f8f0841f0f869d4596f886e73e6/> lock file maintenance
- - <csr-id-175a908e0a00bd17c5a482ba257028d8ad900941/> lock file maintenance
- - <csr-id-8c0c37f78e399a7c42b49e96c295983954ef1934/> lock file maintenance
- - <csr-id-fe4c00656df7cba865b041d89fd82c366fa20b01/> pin rust crate rstest to =0.26.1
-   | datasource | package | from   | to     |
-   | ---------- | ------- | ------ | ------ |
-   | crate      | rstest  | 0.26.1 | 0.26.1 |
-
 ### Bug Fixes
 
  - <csr-id-00001040632580cd0786210aca14d24875c88bec/> simplify main a bit
@@ -961,6 +1126,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <csr-read-only-do-not-edit/>
 
  - 20 commits contributed to the release.
+ - 56 days passed between releases.
  - 19 commits were understood as [conventional](https://www.conventionalcommits.org).
  - 0 issues like '(#ID)' were seen in commit messages
 
@@ -1000,15 +1166,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <csr-id-6e7d52e53b1d83d0cb0e896314fc5676b34b2e11/>
 <csr-id-0000084025a902cc26b19c78eab8fd321ff47b9e/>
 
-### Chore
-
- - <csr-id-76e66c24a7ba99684b0df875d2d227b14e1e437c/> lock file maintenance
- - <csr-id-c308d13e1284ad30d625b378492cd04f897cab27/> lock file maintenance
- - <csr-id-6e7d52e53b1d83d0cb0e896314fc5676b34b2e11/> update rust crate insta to v1.43.2
-   | datasource | package | from   | to     |
-   | ---------- | ------- | ------ | ------ |
-   | crate      | insta   | 1.43.1 | 1.43.2 |
-
 ### Bug Fixes
 
  - <csr-id-000008301413329b8017f896c09fab0fe1fe3ce8/> allow passing non uppercase record types
@@ -1017,16 +1174,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
    | ---------- | ------- | ------ | ------ |
    | crate      | clap    | 4.5.47 | 4.5.48 |
 
-### Test
-
- - <csr-id-0000084025a902cc26b19c78eab8fd321ff47b9e/> add a few tests, and use rstest+case
-
 ### Commit Statistics
 
 <csr-read-only-do-not-edit/>
 
  - 7 commits contributed to the release.
- - 16 days passed between releases.
+ - 17 days passed between releases.
  - 6 commits were understood as [conventional](https://www.conventionalcommits.org).
  - 0 issues like '(#ID)' were seen in commit messages
 
@@ -1050,11 +1203,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <csr-id-0000077006dc7eee26de87362582c07b0f678a2d/>
 <csr-id-c2438fc618d0e3e087bca5fc1d381ddf554bdb0e/>
-
-### Chore
-
- - <csr-id-0000077006dc7eee26de87362582c07b0f678a2d/> remove release profile
- - <csr-id-c2438fc618d0e3e087bca5fc1d381ddf554bdb0e/> lock file maintenance
 
 ### Bug Fixes
 
@@ -1083,7 +1231,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <csr-read-only-do-not-edit/>
 
  - 9 commits contributed to the release.
- - 18 days passed between releases.
+ - 19 days passed between releases.
  - 5 commits were understood as [conventional](https://www.conventionalcommits.org).
  - 0 issues like '(#ID)' were seen in commit messages
 
@@ -1111,11 +1259,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <csr-id-00000620f334d9fe7408ea5eab8a175e51352f6d/>
 <csr-id-00000680928af94ee73f8139aee2971bddeef129/>
 
-### Chore
-
- - <csr-id-00000650455606f53b01ed8e09dea9ff0ab54959/> update lock file
- - <csr-id-00000620f334d9fe7408ea5eab8a175e51352f6d/> update lock file
-
 ### Bug Fixes
 
  - <csr-id-00000670f33fe43499013da8d49cb6f119401cdc/> start using eyre
@@ -1125,16 +1268,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - <csr-id-000006108323bec6cfc8cfa97ca47fb750b6c957/> update hickory* to 0.25.2
  - <csr-id-0000060037d3667a1aae81aca84fa0ab8504dc42/> clippy
 
-### Test
-
- - <csr-id-00000680928af94ee73f8139aee2971bddeef129/> use insta for tests
-
 ### Commit Statistics
 
 <csr-read-only-do-not-edit/>
 
  - 10 commits contributed to the release over the course of 28 calendar days.
- - 67 days passed between releases.
+ - 68 days passed between releases.
  - 9 commits were understood as [conventional](https://www.conventionalcommits.org).
  - 0 issues like '(#ID)' were seen in commit messages
 
@@ -1162,23 +1301,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <csr-id-000005884cd1d917abd6ebd0ce6319c9d1f4baf9/>
 <csr-id-00000563c5592b829463596927684b92e05e91a5/>
 
-### Chore
-
- - <csr-id-000005884cd1d917abd6ebd0ce6319c9d1f4baf9/> update lock file
-
 ### Bug Fixes
 
  - <csr-id-000005720c17467d5463df4dc15d077dda828e69/> add a few lints and fix code
-
-### Test
-
- - <csr-id-00000563c5592b829463596927684b92e05e91a5/> fix tests
 
 ### Commit Statistics
 
 <csr-read-only-do-not-edit/>
 
  - 4 commits contributed to the release.
+ - 95 days passed between releases.
  - 3 commits were understood as [conventional](https://www.conventionalcommits.org).
  - 0 issues like '(#ID)' were seen in commit messages
 
@@ -1200,11 +1332,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <csr-id-000005488c8144805e6637de13f294030ae8ff63/>
 <csr-id-0000051722ea125a8fb5aaba29ac623a386a5375/>
 
-### Chore
-
- - <csr-id-000005488c8144805e6637de13f294030ae8ff63/> update lock file
- - <csr-id-0000051722ea125a8fb5aaba29ac623a386a5375/> slim release builds a bit
-
 ### Bug Fixes
 
  - <csr-id-0000053efd45344f286374a3e3cd6a7bb698c657/> update hickory-* to 0.24.4
@@ -1221,7 +1348,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <csr-read-only-do-not-edit/>
 
  - 11 commits contributed to the release over the course of 48 calendar days.
- - 48 days passed between releases.
+ - 49 days passed between releases.
  - 10 commits were understood as [conventional](https://www.conventionalcommits.org).
  - 0 issues like '(#ID)' were seen in commit messages
 
@@ -1250,10 +1377,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <csr-id-000004383b5d7dc2afbb9387ec2e0b32a88145ce/>
 <csr-id-0000038bad2d66cd2d526abac3b19289c2f6dfdc/>
 
-### Chore
-
- - <csr-id-000004383b5d7dc2afbb9387ec2e0b32a88145ce/> update lock file
-
 ### Bug Fixes
 
  - <csr-id-0000042136ac438af0dc58a13fe247869bb5cd3a/> update tokio to 1.43.0
@@ -1261,16 +1384,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - <csr-id-0000040aab4cf270066eb190933f94f877e1ce69/> update hickory-* to 0.24.2
  - <csr-id-0000039d2d445743e950fed09433faa85f537423/> update clap to 4.5.26
 
-### Other
-
- - <csr-id-0000038bad2d66cd2d526abac3b19289c2f6dfdc/> build with latest
-
 ### Commit Statistics
 
 <csr-read-only-do-not-edit/>
 
  - 7 commits contributed to the release over the course of 18 calendar days.
- - 41 days passed between releases.
+ - 42 days passed between releases.
  - 6 commits were understood as [conventional](https://www.conventionalcommits.org).
  - 0 issues like '(#ID)' were seen in commit messages
 
@@ -1301,20 +1420,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - <csr-id-000003336ec43c3fa57fb74b1547dbbd0c4bc74d/> update tokio to 1.42.0
  - <csr-id-000003275a4427161a70ec1edf463c694c4ec118/> this lifetime has a name
 
-### Other
-
- - <csr-id-00000354eea0e832fae6285c44605e7222f50652/> include the README.md instead of copying it
-
-### Style
-
- - <csr-id-00000369560f5a95262d5e2cacc2e38339a7b308/> clippy
-
 ### Commit Statistics
 
 <csr-read-only-do-not-edit/>
 
  - 6 commits contributed to the release.
- - 13 days passed between releases.
+ - 14 days passed between releases.
  - 5 commits were understood as [conventional](https://www.conventionalcommits.org).
  - 0 issues like '(#ID)' were seen in commit messages
 
@@ -1338,11 +1449,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <csr-id-00000303484ccb4f2fb2180b5f9facdc287fb9e0/>
 <csr-id-000002746ba7b4a6356ccc7f5f148913310d3cfb/>
 
-### Chore
-
- - <csr-id-00000303484ccb4f2fb2180b5f9facdc287fb9e0/> update lock file
- - <csr-id-000002746ba7b4a6356ccc7f5f148913310d3cfb/> clippy
-
 ### Bug Fixes
 
  - <csr-id-0000029a09921484cfb6dca43d40ad0362e23582/> update tokio to 1.41.1
@@ -1353,6 +1459,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <csr-read-only-do-not-edit/>
 
  - 5 commits contributed to the release.
+ - 31 days passed between releases.
  - 4 commits were understood as [conventional](https://www.conventionalcommits.org).
  - 0 issues like '(#ID)' were seen in commit messages
 
@@ -1375,10 +1482,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <csr-id-0000020ffd4184a2e3f769b2869d3bc340b60438/>
 <csr-id-00000192671e0aeccb2cd9e9b222a38eb495846d/>
 
-### Chore
-
- - <csr-id-0000020ffd4184a2e3f769b2869d3bc340b60438/> add old changelog
-
 ### New Features
 
  - <csr-id-000002439f930b2237003e14864784265da57ccf/> change the meaning of . as a server
@@ -1391,10 +1494,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - <csr-id-000002396551c391ae8328059a683779c5af5c27/> use the timeout from the arguments
  - <csr-id-0000022af7f9012d4a22b6b9305eafeea06b57ca/> avoid cloning the last vec for printing
  - <csr-id-0000021d4fdf551a0c1449aba0e788343935d6ce/> simplify code
-
-### Style
-
- - <csr-id-00000192671e0aeccb2cd9e9b222a38eb495846d/> fmt
 
 ### Commit Statistics
 
@@ -1427,11 +1526,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <csr-id-000001859882e30eefd707dcb762ccaa67c630cf/>
 <csr-id-0000011944a7ba166dff4bdede376f0d1b144af3/>
 
-### Chore
-
- - <csr-id-000001859882e30eefd707dcb762ccaa67c630cf/> v1.0.0
- - <csr-id-0000011944a7ba166dff4bdede376f0d1b144af3/> lock file maintenance
-
 ### New Features
 
  - <csr-id-00000164ebc05ac97e03ec82c623fa19afc4c630/> add support for TCP queries
@@ -1449,7 +1543,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <csr-read-only-do-not-edit/>
 
  - 8 commits contributed to the release.
- - 1 day passed between releases.
+ - 2 days passed between releases.
  - 8 commits were understood as [conventional](https://www.conventionalcommits.org).
  - 0 issues like '(#ID)' were seen in commit messages
 
@@ -1475,18 +1569,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <csr-id-0000007442382fb59fc62314a5caae5f024b2f75/>
 <csr-id-00000088e4167ccd4c47b2924e7abd4cc470df34/>
 
-### Chore
-
- - <csr-id-0000007442382fb59fc62314a5caae5f024b2f75/> move a comment at the right place
-
 ### Bug Fixes
 
  - <csr-id-0000010169c90fe6b596fc2f01485441318f4b68/> convert to use all async apis from hickory-dns
  - <csr-id-00000090a38fc33839bcbeda851d01d514cc92fc/> switch to AsyncClient to be able to set edns
-
-### Style
-
- - <csr-id-00000088e4167ccd4c47b2924e7abd4cc470df34/> clippy
 
 ### Commit Statistics
 
@@ -1513,10 +1599,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## v0.9.1 (2024-10-16)
 
 <csr-id-0000005992bae326ff306b9d76952988dd6708ff/>
-
-### Chore
-
- - <csr-id-0000005992bae326ff306b9d76952988dd6708ff/> add LICENSE file
 
 ### Bug Fixes
 
@@ -1550,14 +1632,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### New Features
 
  - <csr-id-0000002647ef29a540fe23d9cd043773b1cca545/> implement most of the original dnstracer
-
-### Other
-
- - <csr-id-0000004e9ef9e2582e57373f8a76beeda2339b36/> add ci
-
-### Test
-
- - <csr-id-0000003319978b8d3f5ef777cfb41f64b90a21f5/> add tests
 
 ### Commit Statistics
 
