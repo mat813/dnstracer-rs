@@ -3,7 +3,7 @@ use std::{
     collections::{BTreeSet, HashMap, HashSet},
     fmt,
     io::{self, Write},
-    net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr},
+    net::{IpAddr, SocketAddr},
 };
 
 use derive_more::{Debug, Display};
@@ -662,12 +662,8 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
                     .iter()
                     .filter(|r| r.name == ns.0)
                     .filter_map(|additional| match additional.data {
-                        RData::A(ref a) => {
-                            Some((additional, IpAddr::from(Into::<Ipv4Addr>::into(*a))))
-                        },
-                        RData::AAAA(ref a) => {
-                            Some((additional, IpAddr::from(Into::<Ipv6Addr>::into(*a))))
-                        },
+                        RData::A(ref a) => Some((additional, IpAddr::V4(a.0))),
+                        RData::AAAA(ref a) => Some((additional, IpAddr::V6(a.0))),
                         _ => None,
                     })
                     .filter(|&(_, ip)| self.is_ip_allowed(ip))
@@ -844,7 +840,7 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
 mod tests {
     #![allow(clippy::expect_used, clippy::indexing_slicing, reason = "test")]
 
-    use std::{str::FromStr as _, time::Duration};
+    use std::{net::Ipv4Addr, str::FromStr as _, time::Duration};
 
     use hickory_proto::rr::rdata;
     use insta::{assert_debug_snapshot, assert_snapshot};
