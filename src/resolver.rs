@@ -4,7 +4,6 @@ use std::{
     fmt,
     io::{self, Write},
     net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr},
-    pin::Pin,
 };
 
 use derive_more::{Debug, Display};
@@ -502,129 +501,128 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
         tracing::instrument(level = "trace", skip(self, name, server, depth, last))
     )]
     /// Recurse through the internet looking for answers
-    pub fn do_recurse<'b>(
-        &'b self,
-        name: &'b Name,
-        server: &'b OptName,
+    #[expect(clippy::future_not_send, reason = "single-threaded, RefCell state")]
+    pub async fn do_recurse(
+        &self,
+        name: &Name,
+        server: &OptName,
         depth: usize,
         last: Vec<bool>,
-    ) -> Pin<Box<dyn Future<Output = Result<(), ResolverError>> + 'b>> {
-        Box::pin(async move {
-            #[cfg(feature = "tracing")]
-            tracing::debug!(?name, ?server, ?depth, ?last);
+    ) -> Result<(), ResolverError> {
+        #[cfg(feature = "tracing")]
+        tracing::debug!(?name, ?server, ?depth, ?last);
 
-            if depth > MAX_RECURSION_DEPTH {
-                bail!(ResolverError::MaxDepthExceeded {
-                    depth: MAX_RECURSION_DEPTH
-                });
-            }
+        if depth > MAX_RECURSION_DEPTH {
+            bail!(ResolverError::MaxDepthExceeded {
+                depth: MAX_RECURSION_DEPTH
+            });
+        }
 
-            if self.cache_get(&(server.ip, name.clone())) {
-                self.print(depth, server, "(cached)", &last);
-                return Ok(());
-            }
+        if self.cache_get(&(server.ip, name.clone())) {
+            self.print(depth, server, "(cached)", &last);
+            return Ok(());
+        }
 
-            let query_type = if depth == 0 {
-                // First request is always a NS request, in case the given server is a recursive server.
-                RecordType::NS
-            } else {
-                self.arguments.query_type
-            };
+        let query_type = if depth == 0 {
+            // First request is always a NS request, in case the given server is a recursive server.
+            RecordType::NS
+        } else {
+            self.arguments.query_type
+        };
 
-            match self.querier.query(server, name, query_type).await {
-                Ok(response) => {
-                    let mut next_servers: Option<BTreeSet<OptName>> = None;
+        match self.querier.query(server, name, query_type).await {
+            Ok(response) => {
+                let mut next_servers: Option<BTreeSet<OptName>> = None;
 
-                    if response.authoritative {
-                        // If the response is authoritative, we are probably at the end of the journey.
-                        let result = &response.answers;
-                        self.print(depth, server, "found authoritative answer", &last);
-                        self.cache_set(true, (server.ip, name.clone()));
-                        self.add_result(server.clone(), response.response_code, result);
+                if response.authoritative {
+                    // If the response is authoritative, we are probably at the end of the journey.
+                    let result = &response.answers;
+                    self.print(depth, server, "found authoritative answer", &last);
+                    self.cache_set(true, (server.ip, name.clone()));
+                    self.add_result(server.clone(), response.response_code, result);
 
-                        // But if we get only CNAMEs and we asked for something
-                        // else, we need to try and continue the recursion.
-                        if self.arguments.query_type != RecordType::CNAME
-                            && result.iter().all(|r| r.record_type() == RecordType::CNAME)
-                            && !response.name_servers.is_empty()
-                        {
-                            let mut accumulated: BTreeSet<OptName> = BTreeSet::new();
-                            for cname in response
-                                .answers
-                                .iter()
-                                // We already checked every entry was a CNAME
-                                .filter_map(|r| match r.data {
-                                    RData::CNAME(ref cname) => Some(cname),
-                                    _ => None,
-                                })
-                            {
-                                accumulated.extend(
-                                    self.get_next_servers(
-                                        &response.name_servers,
-                                        &response.additionals,
-                                        server,
-                                        cname,
-                                        depth,
-                                        &last,
-                                    )
-                                    .await,
-                                );
-                            }
-                            if !accumulated.is_empty() {
-                                next_servers = Some(accumulated);
-                            }
-                        }
-                    } else {
-                        self.print(depth, server, "", &last);
-
-                        let (records, additionals) = if depth == 0 && !response.answers.is_empty() {
-                            // If we're at the start and we get answers, it means it was a recursive name server, so use those answers.
-                            (&response.answers, &response.additionals)
-                        } else {
-                            // Otherwise, we get an authority section.
-                            (&response.name_servers, &response.additionals)
-                        };
-
-                        next_servers = Some(
-                            self.get_next_servers(records, additionals, server, name, depth, &last)
-                                .await,
-                        );
-                    }
-
-                    if let Some(next) = next_servers {
-                        let len = next.len();
-                        for (index, ns) in next.iter().enumerate() {
-                            self.do_recurse(name, ns, depth + 1, {
-                                let mut new_last = last.clone();
-                                new_last.push(index == (len - 1));
-                                new_last
+                    // But if we get only CNAMEs and we asked for something
+                    // else, we need to try and continue the recursion.
+                    if self.arguments.query_type != RecordType::CNAME
+                        && result.iter().all(|r| r.record_type() == RecordType::CNAME)
+                        && !response.name_servers.is_empty()
+                    {
+                        let mut accumulated: BTreeSet<OptName> = BTreeSet::new();
+                        for cname in response
+                            .answers
+                            .iter()
+                            // We already checked every entry was a CNAME
+                            .filter_map(|r| match r.data {
+                                RData::CNAME(ref cname) => Some(cname),
+                                _ => None,
                             })
-                            .await
-                            .or_raise(|| ResolverError::DoRecurse)?;
+                        {
+                            accumulated.extend(
+                                self.get_next_servers(
+                                    &response.name_servers,
+                                    &response.additionals,
+                                    server,
+                                    cname,
+                                    depth,
+                                    &last,
+                                )
+                                .await,
+                            );
+                        }
+                        if !accumulated.is_empty() {
+                            next_servers = Some(accumulated);
                         }
                     }
-                },
-                Err(e) => {
-                    self.cache_set(false, (server.ip, name.clone()));
-                    self.print(
-                        depth,
-                        server,
-                        std::fmt::from_fn(|f| {
-                            write!(
-                                f,
-                                "{e} -> {}",
-                                e.frame().children().first().map_or_else(
-                                    || "unknown error".to_owned(),
-                                    std::string::ToString::to_string
-                                )
-                            )
-                        }),
-                        &last,
+                } else {
+                    self.print(depth, server, "", &last);
+
+                    let (records, additionals) = if depth == 0 && !response.answers.is_empty() {
+                        // If we're at the start and we get answers, it means it was a recursive name server, so use those answers.
+                        (&response.answers, &response.additionals)
+                    } else {
+                        // Otherwise, we get an authority section.
+                        (&response.name_servers, &response.additionals)
+                    };
+
+                    next_servers = Some(
+                        self.get_next_servers(records, additionals, server, name, depth, &last)
+                            .await,
                     );
-                },
-            }
-            Ok(())
-        })
+                }
+
+                if let Some(next) = next_servers {
+                    let len = next.len();
+                    for (index, ns) in next.iter().enumerate() {
+                        Box::pin(self.do_recurse(name, ns, depth + 1, {
+                            let mut new_last = last.clone();
+                            new_last.push(index == (len - 1));
+                            new_last
+                        }))
+                        .await
+                        .or_raise(|| ResolverError::DoRecurse)?;
+                    }
+                }
+            },
+            Err(e) => {
+                self.cache_set(false, (server.ip, name.clone()));
+                self.print(
+                    depth,
+                    server,
+                    std::fmt::from_fn(|f| {
+                        write!(
+                            f,
+                            "{e} -> {}",
+                            e.frame().children().first().map_or_else(
+                                || "unknown error".to_owned(),
+                                std::string::ToString::to_string
+                            )
+                        )
+                    }),
+                    &last,
+                );
+            },
+        }
+        Ok(())
     }
 
     #[cfg_attr(
@@ -1238,7 +1236,7 @@ mod tests {
         assert!(result.is_err());
         assert_debug_snapshot!(result, @"
         Err(
-            No IP address found for hostname: ns1.example.com, at src/resolver.rs:492:13,
+            No IP address found for hostname: ns1.example.com, at src/resolver.rs:491:13,
         )
         ");
         assert_snapshot!(get_output(resolver), @"");
