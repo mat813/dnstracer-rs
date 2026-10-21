@@ -29,18 +29,6 @@ impl hash::Hash for OptName {
     }
 }
 
-impl From<OptName> for SocketAddr {
-    #[cfg_attr(
-        feature = "tracing",
-        tracing::instrument(level = "trace", skip(opt_name), ret)
-    )]
-    fn from(opt_name: OptName) -> Self {
-        #[cfg(feature = "tracing")]
-        tracing::debug!(?opt_name);
-        Self::new(opt_name.ip, 53)
-    }
-}
-
 impl From<&OptName> for SocketAddr {
     #[cfg_attr(
         feature = "tracing",
@@ -293,7 +281,7 @@ mod tests {
             zone: None,
         };
 
-        let socket_addr: SocketAddr = opt.into();
+        let socket_addr = SocketAddr::from(&opt);
         assert_eq!(
             socket_addr,
             "192.168.1.1:53"
@@ -312,7 +300,7 @@ mod tests {
             zone: None,
         };
 
-        let socket_addr: SocketAddr = opt.into();
+        let socket_addr = SocketAddr::from(&opt);
         assert_eq!(
             socket_addr,
             "[fe80::202:b3ff:fe1e:8329]:53"
