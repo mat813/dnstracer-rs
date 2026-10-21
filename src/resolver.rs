@@ -683,7 +683,6 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
             // ourselves.
             if next_servers.len() == before_len {
                 let ns_s = ns.to_string();
-                let before_resolve_len = next_servers.len();
                 if let Ok(servers) = self
                     .lookup_servers(&ns_s, Some(record.name.to_string()))
                     .await
@@ -691,7 +690,7 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
                     next_servers.extend(servers);
                 }
 
-                if next_servers.len() > before_resolve_len {
+                if next_servers.len() > before_len {
                     self.cache_set(true, (server.ip, name.clone()));
                 } else {
                     // If we cannot find an IP address, we create a fake server to give an error
