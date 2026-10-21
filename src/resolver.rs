@@ -1,10 +1,10 @@
 use std::{
+    cell::RefCell,
     collections::{BTreeSet, HashMap, HashSet},
     fmt,
     io::{self, Write},
     net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr},
     pin::Pin,
-    sync::{Mutex, RwLock},
 };
 
 use derive_more::{Debug, Display};
@@ -74,12 +74,6 @@ pub enum ResolverError {
         /// The depth
         depth: usize,
     },
-    /// Failed to acquire read lock
-    #[display("Failed to acquire read lock")]
-    ReadLock,
-    /// Failed to acquire write lock
-    #[display("Failed to acquire write lock")]
-    WriteLock,
     /// Write error
     #[display("Write error")]
     Write,
@@ -390,7 +384,7 @@ impl DnsQuerier for DefaultDnsQuerier {
 #[derive(Debug)]
 pub struct RecursiveResolver<'a, R = TokioNameResolver, Q = DefaultDnsQuerier, W = io::Stdout> {
     /// Store the results, in case we need to display them
-    results: RwLock<HashMap<OptName, FullResult>>,
+    results: RefCell<HashMap<OptName, FullResult>>,
     /// Resolver for bootstrapping and NS name resolution
     #[debug(skip)]
     name_resolver: R,
@@ -400,12 +394,12 @@ pub struct RecursiveResolver<'a, R = TokioNameResolver, Q = DefaultDnsQuerier, W
     /// Copy of all the arguments for easier processing
     arguments: &'a Args,
     /// Positive answer cache
-    positive_cache: Option<RwLock<Cache>>,
+    positive_cache: Option<RefCell<Cache>>,
     /// Negative answer cache
-    negative_cache: Option<RwLock<Cache>>,
+    negative_cache: Option<RefCell<Cache>>,
     /// Output writer
     #[debug(skip)]
-    output: Mutex<W>,
+    output: RefCell<W>,
 }
 
 impl<'a> RecursiveResolver<'a> {
@@ -431,13 +425,13 @@ impl<'a> RecursiveResolver<'a> {
             .or_raise(|| ResolverError::BuildTokioResolver)?;
 
         Ok(Self {
-            results: RwLock::new(HashMap::new()),
+            results: RefCell::new(HashMap::new()),
             name_resolver: TokioNameResolver(resolver),
             querier: DefaultDnsQuerier::from_args(args),
-            positive_cache: (!args.no_positive_cache).then(|| RwLock::new(HashSet::new())),
-            negative_cache: args.negative_cache.then(|| RwLock::new(HashSet::new())),
+            positive_cache: (!args.no_positive_cache).then(|| RefCell::new(HashSet::new())),
+            negative_cache: args.negative_cache.then(|| RefCell::new(HashSet::new())),
             arguments: args,
-            output: Mutex::new(io::stdout()),
+            output: RefCell::new(io::stdout()),
         })
     }
 }
@@ -455,6 +449,7 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
         tracing::instrument(level = "trace", skip(self), ret, err(level = "debug"))
     )]
     /// Figure out the server we got as an argument
+    #[expect(clippy::future_not_send, reason = "single-threaded, RefCell state")]
     pub async fn init(&self) -> Result<Vec<OptName>, ResolverError> {
         let mut results: Vec<OptName> = vec![];
 
@@ -560,7 +555,7 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
                         let result = &response.answers;
                         self.print(depth, server, "found authoritative answer", &last);
                         self.cache_set(true, (server.ip, name.clone()));
-                        self.add_result(server.clone(), response.response_code, result)?;
+                        self.add_result(server.clone(), response.response_code, result);
 
                         // But if we get only CNAMEs and we asked for something
                         // else, we need to try and continue the recursion.
@@ -656,6 +651,7 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
         )
     )]
     /// Figure out the next servers in the recursion
+    #[expect(clippy::future_not_send, reason = "single-threaded, RefCell state")]
     async fn get_next_servers(
         &self,
         records: &[Record],
@@ -744,8 +740,8 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
     )]
     /// Print the overview
     pub fn show_overview(&self) -> Result<(), ResolverError> {
-        let results = self.results.read().map_err(|_| ResolverError::ReadLock)?;
-        let mut output = self.output.lock().map_err(|_| ResolverError::WriteLock)?;
+        let results = self.results.borrow();
+        let mut output = self.output.borrow_mut();
         for (key, values) in results.iter() {
             if values.response_code != ResponseCode::NoError {
                 writeln!(
@@ -789,11 +785,11 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
 
         self.positive_cache
             .as_ref()
-            .is_some_and(|o| o.read().ok().as_ref().and_then(|r| r.get(key)).is_some())
+            .is_some_and(|o| o.borrow().contains(key))
             || self
                 .negative_cache
                 .as_ref()
-                .is_some_and(|o| o.read().ok().as_ref().and_then(|r| r.get(key)).is_some())
+                .is_some_and(|o| o.borrow().contains(key))
     }
 
     #[cfg_attr(
@@ -801,7 +797,6 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
         tracing::instrument(level = "trace", skip(self, positive, key))
     )]
     /// Set one of the caches
-    #[expect(clippy::print_stderr, reason = "non fatal error")]
     fn cache_set(&self, positive: bool, key: CacheKey) {
         #[cfg(feature = "tracing")]
         tracing::debug!(?positive, ?key);
@@ -811,42 +806,21 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
         } else {
             &self.negative_cache
         };
-        #[expect(clippy::pattern_type_mismatch, reason = "can't dereference guard")]
-        if let Some(locked_cache) = cache {
-            match locked_cache.write() {
-                Ok(mut c) => {
-                    c.insert(key);
-                },
-                Err(error) => {
-                    eprintln!("cache set error {error}");
-                },
-            }
+        if let Some(cache) = cache.as_ref() {
+            cache.borrow_mut().insert(key);
         }
     }
 
     #[cfg_attr(
         feature = "tracing",
-        tracing::instrument(
-            level = "trace",
-            skip(self, server, response_code, results),
-            err(level = "debug")
-        )
+        tracing::instrument(level = "trace", skip(self, server, response_code, results))
     )]
     /// Add a result to the pile
-    #[expect(
-        clippy::significant_drop_tightening,
-        reason = "Scope is short enough and there should not be contentions"
-    )]
-    fn add_result(
-        &self,
-        server: OptName,
-        response_code: ResponseCode,
-        results: &[Record],
-    ) -> Result<(), ResolverError> {
+    fn add_result(&self, server: OptName, response_code: ResponseCode, results: &[Record]) {
         #[cfg(feature = "tracing")]
         tracing::debug!(?server, ?response_code, ?results);
 
-        let mut res = self.results.write().map_err(|_| ResolverError::WriteLock)?;
+        let mut res = self.results.borrow_mut();
         let full = res.entry(server).or_default();
 
         full.response_code = response_code;
@@ -854,8 +828,6 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
         for result in results {
             full.records.insert(result.clone());
         }
-
-        Ok(())
     }
 
     #[cfg_attr(
@@ -890,9 +862,7 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
         } else {
             format!("{prefix}{server} {rest}\n")
         };
-        if let Ok(mut w) = self.output.lock() {
-            let _ = w.write_all(line.as_bytes());
-        }
+        let _ = self.output.borrow_mut().write_all(line.as_bytes());
     }
 }
 
@@ -938,13 +908,13 @@ mod tests {
         querier: MockDnsQuerier,
     ) -> RecursiveResolver<'_, MockNameResolver, MockDnsQuerier, Vec<u8>> {
         RecursiveResolver {
-            results: RwLock::new(HashMap::new()),
+            results: RefCell::new(HashMap::new()),
             name_resolver,
             querier,
             arguments: args,
-            positive_cache: (!args.no_positive_cache).then(|| RwLock::new(HashSet::new())),
-            negative_cache: args.negative_cache.then(|| RwLock::new(HashSet::new())),
-            output: Mutex::new(Vec::<u8>::new()),
+            positive_cache: (!args.no_positive_cache).then(|| RefCell::new(HashSet::new())),
+            negative_cache: args.negative_cache.then(|| RefCell::new(HashSet::new())),
+            output: RefCell::new(Vec::<u8>::new()),
         }
     }
 
@@ -1000,13 +970,7 @@ mod tests {
     fn get_output(
         resolver: RecursiveResolver<'_, MockNameResolver, MockDnsQuerier, Vec<u8>>,
     ) -> String {
-        String::from_utf8(
-            resolver
-                .output
-                .into_inner()
-                .expect("output lock should not be poisoned"),
-        )
-        .expect("output should be valid UTF-8")
+        String::from_utf8(resolver.output.into_inner()).expect("output should be valid UTF-8")
     }
 
     // ── Existing tests (kept as-is) ───────────────────────────────────────────
@@ -1297,7 +1261,7 @@ mod tests {
         assert!(result.is_err());
         assert_debug_snapshot!(result, @"
         Err(
-            No IP address found for hostname: ns1.example.com, at src/resolver.rs:512:13,
+            No IP address found for hostname: ns1.example.com, at src/resolver.rs:507:13,
         )
         ");
         assert_snapshot!(get_output(resolver), @"");
@@ -1327,10 +1291,7 @@ mod tests {
             .await
             .expect("do_recurse should succeed");
 
-        let results = resolver
-            .results
-            .read()
-            .expect("results lock should not be poisoned");
+        let results = resolver.results.borrow();
         assert_eq!(results.len(), 1);
         let result = results
             .values()
@@ -1389,10 +1350,7 @@ mod tests {
             .do_recurse(&name, &server, 0, vec![])
             .await
             .expect("do_recurse should succeed");
-        let results = resolver
-            .results
-            .read()
-            .expect("results lock should not be poisoned");
+        let results = resolver.results.borrow();
         assert!(results.is_empty());
         drop(results);
         assert_snapshot!(get_output(resolver), @"ns1.example.com. (192.0.2.1)");
@@ -1437,10 +1395,7 @@ mod tests {
             .await
             .expect("do_recurse should succeed");
 
-        let results = resolver
-            .results
-            .read()
-            .expect("results lock should not be poisoned");
+        let results = resolver.results.borrow();
         assert_eq!(results.len(), 1);
         assert_debug_snapshot!(results, @r#"
         {
@@ -1494,18 +1449,14 @@ mod tests {
             .positive_cache
             .as_ref()
             .expect("positive cache should be initialized")
-            .write()
-            .expect("positive cache lock should not be poisoned")
+            .borrow_mut()
             .insert((server.ip, name.clone()));
 
         resolver
             .do_recurse(&name, &server, 1, vec![])
             .await
             .expect("do_recurse should succeed");
-        let results = resolver
-            .results
-            .read()
-            .expect("results lock should not be poisoned");
+        let results = resolver.results.borrow();
         assert!(results.is_empty());
         drop(results);
         // The mock verifies query was never called
@@ -1547,8 +1498,7 @@ mod tests {
             .negative_cache
             .as_ref()
             .expect("negative cache should be initialized")
-            .read()
-            .expect("negative cache lock should not be poisoned");
+            .borrow();
         assert!(neg.contains(&(server.ip, name.clone())));
         assert_debug_snapshot!(neg, @r#"
         {
@@ -1559,10 +1509,7 @@ mod tests {
         }
         "#);
         drop(neg);
-        let results = resolver
-            .results
-            .read()
-            .expect("results lock should not be poisoned");
+        let results = resolver.results.borrow();
         assert!(results.is_empty());
         drop(results);
         assert_snapshot!(get_output(resolver), @r" |\___ ns1.example.com. (192.0.2.1) Client query failed for A example.com. -> unknown error");
@@ -1600,10 +1547,7 @@ mod tests {
                 .ip,
             IpAddr::from([1, 2, 3, 4])
         );
-        let results = resolver
-            .results
-            .read()
-            .expect("results lock should not be poisoned");
+        let results = resolver.results.borrow();
         assert!(results.is_empty());
         drop(results);
         assert_snapshot!(get_output(resolver), @"");
@@ -1651,10 +1595,7 @@ mod tests {
             IpAddr::from([5, 6, 7, 8])
         );
 
-        let results = resolver
-            .results
-            .read()
-            .expect("results lock should not be poisoned");
+        let results = resolver.results.borrow();
         assert!(results.is_empty());
         drop(results);
         assert_snapshot!(get_output(resolver), @"");
@@ -1697,23 +1638,16 @@ mod tests {
             300,
             RData::A(rdata::A(Ipv4Addr::new(93, 184, 216, 34))),
         );
-        resolver
-            .results
-            .write()
-            .expect("results lock should not be poisoned")
-            .insert(server, FullResult {
-                records: std::collections::BTreeSet::from([record]),
-                response_code: ResponseCode::NoError,
-            });
+        resolver.results.borrow_mut().insert(server, FullResult {
+            records: std::collections::BTreeSet::from([record]),
+            response_code: ResponseCode::NoError,
+        });
 
         resolver
             .show_overview()
             .expect("show_overview with a record should succeed");
 
-        let results = resolver
-            .results
-            .read()
-            .expect("results lock should not be poisoned");
+        let results = resolver.results.borrow();
         assert_debug_snapshot!(results, @r#"
         {
             OptName {
@@ -1753,23 +1687,16 @@ mod tests {
             name: Some("ns1.example.com.".to_owned()),
             zone: None,
         };
-        resolver
-            .results
-            .write()
-            .expect("results lock should not be poisoned")
-            .insert(server, FullResult {
-                records: std::collections::BTreeSet::new(),
-                response_code: ResponseCode::NXDomain,
-            });
+        resolver.results.borrow_mut().insert(server, FullResult {
+            records: std::collections::BTreeSet::new(),
+            response_code: ResponseCode::NXDomain,
+        });
 
         resolver
             .show_overview()
             .expect("show_overview with an error response code should succeed");
 
-        let results = resolver
-            .results
-            .read()
-            .expect("results lock should not be poisoned");
+        let results = resolver.results.borrow();
         assert_debug_snapshot!(results, @r#"
         {
             OptName {
