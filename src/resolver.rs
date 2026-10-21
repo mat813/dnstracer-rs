@@ -113,7 +113,7 @@ pub trait NameResolver: Send + Sync {
 }
 
 /// Simplified DNS query result containing only the fields we use
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct QueryResult {
     /// Whether the response is authoritative
     pub authoritative: bool,
@@ -125,19 +125,6 @@ pub struct QueryResult {
     pub additionals: Vec<Record>,
     /// Response code
     pub response_code: ResponseCode,
-}
-
-impl Default for QueryResult {
-    #[cfg_attr(feature = "tracing", tracing::instrument(level = "trace", skip()))]
-    fn default() -> Self {
-        Self {
-            authoritative: false,
-            answers: vec![],
-            name_servers: vec![],
-            additionals: vec![],
-            response_code: ResponseCode::NoError,
-        }
-    }
 }
 
 impl From<DnsResponse> for QueryResult {
@@ -1257,7 +1244,7 @@ mod tests {
         assert!(result.is_err());
         assert_debug_snapshot!(result, @"
         Err(
-            No IP address found for hostname: ns1.example.com, at src/resolver.rs:506:13,
+            No IP address found for hostname: ns1.example.com, at src/resolver.rs:493:13,
         )
         ");
         assert_snapshot!(get_output(resolver), @"");
