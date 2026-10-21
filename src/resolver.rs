@@ -763,13 +763,10 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
         #[cfg(feature = "tracing")]
         tracing::debug!(?key);
 
-        self.positive_cache
-            .as_ref()
-            .is_some_and(|o| o.borrow().contains(key))
-            || self
-                .negative_cache
-                .as_ref()
-                .is_some_and(|o| o.borrow().contains(key))
+        [&self.positive_cache, &self.negative_cache]
+            .into_iter()
+            .flatten()
+            .any(|cache| cache.borrow().contains(key))
     }
 
     #[cfg_attr(
