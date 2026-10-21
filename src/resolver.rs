@@ -259,6 +259,28 @@ impl DefaultDnsQuerier {
         }
     }
 
+    /// Apply the EDNS0 setting and send the query over an already-built client
+    async fn send(
+        &self,
+        mut client: Client<TokioRuntimeProvider>,
+        name: &Name,
+        query_type: RecordType,
+    ) -> Result<DnsResponse, ResolverError> {
+        if self.no_edns0 {
+            client.disable_edns();
+        } else {
+            client.enable_edns();
+        }
+
+        client
+            .query(name.clone(), DNSClass::IN, query_type)
+            .await
+            .or_raise(|| ResolverError::ClientQuery {
+                name: name.clone(),
+                query_type,
+            })
+    }
+
     #[cfg_attr(
         feature = "tracing",
         tracing::instrument(
@@ -282,23 +304,10 @@ impl DefaultDnsQuerier {
             .with_timeout(Some(self.timeout))
             .with_bind_addr(self.source_address.map(|ip| SocketAddr::new(ip, 0)))
             .build();
-        let (mut client, bg) = Client::<TokioRuntimeProvider>::from_sender(stream);
-
-        if self.no_edns0 {
-            client.disable_edns();
-        } else {
-            client.enable_edns();
-        }
-
+        let (client, bg) = Client::<TokioRuntimeProvider>::from_sender(stream);
         tokio::spawn(bg);
 
-        client
-            .query(name.clone(), DNSClass::IN, query_type)
-            .await
-            .or_raise(|| ResolverError::ClientQuery {
-                name: name.clone(),
-                query_type,
-            })
+        self.send(client, name, query_type).await
     }
 
     #[cfg_attr(
@@ -327,28 +336,15 @@ impl DefaultDnsQuerier {
             TokioRuntimeProvider::new(),
         );
 
-        let (mut client, bg) = Client::<TokioRuntimeProvider>::new(
+        let (client, bg) = Client::<TokioRuntimeProvider>::new(
             future.await.or_raise(|| ResolverError::ClientNew {
                 name: server.clone(),
             })?,
             sender,
         );
-
-        if self.no_edns0 {
-            client.disable_edns();
-        } else {
-            client.enable_edns();
-        }
-
         tokio::spawn(bg);
 
-        client
-            .query(name.clone(), DNSClass::IN, query_type)
-            .await
-            .or_raise(|| ResolverError::ClientQuery {
-                name: name.clone(),
-                query_type,
-            })
+        self.send(client, name, query_type).await
     }
 }
 
@@ -1261,7 +1257,7 @@ mod tests {
         assert!(result.is_err());
         assert_debug_snapshot!(result, @"
         Err(
-            No IP address found for hostname: ns1.example.com, at src/resolver.rs:510:13,
+            No IP address found for hostname: ns1.example.com, at src/resolver.rs:506:13,
         )
         ");
         assert_snapshot!(get_output(resolver), @"");
