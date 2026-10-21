@@ -23,7 +23,6 @@ use hickory_resolver::{
     TokioResolver,
     config::{LookupIpStrategy, ResolverOpts},
 };
-use itertools::Itertools as _;
 
 use crate::{args::Args, opt_name::OptName};
 
@@ -737,12 +736,10 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
                 .map_err(|_| ResolverError::Write)?;
             }
 
-            for record in values
-                .records
-                .iter()
-                // Don't use Record's Ord impl, it sorts things in a strange way
-                .sorted_by_cached_key(|r| format!("{r}"))
-            {
+            // Don't use Record's Ord impl, it sorts things in a strange way
+            let mut records: Vec<_> = values.records.iter().collect();
+            records.sort_by_cached_key(|r| format!("{r}"));
+            for record in records {
                 writeln!(
                     output,
                     "{} ({}) \t{record}",
@@ -1244,7 +1241,7 @@ mod tests {
         assert!(result.is_err());
         assert_debug_snapshot!(result, @"
         Err(
-            No IP address found for hostname: ns1.example.com, at src/resolver.rs:493:13,
+            No IP address found for hostname: ns1.example.com, at src/resolver.rs:492:13,
         )
         ");
         assert_snapshot!(get_output(resolver), @"");
