@@ -25,103 +25,103 @@ use hickory_resolver::{
 
 use crate::{args::Args, opt_name::OptName};
 
-/// A container for all resolver errors
+/// The errors of the resolver
 #[derive(Debug, Display)]
 pub enum ResolverError {
-    /// NS lookup failed
+    /// The NS lookup failed
     #[display("NS lookup failed for {name}")]
     NsLookup {
-        /// for this name
+        /// The name that the lookup used
         name: String,
     },
-    /// IP reverse lookup failure
+    /// The IP lookup failed
     #[display("IP lookup failed for {name}")]
     IpLookup {
-        /// The name with no ip
+        /// The name that has no IP address
         name: String,
     },
-    /// Client query failure
+    /// The client query failed
     #[display("Client query failed for {query_type} {name}")]
     ClientQuery {
-        /// The name
+        /// The name that the query used
         name: Name,
-        /// The type
+        /// The record type that the query used
         query_type: RecordType,
     },
-    /// client creation failure
+    /// The client creation failed
     #[display("Client creation failed for {name}")]
     ClientNew {
-        /// The name
+        /// The server that the client connects to
         name: OptName,
     },
-    /// building tokio resolver
-    #[display("Failed to build tokio resolver")]
+    /// The Tokio resolver cannot be built
+    #[display("Cannot build the Tokio resolver")]
     BuildTokioResolver,
-    /// No ip for hostname
-    #[display("No IP address found for hostname: {name}")]
+    /// The hostname has no IP address
+    #[display("No IP address found for hostname {name}")]
     NoIpForHostname {
-        /// The name
+        /// The hostname
         name: String,
     },
-    /// `do_recurse` call
-    #[display("do recurse failed")]
+    /// The call to `do_recurse` failed
+    #[display("Recursive query failed")]
     DoRecurse,
-    /// Maximum depth
-    #[display("Maximum recursion depth ({depth}) exceeded")]
+    /// The recursion went deeper than the maximum depth
+    #[display("Recursion is deeper than the maximum depth {depth}")]
     MaxDepthExceeded {
-        /// The depth
+        /// The maximum depth
         depth: usize,
     },
-    /// Write error
-    #[display("Write error")]
+    /// The output cannot be written
+    #[display("Cannot write the output")]
     Write,
 }
 
 impl std::error::Error for ResolverError {}
 
-/// Maximum DNS delegation depth to prevent infinite recursion
+/// The maximum DNS delegation depth. This limit stops infinite recursion.
 const MAX_RECURSION_DEPTH: usize = 32;
 
-/// Cache key
+/// The key of a cache entry
 type CacheKey = (IpAddr, Name);
 
-/// Lookup cache
+/// A cache of lookups
 type Cache = HashSet<CacheKey>;
 
-/// Results from one nameserver
+/// The results from one name server
 #[derive(Clone, Debug, Default)]
 struct FullResult {
-    /// List of records from a nameserver
+    /// The records from the name server
     records: BTreeSet<Record>,
-    /// Response code from the answer
+    /// The response code of the answer
     response_code: ResponseCode,
 }
 
-/// Trait for resolving DNS names to IPs — used for bootstrapping and NS name resolution
+/// Resolve DNS names to IP addresses. Used to find the first servers and to resolve NS names.
 #[cfg_attr(
     test,
     allow(clippy::unused_async_trait_impl, reason = "mockall"),
     mockall::automock
 )]
 pub trait NameResolver: Send + Sync {
-    /// Look up the NS records for a zone
+    /// Find the NS records of a zone
     async fn ns_lookup(&self, name: &str) -> Result<Vec<Name>, ResolverError>;
-    /// Look up the IP addresses for a hostname
+    /// Find the IP addresses of a hostname
     async fn lookup_ip(&self, name: &str) -> Result<Vec<IpAddr>, ResolverError>;
 }
 
-/// Simplified DNS query result containing only the fields we use
+/// A DNS query result. It has only the fields that this program uses.
 #[derive(Clone, Debug, Default)]
 pub struct QueryResult {
-    /// Whether the response is authoritative
+    /// True if the response is authoritative
     pub authoritative: bool,
-    /// Answer section records
+    /// The records of the answer section
     pub answers: Vec<Record>,
-    /// Authority section records
+    /// The records of the authority section
     pub name_servers: Vec<Record>,
-    /// Additional section records
+    /// The records of the additional section
     pub additionals: Vec<Record>,
-    /// Response code
+    /// The response code
     pub response_code: ResponseCode,
 }
 
@@ -144,14 +144,14 @@ impl From<DnsResponse> for QueryResult {
     }
 }
 
-/// Trait for making direct DNS queries to a nameserver
+/// Send DNS queries directly to a name server
 #[cfg_attr(
     test,
     allow(clippy::unused_async_trait_impl, reason = "mockall"),
     mockall::automock
 )]
 pub trait DnsQuerier: Send + Sync {
-    /// Send a DNS query to the given server
+    /// Send a DNS query to the server
     async fn query(
         &self,
         server: &OptName,
@@ -160,7 +160,7 @@ pub trait DnsQuerier: Send + Sync {
     ) -> Result<QueryResult, ResolverError>;
 }
 
-/// Real DNS name resolver wrapping hickory's `TokioResolver`
+/// A DNS name resolver that wraps the `TokioResolver` of hickory
 pub struct TokioNameResolver(TokioResolver);
 
 impl NameResolver for TokioNameResolver {
@@ -180,9 +180,8 @@ impl NameResolver for TokioNameResolver {
                 name: name.to_owned(),
             })?;
 
-        // If the nameserver used is a caching resolver, its answer for "what
-        // are the NS for ." may not have an authorities section and only an
-        // answer one, but we can use its content.
+        // A caching resolver may answer "what are the NS for ." with an
+        // answer section and no authority section. In that case, use the answer section.
         if name == "." && lookup.authorities().is_empty() && !lookup.answers().is_empty() {
             Ok(lookup
                 .answers()
@@ -221,20 +220,20 @@ impl NameResolver for TokioNameResolver {
     }
 }
 
-/// Configuration needed for direct DNS queries, extracted from Args at construction time
+/// The configuration of direct DNS queries. `from_args` copies it from `Args`.
 pub struct DefaultDnsQuerier {
     /// Use TCP instead of UDP
     tcp: bool,
-    /// Query timeout
+    /// The query timeout
     timeout: std::time::Duration,
-    /// Optional source address to bind to
+    /// The source address to bind to, if any
     source_address: Option<IpAddr>,
-    /// Whether EDNS0 is disabled
+    /// True if EDNS0 is disabled
     no_edns0: bool,
 }
 
 impl DefaultDnsQuerier {
-    /// Create from CLI arguments
+    /// Create the configuration from the command-line arguments
     const fn from_args(args: &Args) -> Self {
         Self {
             tcp: args.tcp,
@@ -244,7 +243,7 @@ impl DefaultDnsQuerier {
         }
     }
 
-    /// Apply the EDNS0 setting and send the query over an already-built client
+    /// Apply the EDNS0 setting and send the query on a client that exists
     async fn send(
         &self,
         mut client: Client<TokioRuntimeProvider>,
@@ -275,7 +274,7 @@ impl DefaultDnsQuerier {
             err(level = "debug")
         )
     )]
-    /// Make a UDP DNS query
+    /// Send a DNS query over UDP
     async fn udp_query(
         &self,
         server: &OptName,
@@ -304,7 +303,7 @@ impl DefaultDnsQuerier {
             err(level = "debug")
         )
     )]
-    /// Make a TCP DNS query
+    /// Send a DNS query over TCP
     async fn tcp_query(
         &self,
         server: &OptName,
@@ -361,24 +360,24 @@ impl DnsQuerier for DefaultDnsQuerier {
     }
 }
 
-/// Recursive resolver
+/// A resolver that follows the DNS delegations from server to server
 #[derive(Debug)]
 pub struct RecursiveResolver<'a, R = TokioNameResolver, Q = DefaultDnsQuerier, W = io::Stdout> {
-    /// Store the results, in case we need to display them
+    /// The results. The overview shows them.
     results: RefCell<HashMap<OptName, FullResult>>,
-    /// Resolver for bootstrapping and NS name resolution
+    /// The resolver that finds the first servers and resolves NS names
     #[debug(skip)]
     name_resolver: R,
-    /// Client for making direct DNS queries
+    /// The client that sends the DNS queries
     #[debug(skip)]
     querier: Q,
-    /// Copy of all the arguments for easier processing
+    /// The command-line arguments
     arguments: &'a Args,
-    /// Positive answer cache
+    /// The cache of positive answers
     positive_cache: Option<RefCell<Cache>>,
-    /// Negative answer cache
+    /// The cache of negative answers
     negative_cache: Option<RefCell<Cache>>,
-    /// Output writer
+    /// The writer for the output
     #[debug(skip)]
     output: RefCell<W>,
 }
@@ -388,7 +387,7 @@ impl<'a> RecursiveResolver<'a> {
         feature = "tracing",
         tracing::instrument(level = "trace", skip(args), ret, err(level = "debug"))
     )]
-    /// Create a new recursive resolver with real DNS implementations
+    /// Create a resolver that uses real DNS clients
     pub fn new(args: &'a Args) -> Result<Self, ResolverError> {
         #[cfg(feature = "tracing")]
         tracing::debug!(?args);
@@ -418,18 +417,18 @@ impl<'a> RecursiveResolver<'a> {
 }
 
 impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q, W> {
-    /// Is the given IP allowed given the user's IPv4/IPv6 preferences?
+    /// Check if the IPv4 and IPv6 options of the user allow the IP address
     const fn is_ip_allowed(&self, ip: IpAddr) -> bool {
-        ip.is_ipv4() && self.arguments.ipv4 // if we asked for ipv4 only
-            || ip.is_ipv6() && self.arguments.ipv6 // if we asked for ipv6 only
-            || !(self.arguments.ipv4 || self.arguments.ipv6) // if we did not ask anything
+        ip.is_ipv4() && self.arguments.ipv4 // the user asked for IPv4 only
+            || ip.is_ipv6() && self.arguments.ipv6 // the user asked for IPv6 only
+            || !(self.arguments.ipv4 || self.arguments.ipv6) // the user did not select an IP version
     }
 
     #[cfg_attr(
         feature = "tracing",
         tracing::instrument(level = "trace", skip(self, host, zone), ret, err(level = "debug"))
     )]
-    /// Resolve a hostname to the allowed name servers it points to
+    /// Resolve a hostname to the name servers that the IP options allow
     #[expect(clippy::future_not_send, reason = "single-threaded, RefCell state")]
     async fn lookup_servers(
         &self,
@@ -460,12 +459,12 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
         feature = "tracing",
         tracing::instrument(level = "trace", skip(self), ret, err(level = "debug"))
     )]
-    /// Figure out the server we got as an argument
+    /// Find the servers that the `server` argument selects
     #[expect(clippy::future_not_send, reason = "single-threaded, RefCell state")]
     pub async fn init(&self) -> Result<Vec<OptName>, ResolverError> {
         let mut results: Vec<OptName> = vec![];
 
-        // If it is an IP, use it directly
+        // For an IP address, use that address
         if let Ok(ip) = self.arguments.server.parse::<IpAddr>() {
             results.push(OptName {
                 ip,
@@ -473,7 +472,7 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
                 zone: None,
             });
         } else if self.arguments.server == "." {
-            // It's a dot, we want to start at the root zone and iterate over all its name servers ips
+            // For a dot, start at the root zone and use the IP addresses of all its name servers
             let root_ns = self.name_resolver.ns_lookup(".").await?;
 
             for ns in root_ns {
@@ -483,7 +482,7 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
                 );
             }
         } else {
-            // It's not a dot, let's try and resolve it
+            // For a hostname, resolve it
             results.extend(self.lookup_servers(&self.arguments.server, None).await?);
         }
 
@@ -500,7 +499,7 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
         feature = "tracing",
         tracing::instrument(level = "trace", skip(self, name, server, depth, last))
     )]
-    /// Recurse through the internet looking for answers
+    /// Follow the delegations from server to server to find the answers
     #[expect(clippy::future_not_send, reason = "single-threaded, RefCell state")]
     pub async fn do_recurse(
         &self,
@@ -524,7 +523,7 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
         }
 
         let query_type = if depth == 0 {
-            // First request is always a NS request, in case the given server is a recursive server.
+            // The first request is always an NS request, because the first server can be a recursive server.
             RecordType::NS
         } else {
             self.arguments.query_type
@@ -535,14 +534,14 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
                 let mut next_servers: Option<BTreeSet<OptName>> = None;
 
                 if response.authoritative {
-                    // If the response is authoritative, we are probably at the end of the journey.
+                    // An authoritative response probably ends the delegation chain.
                     let result = &response.answers;
                     self.print(depth, server, "found authoritative answer", &last);
                     self.cache_set(true, (server.ip, name.clone()));
                     self.add_result(server.clone(), response.response_code, result);
 
-                    // But if we get only CNAMEs and we asked for something
-                    // else, we need to try and continue the recursion.
+                    // If the answers are only CNAMEs and the query type is not CNAME,
+                    // continue the recursion.
                     if self.arguments.query_type != RecordType::CNAME
                         && result.iter().all(|r| r.record_type() == RecordType::CNAME)
                         && !response.name_servers.is_empty()
@@ -551,7 +550,7 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
                         for cname in response
                             .answers
                             .iter()
-                            // We already checked every entry was a CNAME
+                            // The check above showed that every record is a CNAME
                             .filter_map(|r| match r.data {
                                 RData::CNAME(ref cname) => Some(cname),
                                 _ => None,
@@ -577,10 +576,10 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
                     self.print(depth, server, "", &last);
 
                     let (records, additionals) = if depth == 0 && !response.answers.is_empty() {
-                        // If we're at the start and we get answers, it means it was a recursive name server, so use those answers.
+                        // At the start, answers mean that the server is a recursive name server. Use the answers.
                         (&response.answers, &response.additionals)
                     } else {
-                        // Otherwise, we get an authority section.
+                        // Otherwise, use the authority section.
                         (&response.name_servers, &response.additionals)
                     };
 
@@ -633,7 +632,7 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
             ret
         )
     )]
-    /// Figure out the next servers in the recursion
+    /// Find the servers for the next step of the recursion
     #[expect(clippy::future_not_send, reason = "single-threaded, RefCell state")]
     async fn get_next_servers(
         &self,
@@ -650,12 +649,12 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
         let mut next_servers: BTreeSet<OptName> = BTreeSet::new();
 
         for record in records {
-            // Here, we know it's a NS, so unwrap all that.
+            // Only NS records give servers. Skip the other records.
             let RData::NS(ref ns) = record.data else {
                 continue;
             };
 
-            // Some name servers will respond with an additional section, use it
+            // Some name servers send an additional section. Use it.
             let before_len = next_servers.len();
             next_servers.extend(
                 additionals
@@ -674,9 +673,8 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
                     }),
             );
 
-            // If we don't have an additional section or we had stuff
-            // but not this name server, we need to resolve it
-            // ourselves.
+            // If the additional section has no address for this name server,
+            // resolve the name server.
             if next_servers.len() == before_len {
                 let ns_s = ns.to_string();
                 if let Ok(servers) = self
@@ -689,7 +687,7 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
                 if next_servers.len() > before_len {
                     self.cache_set(true, (server.ip, name.clone()));
                 } else {
-                    // If we cannot find an IP address, we create a fake server to give an error
+                    // If there is no IP address, print the error for a placeholder server
                     self.print(
                         depth,
                         &OptName {
@@ -713,7 +711,7 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
         feature = "tracing",
         tracing::instrument(level = "trace", skip(self), err(level = "debug"))
     )]
-    /// Print the overview
+    /// Print the overview of the answers
     pub fn show_overview(&self) -> Result<(), ResolverError> {
         let results = self.results.borrow();
         let mut output = self.output.borrow_mut();
@@ -729,7 +727,7 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
                 .map_err(|_| ResolverError::Write)?;
             }
 
-            // Don't use Record's Ord impl, it sorts things in a strange way
+            // Do not use the `Ord` implementation of `Record`. It sorts the records in an unexpected order.
             let mut records: Vec<_> = values.records.iter().collect();
             records.sort_by_cached_key(|r| format!("{r}"));
             for record in records {
@@ -751,7 +749,7 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
         feature = "tracing",
         tracing::instrument(level = "trace", skip(self, key), ret)
     )]
-    /// Did we already ask for this, whether it turned out ok or not ?
+    /// Check if the program already sent a query for this key, with or without success
     fn cache_get(&self, key: &CacheKey) -> bool {
         #[cfg(feature = "tracing")]
         tracing::debug!(?key);
@@ -766,7 +764,7 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
         feature = "tracing",
         tracing::instrument(level = "trace", skip(self, positive, key))
     )]
-    /// Set one of the caches
+    /// Add the key to the positive or the negative cache
     fn cache_set(&self, positive: bool, key: CacheKey) {
         #[cfg(feature = "tracing")]
         tracing::debug!(?positive, ?key);
@@ -785,7 +783,7 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
         feature = "tracing",
         tracing::instrument(level = "trace", skip(self, server, response_code, results))
     )]
-    /// Add a result to the pile
+    /// Add the records of a server to the results
     fn add_result(&self, server: OptName, response_code: ResponseCode, results: &[Record]) {
         #[cfg(feature = "tracing")]
         tracing::debug!(?server, ?response_code, ?results);
@@ -804,7 +802,7 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
         feature = "tracing",
         tracing::instrument(level = "trace", skip(self, depth, server, rest, last))
     )]
-    /// Try to give a nice out, as the original did
+    /// Print one line of the delegation tree, in the format of the original tool
     fn print(&self, depth: usize, server: &OptName, rest: impl fmt::Display, last: &[bool]) {
         #[cfg(feature = "tracing")]
         tracing::debug!(?depth, ?server, %rest, ?last);
@@ -871,7 +869,7 @@ mod tests {
         feature = "tracing",
         tracing::instrument(level = "trace", skip(args, name_resolver, querier))
     )]
-    /// Build a `RecursiveResolver` with mock implementations for testing (output discarded)
+    /// Build a `RecursiveResolver` with mock implementations. It discards the output.
     fn mock_resolver(
         args: &Args,
         name_resolver: MockNameResolver,
@@ -892,7 +890,7 @@ mod tests {
         feature = "tracing",
         tracing::instrument(level = "trace", skip(ns_name, ns_ip, zone))
     )]
-    /// Build a `QueryResult` representing a non-authoritative NS delegation with glue records
+    /// Build a `QueryResult` for a non-authoritative NS delegation with glue records
     fn delegation_response(ns_name: &str, ns_ip: Ipv4Addr, zone: &str) -> QueryResult {
         let ns_name_parsed = Name::from_str(ns_name).expect("ns_name is a valid DNS name literal");
         let zone_name = Name::from_str(zone).expect("zone is a valid DNS name literal");
@@ -917,7 +915,7 @@ mod tests {
         feature = "tracing",
         tracing::instrument(level = "trace", skip(domain, ip))
     )]
-    /// Build a `QueryResult` representing an authoritative answer with one A record
+    /// Build a `QueryResult` for an authoritative answer with one A record
     fn authoritative_a_response(domain: &str, ip: Ipv4Addr) -> QueryResult {
         let record = Record::from_rdata(
             Name::from_str(domain).expect("domain is a valid DNS name literal"),
@@ -943,7 +941,7 @@ mod tests {
         String::from_utf8(resolver.output.into_inner()).expect("output should be valid UTF-8")
     }
 
-    // ── Existing tests (kept as-is) ───────────────────────────────────────────
+    // ── Tests of the creation of the resolver ─────────────────────────────────
 
     #[test]
     fn recursive_resolver_new() {
@@ -989,7 +987,7 @@ mod tests {
         assert!(servers[0].name.is_none());
     }
 
-    // ── New mock-based tests ──────────────────────────────────────────────────
+    // ── Tests with mock implementations ───────────────────────────────────────
 
     #[tokio::test]
     async fn init_with_dot_uses_ns_then_lookup_ip() {
@@ -1089,7 +1087,7 @@ mod tests {
                     .expect("b.root-servers.net. is a valid DNS name"),
             ])
         });
-        // Return both an IPv4 and an IPv6 address
+        // Return an IPv4 address and an IPv6 address
         nr.expect_lookup_ip()
             .with(predicate::eq("a.root-servers.net."))
             .once()
@@ -1112,7 +1110,7 @@ mod tests {
         let resolver = mock_resolver(&args, nr, MockDnsQuerier::new());
         let servers = resolver.init().await.expect("init with dot should succeed");
 
-        // Only the IPv4 address should be kept
+        // Only the IPv4 address remains
         assert_eq!(servers.len(), 2);
         assert!(servers.iter().all(|server| server.ip.is_ipv4()));
         assert_debug_snapshot!(servers, @r#"
@@ -1217,7 +1215,7 @@ mod tests {
         };
 
         let mut nr = MockNameResolver::new();
-        // Return only an IPv6 address but ipv4=true means it gets filtered out
+        // Return only an IPv6 address. The option ipv4=true filters it out.
         nr.expect_lookup_ip().once().returning(|_| {
             let ipv6: IpAddr = "2001:db8::1"
                 .parse()
@@ -1231,7 +1229,7 @@ mod tests {
         assert!(result.is_err());
         assert_debug_snapshot!(result, @"
         Err(
-            No IP address found for hostname: ns1.example.com, at src/resolver.rs:491:13,
+            No IP address found for hostname ns1.example.com, at src/resolver.rs:490:13,
         )
         ");
         assert_snapshot!(get_output(resolver), @"");
@@ -1315,7 +1313,7 @@ mod tests {
             .returning(|_, _, _| Ok(QueryResult::default()));
 
         let resolver = mock_resolver(&args, MockNameResolver::new(), q);
-        // depth = 0 forces NS query type regardless of args.query_type
+        // At depth 0 the query type is NS, for any value of args.query_type
         resolver
             .do_recurse(&name, &server, 0, vec![])
             .await
@@ -1337,7 +1335,7 @@ mod tests {
         };
 
         let mut q = MockDnsQuerier::new();
-        // First call: delegation response
+        // First call: a delegation response
         q.expect_query()
             .withf(|server, _, _| server.ip == IpAddr::from([192, 0, 2, 1]))
             .once()
@@ -1348,7 +1346,7 @@ mod tests {
                     "example.com.",
                 ))
             });
-        // Second call (recursion): authoritative answer
+        // Second call (recursion): an authoritative answer
         q.expect_query()
             .withf(|server, _, _| server.ip == IpAddr::from([192, 0, 2, 2]))
             .once()
@@ -1429,7 +1427,7 @@ mod tests {
         let results = resolver.results.borrow();
         assert!(results.is_empty());
         drop(results);
-        // The mock verifies query was never called
+        // The mock checks that the code sends no query
         assert_snapshot!(get_output(resolver), @r" |\___ ns1.example.com. (192.0.2.1) (cached)");
     }
 
@@ -1495,7 +1493,7 @@ mod tests {
             zone: None,
         };
 
-        // No lookup_ip call expected — glue records in additionals are sufficient
+        // The test expects no lookup_ip call. The glue records in the additional section are sufficient.
         let nr = MockNameResolver::new();
 
         let ns_name =

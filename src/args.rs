@@ -9,22 +9,22 @@ use derive_more::Display;
 use exn::{Result, bail};
 use hickory_proto::{rr::RecordType, serialize::binary::DecodeError};
 
-// Original arguments
+// Arguments of the original tool
 // -c: disable local caching, default enabled
 // -C: enable negative caching, default disabled
 // -e: disable EDNS0, default enabled
-// TODO: -E <size>: set EDNS0 size, default 1500
-// -o: enable overview of received answers, default disabled
-// -q <querytype>: query-type to use for the DNS requests, default A
-// -r <retries>: amount of retries for DNS requests, default 3
-// -s <server>: use this server for the initial request, default localhost
-//             If . is specified, A.ROOT-SERVERS.NET will be used.
-// -t <maximum timeout>: Limit time to wait per try
+// TODO: -E <size>: set the EDNS0 size, default 1500
+// -o: enable the overview of received answers, default disabled
+// -q <querytype>: set the query type of the DNS requests, default A
+// -r <retries>: set the number of retries for DNS requests, default 3
+// -s <server>: send the first request to this server, default localhost
+//             If the value is ".", use A.ROOT-SERVERS.NET.
+// -t <maximum timeout>: set the time limit for each try
 // TODO: -v: verbose
 // -S <ip address>: use this source address.
-// -4: don't query IPv6 servers
+// -4: do not query IPv6 servers
 
-/// Our command line arguments
+/// The command-line arguments
 #[expect(clippy::struct_excessive_bools, reason = "Those are flags, not states")]
 #[derive(Clone, Debug, Eq, Parser, PartialEq)]
 #[command(version, about)]
@@ -32,71 +32,71 @@ pub struct Args {
     /// The domain to query
     pub domain: String,
 
-    /// disable positive response caching, default enabled
+    /// Disable the cache of positive responses (default: enabled)
     #[arg(short = 'c', long)]
     pub no_positive_cache: bool,
 
-    /// enable negative response caching, default disabled
+    /// Enable the cache of negative responses (default: disabled)
     #[arg(short = 'C', long)]
     pub negative_cache: bool,
 
-    /// disable EDNS0, default enabled
+    /// Disable EDNS0 (default: enabled)
     #[arg(short = 'e', long)]
     pub no_edns0: bool,
 
-    /// enable overview of received answers, default disabled
+    /// Show an overview of the received answers (default: disabled)
     #[arg(short = 'o', long)]
     pub overview: bool,
 
-    /// The type of record (A, AAAA, NS ...)
+    /// The record type to query (A, AAAA, NS, ...)
     #[arg(short = 'q', long, default_value = "A", value_parser = parse_record_type)]
     pub query_type: RecordType,
 
-    /// amount of retries for DNS requests, default 3
+    /// The number of retries for each DNS request
     #[arg(short = 'r', long, default_value = "3")]
     pub retries: usize,
 
-    /// Start the query at the given DNS server
-    /// If an ip is given, it will be used
-    /// If a hostname is given, all its ip will be used
-    /// If "." is specified, all root servers will be used
+    /// Start the query at the given DNS server.
+    /// For an IP address, use that address.
+    /// For a hostname, use all the IP addresses of that hostname.
+    /// For ".", use all the root servers.
     #[arg(short, long, default_value = "a.root-servers.net")]
     pub server: String,
 
-    /// Limit time to wait per try
+    /// The time limit, in seconds, for each try
     #[arg(short = 't', long, default_value = "5", value_parser = parse_duration)]
     pub timeout: Duration,
 
-    /// use this source address.
+    /// The source address of the DNS queries
     #[arg(short = 'S', long)]
     pub source_address: Option<IpAddr>,
 
-    /// Force using IPv6 for DNS queries (no IPv4)
+    /// Use only IPv6 for DNS queries
     #[arg(short = '6', long)]
     pub ipv6: bool,
 
-    /// Force using IPv4 for DNS queries (no IPv6)
+    /// Use only IPv4 for DNS queries
     #[arg(short = '4', long)]
     pub ipv4: bool,
 
-    /// Force using TCP for DNS queries
+    /// Use only TCP for DNS queries
     #[arg(short = 'T', long)]
     pub tcp: bool,
 }
 
-/// The argument parsing errors
+/// The errors of argument parsing
 #[derive(Debug, Display)]
 pub enum ArgsError {
     /// IPv6-only mode requested but source address is IPv4
-    #[display("Cannot use IPv6 only queries with an ipv4 source address ({ipv4})")]
+    #[display("Cannot use IPv6-only queries with the IPv4 source address {ipv4}")]
     Ipv6WithIpv4Source {
-        /// The offending ipv4
+        /// The IPv4 source address
         ipv4: Ipv4Addr,
     },
     /// IPv4-only mode requested but source address is IPv6
-    #[display("Cannot use IPv4 only queries with an ipv6 source address ({ipv6})")]
+    #[display("Cannot use IPv4-only queries with the IPv6 source address {ipv6}")]
     Ipv4WithIpv6Source {
-        /// The offending ipv6
+        /// The IPv6 source address
         ipv6: Ipv6Addr,
     },
 }
@@ -107,7 +107,7 @@ impl std::error::Error for ArgsError {}
     feature = "tracing",
     tracing::instrument(level = "trace", skip(s), ret, err(level = "debug"))
 )]
-/// Parsing record type
+/// Parse a record type
 fn parse_record_type(s: &str) -> std::result::Result<RecordType, DecodeError> {
     #[cfg(feature = "tracing")]
     tracing::debug!(?s);
@@ -119,7 +119,7 @@ impl Args {
         feature = "tracing",
         tracing::instrument(level = "trace", skip(self), err(level = "debug"))
     )]
-    /// Perform some validation on arguments
+    /// Check that the arguments are compatible
     pub fn validate(&mut self) -> Result<(), ArgsError> {
         #[cfg(feature = "tracing")]
         tracing::debug!(?self);
@@ -128,14 +128,14 @@ impl Args {
                 if self.ipv6 {
                     bail!(ArgsError::Ipv6WithIpv4Source { ipv4: ip });
                 }
-                // Also, force IPv4 queries everywhere, otherwise we'd get protocol errors
+                // Use IPv4 for all queries. IPv6 queries from an IPv4 source cause protocol errors.
                 self.ipv4 = true;
             },
             Some(IpAddr::V6(ip)) => {
                 if self.ipv4 {
                     bail!(ArgsError::Ipv4WithIpv6Source { ipv6: ip });
                 }
-                // Also, force IPv6 queries everywhere, otherwise we'd get protocol errors
+                // Use IPv6 for all queries. IPv4 queries from an IPv6 source cause protocol errors.
                 self.ipv6 = true;
             },
             None => (),
@@ -149,7 +149,7 @@ impl Args {
     feature = "tracing",
     tracing::instrument(level = "trace", skip(src), ret, err(level = "debug"))
 )]
-/// Duration parser for args
+/// Parse a number of seconds into a `Duration`
 fn parse_duration(src: &str) -> std::result::Result<Duration, ParseIntError> {
     #[cfg(feature = "tracing")]
     tracing::debug!(?src);

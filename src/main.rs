@@ -9,33 +9,33 @@ use hickory_proto::rr::Name;
 
 use crate::{args::Args, opt_name::OptName, resolver::RecursiveResolver};
 
-/// The arguments
+/// The command-line arguments
 mod args;
-/// A nameserver and the zone it is supposed to be authoritative for.
+/// A name server and the zone for which it should be authoritative
 mod opt_name;
-/// All the codes in there
+/// The recursive resolver and its DNS clients
 mod resolver;
 
-/// The main body error
+/// The errors of `main`
 #[derive(Debug, Display)]
 enum MainError {
-    /// argiments validation error
-    #[display("Arguments validation error")]
+    /// The arguments are not valid
+    #[display("Cannot validate the arguments")]
     ArgumentsValidation,
-    /// Resolver creation error
-    #[display("Resolver creation")]
+    /// The resolver cannot be created
+    #[display("Cannot create the resolver")]
     ResolverCreation,
-    /// Error getting first server(s)
-    #[display("Getting first servers")]
+    /// The first servers cannot be found
+    #[display("Cannot find the first servers")]
     GettingFirstServers,
-    /// Converting to a DNS name
-    #[display("Converting {name} to a DNS Name")]
+    /// The name is not a valid DNS name
+    #[display("Cannot convert {name} to a DNS name")]
     DnsNameConversion {
-        /// The invalid name
+        /// The name that is not valid
         name: String,
     },
-    /// Creating the overview
-    #[display("Creating overview")]
+    /// The overview cannot be created
+    #[display("Cannot create the overview")]
     CreatingOverview,
 }
 
@@ -71,7 +71,7 @@ async fn main() -> Result<(), MainError> {
             .init();
     }
 
-    // Parse command-line arguments into the Args struct
+    // Parse the command-line arguments into `Args`
     let mut arguments = Args::parse();
 
     #[cfg(feature = "tracing")]
