@@ -1,37 +1,37 @@
 
 # dnstracer
 
-`dnstracer` is a Rust-based implementation of `dnstracer`, a DNS tracing tool that follows the chain of DNS servers responsible for resolving a domain name. It helps trace the delegation path from the root DNS servers down to the authoritative servers for a specific domain.
+`dnstracer` is a Rust implementation of the DNS tracing tool `dnstracer`. It follows the chain of DNS servers that resolve a domain name. It shows the delegation path from the root DNS servers to the authoritative servers of a domain.
 
 ## Features
 
-- Traces DNS delegation paths for domain names.
-- Supports both IPv4 and IPv6 addresses.
-- Allows specifying custom DNS query types.
-- Handles recursive and authoritative DNS queries.
-- Provides detailed output of DNS servers and records.
+- Traces the DNS delegation path of a domain name.
+- Supports IPv4 and IPv6.
+- Supports the selection of the DNS query type.
+- Follows NS delegations and CNAME chains.
+- Shows the DNS servers and the records that they return.
 
 ## Installation
 
 ### Requirements
 
-- [Rust](https://www.rust-lang.org/tools/install) (version 1.XX or higher)
-- Cargo (Rust's package manager)
+- [Rust](https://www.rust-lang.org/tools/install) 1.93 or later
+- Cargo, the Rust package manager
 
-### Installing dnstracer
+### Install dnstracer
 
-Clone the repository and build the project using `cargo`:
+Install `dnstracer` with `cargo`:
 
 ```bash
 cargo install dnstracer
 ```
 
-### Running
+### Run
 
-Once built, you can run `dnstracer-rs` from the target directory:
+Run `dnstracer` with a domain name:
 
 ```bash
-dnstracer [options] <domain>
+dnstracer [OPTIONS] <domain>
 ```
 
 ### Example
@@ -40,7 +40,7 @@ dnstracer [options] <domain>
 dnstracer example.com
 ```
 
-This will trace the DNS delegation for the domain `example.com`, showing the path of DNS servers involved in the resolution.
+This command traces the DNS delegation of `example.com`. It shows the DNS servers on the path.
 
 ## Usage
 
@@ -51,29 +51,29 @@ dnstracer [OPTIONS] <domain>
 ### Options
 
 - `-c`, `--no-positive-cache`
-  - disable positive response caching, default enabled
+  - Disable the cache of positive responses (default: enabled)
 - `-C`, `--negative-cache`
-  - enable negative response caching, default disabled
-- `-e`, `--edns0`
-  - disable EDNS0, default enabled
+  - Enable the cache of negative responses (default: disabled)
+- `-e`, `--no-edns0`
+  - Disable EDNS0 (default: enabled)
 - `-o`, `--overview`
-  - enable overview of received answers, default disabled
+  - Show an overview of the received answers (default: disabled)
 - `-q`, `--query-type <QUERY_TYPE>`
-  - The type of record (A, AAAA, NS ...) [default: A]
+  - The record type to query (A, AAAA, NS, ...) [default: A]
 - `-r`, `--retries <RETRIES>`
-  - amount of retries for DNS requests, default 3 [default: 3]
+  - The number of retries for each DNS request [default: 3]
 - `-s`, `--server <SERVER>`
-  - Start the query at the given DNS server (IP or hostname) If `.` is specified, A.ROOT-SERVERS.NET will be used [default: .]
+  - Start the query at the given DNS server. For an IP address, use that address. For a hostname, use all the IP addresses of that hostname. For ".", use all the root servers [default: a.root-servers.net]
 - `-t`, `--timeout <TIMEOUT>`
-  - Limit time to wait per try [default: 5]
+  - The time limit, in seconds, for each try [default: 5]
 - `-S`, `--source-address <SOURCE_ADDRESS>`
-  - use this source address
+  - The source address of the DNS queries
 - `-6`, `--ipv6`
-  - Force using IPv6 for DNS queries (no IPv4)
+  - Use only IPv6 for DNS queries
 - `-4`, `--ipv4`
-  - Force using IPv4 for DNS queries (no IPv6)
+  - Use only IPv4 for DNS queries
 - `-T`, `--tcp`
-  - Force using TCP for DNS queries
+  - Use only TCP for DNS queries
 - `-h`, `--help`
   - Print help
 - `-V`, `--version`
@@ -81,11 +81,11 @@ dnstracer [OPTIONS] <domain>
 
 ## Output
 
-`dnstracer` provides detailed output for each DNS server in the delegation chain:
+`dnstracer` shows these items for each DNS server in the delegation chain:
 
-- The IP address and name of each DNS server.
-- Whether the response is authoritative or not.
-- The DNS records associated with the query.
+- The IP address and the name of the server.
+- If the response is authoritative.
+- The DNS records that the server returns.
 
 ### Sample Output
 
@@ -111,11 +111,11 @@ ns2.example.com. (2001:db8::1) 	www.example.com. 86400 IN A 203.0.113.1
 ## Contributing
 
 1. Fork the repository.
-2. Create a new branch (`git checkout -b feature/your-feature`).
-3. Commit your changes (`git commit -am 'Add some feature'`).
-4. Push to the branch (`git push origin feature/your-feature`).
+2. Create a branch: `git checkout -b feature/your-feature`.
+3. Commit your changes: `git commit -am 'Add some feature'`.
+4. Push the branch: `git push origin feature/your-feature`.
 5. Create a pull request.
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
+The MIT License applies to this project. See the [LICENSE](LICENSE) file.
