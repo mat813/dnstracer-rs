@@ -15,6 +15,7 @@ use hickory_proto::{rr::RecordType, serialize::binary::DecodeError};
 // -e: disable EDNS0, default enabled
 // TODO: -E <size>: set the EDNS0 size, default 1500
 // -o: enable the overview of received answers, default disabled
+// -m <max queries>: set the maximum number of DNS queries for the whole trace, default 200
 // -q <querytype>: set the query type of the DNS requests, default A
 // -r <retries>: set the number of retries for DNS requests, default 3
 // -s <server>: send the first request to this server, default localhost
@@ -55,6 +56,10 @@ pub struct Args {
     /// The number of retries for each DNS request
     #[arg(short = 'r', long, default_value = "3")]
     pub retries: usize,
+
+    /// The maximum number of DNS queries for the whole trace
+    #[arg(short = 'm', long, default_value = "200")]
+    pub max_queries: usize,
 
     /// Start the query at the given DNS server.
     /// For an IP address, use that address.
@@ -193,6 +198,7 @@ mod tests {
         ])]
     #[case::ipv4_flag(vec!["test", "example.com", "-4"])]
     #[case::server_override(vec!["test", "-s", "1.1.1.1", "example.com"])]
+    #[case::max_queries(vec!["test", "example.com", "-m", "10"])]
     #[case::query_type(vec!["test", "example.com", "-q", "AAAA"])]
     #[case::source_v4(vec!["test", "example.com", "-S", "1.1.1.1"])]
     #[case::source_v6(vec!["test", "example.com", "-S", "2001:db8::1"])]
@@ -237,6 +243,7 @@ mod tests {
     #[rstest]
     #[case::invalid_query_type(vec!["test", "example.com", "-q", "INVALID"])]
     #[case::invalid_retries(vec!["test", "example.com", "-r", "INVALID"])]
+    #[case::invalid_max_queries(vec!["test", "example.com", "-m", "INVALID"])]
     #[case::invalid_ipv4(vec!["test", "example.com", "-S", "5432.5432.234.12"])]
     #[case::invalid_ipv6(vec!["test", "example.com", "-S", "2a0x::1"])]
     #[trace]

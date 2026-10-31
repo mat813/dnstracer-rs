@@ -58,6 +58,8 @@ dnstracer [OPTIONS] <domain>
   - Disable EDNS0 (default: enabled)
 - `-o`, `--overview`
   - Show an overview of the received answers (default: disabled)
+- `-m`, `--max-queries <MAX_QUERIES>`
+  - The maximum number of DNS queries for the whole trace [default: 200]
 - `-q`, `--query-type <QUERY_TYPE>`
   - The record type to query (A, AAAA, NS, ...) [default: A]
 - `-r`, `--retries <RETRIES>`

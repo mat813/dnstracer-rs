@@ -10,6 +10,7 @@ Args {
     overview: false,
     query_type: AAAA,
     retries: 3,
+    max_queries: 200,
     server: "a.root-servers.net",
     timeout: 5s,
     source_address: None,

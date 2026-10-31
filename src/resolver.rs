@@ -1,5 +1,5 @@
 use std::{
-    cell::RefCell,
+    cell::{Cell, RefCell},
     collections::{BTreeSet, HashMap, HashSet},
     fmt,
     io::{self, Write},
@@ -71,6 +71,12 @@ pub enum ResolverError {
     MaxDepthExceeded {
         /// The maximum depth
         depth: usize,
+    },
+    /// The trace sent the maximum number of queries
+    #[display("The trace sent more than the maximum of {max} queries")]
+    MaxQueriesExceeded {
+        /// The maximum number of queries
+        max: usize,
     },
     /// The output cannot be written
     #[display("Cannot write the output")]
@@ -377,6 +383,8 @@ pub struct RecursiveResolver<'a, R = TokioNameResolver, Q = DefaultDnsQuerier, W
     positive_cache: Option<RefCell<Cache>>,
     /// The cache of negative answers
     negative_cache: Option<RefCell<Cache>>,
+    /// The number of queries that the trace sent
+    queries: Cell<usize>,
     /// The writer for the output
     #[debug(skip)]
     output: RefCell<W>,
@@ -410,6 +418,7 @@ impl<'a> RecursiveResolver<'a> {
             querier: DefaultDnsQuerier::from_args(args),
             positive_cache: (!args.no_positive_cache).then(|| RefCell::new(HashSet::new())),
             negative_cache: args.negative_cache.then(|| RefCell::new(HashSet::new())),
+            queries: Cell::new(0),
             arguments: args,
             output: RefCell::new(io::stdout()),
         })
@@ -495,12 +504,27 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
         Ok(results)
     }
 
+    /// Count one query. A hostile delegation can fan out without limit,
+    /// so fail after the maximum number of queries.
+    fn count_query(&self) -> Result<(), ResolverError> {
+        let max = self.arguments.max_queries;
+        if self.queries.get() >= max {
+            bail!(ResolverError::MaxQueriesExceeded { max });
+        }
+        self.queries.set(self.queries.get() + 1);
+        Ok(())
+    }
+
     #[cfg_attr(
         feature = "tracing",
         tracing::instrument(level = "trace", skip(self, name, server, depth, last))
     )]
     /// Follow the delegations from server to server to find the answers
     #[expect(clippy::future_not_send, reason = "single-threaded, RefCell state")]
+    #[expect(
+        clippy::too_many_lines,
+        reason = "one function for the whole delegation step"
+    )]
     pub async fn do_recurse(
         &self,
         name: &Name,
@@ -528,6 +552,8 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
         } else {
             self.arguments.query_type
         };
+
+        self.count_query()?;
 
         match self.querier.query(server, name, query_type).await {
             Ok(response) => {
@@ -856,6 +882,7 @@ mod tests {
             overview: false,
             query_type: RecordType::A,
             retries: 3,
+            max_queries: 200,
             server: ".".to_owned(),
             timeout: Duration::from_secs(5),
             source_address: None,
@@ -882,6 +909,7 @@ mod tests {
             arguments: args,
             positive_cache: (!args.no_positive_cache).then(|| RefCell::new(HashSet::new())),
             negative_cache: args.negative_cache.then(|| RefCell::new(HashSet::new())),
+            queries: Cell::new(0),
             output: RefCell::new(Vec::<u8>::new()),
         }
     }
@@ -1229,7 +1257,7 @@ mod tests {
         assert!(result.is_err());
         assert_debug_snapshot!(result, @"
         Err(
-            No IP address found for hostname ns1.example.com, at src/resolver.rs:490:13,
+            No IP address found for hostname ns1.example.com, at src/resolver.rs:499:13,
         )
         ");
         assert_snapshot!(get_output(resolver), @"");
@@ -1397,6 +1425,44 @@ mod tests {
         |\___ ns1.example.com. (192.0.2.1)
                |\___ ns2.example.com. [example.com.] (192.0.2.2) found authoritative answer
         ");
+    }
+
+    #[tokio::test]
+    async fn do_recurse_stops_at_max_queries() {
+        let args = Args {
+            max_queries: 5,
+            ..default_args()
+        };
+        let name = Name::from_str("example.com.").expect("example.com. is a valid DNS name");
+        let first_server = OptName {
+            ip: IpAddr::from([192, 0, 2, 1]),
+            name: Some("ns1.example.com.".to_owned()),
+            zone: None,
+        };
+
+        // A hostile server: every answer delegates to a new IP address
+        let mut q = MockDnsQuerier::new();
+        let mut next = 2_u8;
+        q.expect_query().times(5).returning(move |_, _, _| {
+            next += 1;
+            Ok(delegation_response(
+                "ns.example.com.",
+                Ipv4Addr::new(192, 0, 2, next),
+                "example.com.",
+            ))
+        });
+
+        let resolver = mock_resolver(&args, MockNameResolver::new(), q);
+        let error = resolver
+            .do_recurse(&name, &first_server, 0, vec![])
+            .await
+            .expect_err("do_recurse should stop at the maximum number of queries");
+
+        assert!(
+            format!("{error:?}").contains("more than the maximum of 5 queries"),
+            "the error should come from the query limit: {error:?}"
+        );
+        // The mock checks that the code sent exactly 5 queries
     }
 
     #[tokio::test]

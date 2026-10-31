@@ -10,6 +10,7 @@ Args {
     overview: false,
     query_type: A,
     retries: 3,
+    max_queries: 200,
     server: "1.1.1.1",
     timeout: 5s,
     source_address: None,
