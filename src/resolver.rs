@@ -88,6 +88,20 @@ impl std::error::Error for ResolverError {}
 /// The maximum DNS delegation depth. This limit stops infinite recursion.
 const MAX_RECURSION_DEPTH: usize = 32;
 
+/// Escape the control characters. The data of a record (for example a TXT string)
+/// comes from a name server and can contain terminal escape sequences.
+fn escape_controls(text: &str) -> String {
+    let mut escaped = String::with_capacity(text.len());
+    for c in text.chars() {
+        if c.is_control() {
+            escaped.extend(c.escape_default());
+        } else {
+            escaped.push(c);
+        }
+    }
+    escaped
+}
+
 /// The key of a cache entry
 type CacheKey = (IpAddr, Name);
 
@@ -759,9 +773,10 @@ impl<R: NameResolver, Q: DnsQuerier, W: Write + Send> RecursiveResolver<'_, R, Q
             for record in records {
                 writeln!(
                     output,
-                    "{} ({}) \t{record}",
+                    "{} ({}) \t{}",
                     key.name.as_deref().unwrap_or_default(),
-                    key.ip
+                    key.ip,
+                    escape_controls(&record.to_string())
                 )
                 .map_err(|_| ResolverError::Write)?;
             }
@@ -1257,7 +1272,7 @@ mod tests {
         assert!(result.is_err());
         assert_debug_snapshot!(result, @"
         Err(
-            No IP address found for hostname ns1.example.com, at src/resolver.rs:499:13,
+            No IP address found for hostname ns1.example.com, at src/resolver.rs:513:13,
         )
         ");
         assert_snapshot!(get_output(resolver), @"");
@@ -1709,6 +1724,42 @@ mod tests {
         "#);
         drop(results);
         assert_snapshot!(get_output(resolver), @"ns1.example.com. (192.0.2.1) 	example.com. 300 IN A 93.184.216.34");
+    }
+
+    #[test]
+    fn show_overview_escapes_control_characters() {
+        let args = default_args();
+        let resolver = mock_resolver(&args, MockNameResolver::new(), MockDnsQuerier::new());
+
+        let server = OptName {
+            ip: IpAddr::from([192, 0, 2, 1]),
+            name: Some("ns1.example.com.".to_owned()),
+            zone: None,
+        };
+        // A hostile server sends a TXT string with a "clear screen" sequence
+        let record = Record::from_rdata(
+            Name::from_str("example.com.").expect("example.com. is a valid DNS name"),
+            300,
+            RData::TXT(rdata::TXT::new(vec!["a\u{1b}[2Jb".to_owned()])),
+        );
+        resolver.results.borrow_mut().insert(server, FullResult {
+            records: std::collections::BTreeSet::from([record]),
+            response_code: ResponseCode::NoError,
+        });
+
+        resolver
+            .show_overview()
+            .expect("show_overview with a record should succeed");
+
+        let output = get_output(resolver);
+        assert!(
+            !output.contains('\u{1b}'),
+            "the output should not contain an ESC character: {output:?}"
+        );
+        assert!(
+            output.contains(r"a\u{1b}[2Jb"),
+            "the output should show the escaped character: {output:?}"
+        );
     }
 
     #[test]
