@@ -5,6 +5,72 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v1.2.12 (2026-10-31)
+
+### Chore
+
+ - <csr-id-81cb72c96cc85336d9a7180efbeece9d78e025a8/> update dependency cargo-nextest to v0.9.150
+   | datasource | package       | from    | to      |
+   | ---------- | ------------- | ------- | ------- |
+   | crate      | cargo-nextest | 0.9.149 | 0.9.150 |
+ - <csr-id-b473bbfcb5a3212477f03ebd5ed3f96b1029dbf8/> lock file maintenance
+ - <csr-id-c00f757f7142b13b89a619caf6a19c741c3f3753/> update dependency cargo-binstall to v1.26.1
+   | datasource | package        | from   | to     |
+   | ---------- | -------------- | ------ | ------ |
+   | crate      | cargo-binstall | 1.26.0 | 1.26.1 |
+
+### Documentation
+
+ - <csr-id-00003360d4d60c75ef9b3e78feb2b8355c282495/> rewrite README in Simplified Technical English
+   Also match the options list to the real --help output and use the
+   rust-version from Cargo.toml.
+
+### Bug Fixes
+
+ - <csr-id-00003410027b44f7652c26fd18a310c5f3c39d52/> escape control characters in the overview
+   The data of a record, for example a TXT string, comes from a name
+   server and can contain terminal escape sequences. Escape the control
+   characters of each record in the --overview output.
+ - <csr-id-00003400a4d14bffc057c92e517cc9af96340ae6/> limit the number of queries of a trace
+   A hostile delegation can send an unbounded number of NS and glue
+   records, so one trace could send a very large number of queries.
+   Add -m/--max-queries (default 200). do_recurse fails with
+   MaxQueriesExceeded when the trace reaches the limit.
+ - <csr-id-b4f4ca9731d787264b0fd1363d039fb1563f1b64/> update rust crate tokio to v1.54.1
+   | datasource | package | from   | to     |
+   | ---------- | ------- | ------ | ------ |
+   | crate      | tokio   | 1.54.0 | 1.54.1 |
+
+### Refactor
+
+ - <csr-id-00003370629991e5c60026713dff6fc48b2207a7/> rewrite comments and error messages in Simplified Technical English
+
+### Commit Statistics
+
+<csr-read-only-do-not-edit/>
+
+ - 8 commits contributed to the release.
+ - 10 days passed between releases.
+ - 8 commits were understood as [conventional](https://www.conventionalcommits.org).
+ - 0 issues like '(#ID)' were seen in commit messages
+
+### Commit Details
+
+<csr-read-only-do-not-edit/>
+
+<details><summary>view details</summary>
+
+ * **Uncategorized**
+    - Escape control characters in the overview (0000341)
+    - Limit the number of queries of a trace (0000340)
+    - Update dependency cargo-nextest to v0.9.150 (81cb72c)
+    - Lock file maintenance (b473bbf)
+    - Rewrite comments and error messages in Simplified Technical English (0000337)
+    - Rewrite README in Simplified Technical English (0000336)
+    - Update dependency cargo-binstall to v1.26.1 (c00f757)
+    - Update rust crate tokio to v1.54.1 (b4f4ca9)
+</details>
+
 ## v1.2.11 (2026-10-21)
 
 ### Chore
@@ -154,6 +220,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
    | datasource      | package        | from   | to     |
    | --------------- | -------------- | ------ | ------ |
    | github-releases | rust-lang/rust | 1.97.0 | 1.97.1 |
+ - <csr-id-3381ad371b73e0e8fefdea91731f79875b2db4c8/> Bump dnstracer v1.2.11
 
 ### Bug Fixes
 
@@ -252,9 +319,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <csr-read-only-do-not-edit/>
 
- - 78 commits contributed to the release.
+ - 79 commits contributed to the release.
  - 98 days passed between releases.
- - 78 commits were understood as [conventional](https://www.conventionalcommits.org).
+ - 79 commits were understood as [conventional](https://www.conventionalcommits.org).
  - 0 issues like '(#ID)' were seen in commit messages
 
 ### Commit Details
@@ -264,6 +331,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <details><summary>view details</summary>
 
  * **Uncategorized**
+    - Bump dnstracer v1.2.11 (3381ad3)
     - Build IpAddr from A/AAAA directly (0000332)
     - Reuse before_len when counting resolved servers (0000331)
     - Drop unused derive_more from_str feature (0000330)
