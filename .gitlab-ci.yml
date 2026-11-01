@@ -13,7 +13,7 @@ variables:
   # renovate: datasource=crate depName=cargo-nextest
   CARGO_NEXTEST_VERSION: 0.9.150
   # renovate: datasource=crate depName=cargo-hack
-  CARGO_HACK_VERSION: 0.6.45
+  CARGO_HACK_VERSION: 0.6.46
   # renovate: datasource=crate depName=cargo-sort-derives
   CARGO_SORT_DERIVES_VERSION: 0.14.1
   # renovate: datasource=crate depName=cargo-sort
