@@ -17,7 +17,7 @@ variables:
   # renovate: datasource=crate depName=cargo-sort-derives
   CARGO_SORT_DERIVES_VERSION: 0.15.0
   # renovate: datasource=crate depName=cargo-sort
-  CARGO_SORT_VERSION: 2.1.4
+  CARGO_SORT_VERSION: 2.1.5
   # renovate: datasource=crate depName=cargo-sweep
   CARGO_SWEEP_VERSION: 0.8.0
   # renovate: datasource=crate depName=zipsign
