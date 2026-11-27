@@ -1740,7 +1740,7 @@ mod tests {
         let record = Record::from_rdata(
             Name::from_str("example.com.").expect("example.com. is a valid DNS name"),
             300,
-            RData::TXT(rdata::TXT::new(vec!["a\u{1b}[2Jb".to_owned()])),
+            RData::TXT(rdata::TXT::try_from("a\u{1b}[2Jb".to_owned()).expect("should be valid")),
         );
         resolver.results.borrow_mut().insert(server, FullResult {
             records: std::collections::BTreeSet::from([record]),
